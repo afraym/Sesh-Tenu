@@ -8,13 +8,28 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class Worker extends Model
 {
     protected $fillable = [
-        'project_name',
         'company_id',
-        'worker_name',
-        'mobile_number',
-        'id_number',
+        'name',
+        'entity',
         'job_type_id',
-        'access_code',
+        'national_id',
+        'phone_number',
+        'has_housing',
+        'is_local_community',
+        'address',
+        'join_date',
+        'end_date',
+        'is_on_company_payroll',
+        'salary',
+    ];
+
+    protected $casts = [
+        'has_housing' => 'boolean',
+        'is_local_community' => 'boolean',
+        'is_on_company_payroll' => 'boolean',
+        'join_date' => 'date',
+        'end_date' => 'date',
+        'salary' => 'decimal:2',
     ];
 
     /**

@@ -10,6 +10,10 @@ class Company extends Model
     protected $fillable = [
         'name',
         'description',
+        'address',
+        'phone_number',
+        'email',
+        'logo',
     ];
 
     /**
@@ -18,5 +22,13 @@ class Company extends Model
     public function workers(): HasMany
     {
         return $this->hasMany(Worker::class);
+    }
+
+    /**
+     * Get the equipment for the company.
+     */
+    public function equipment(): HasMany
+    {
+        return $this->hasMany(Equipment::class);
     }
 }

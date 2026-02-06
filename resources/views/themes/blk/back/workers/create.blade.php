@@ -14,12 +14,17 @@
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label for="project_name">Project Name / إسم المشروع</label>
-                                    <input type="text" class="form-control @error('project_name') is-invalid @enderror" 
-                                           id="project_name" name="project_name" 
-                                           value="{{ old('project_name') }}" 
-                                           placeholder="Enter project name">
-                                    @error('project_name')
+                                    <label for="company_id">Company / الشركة <span class="text-danger">*</span></label>
+                                    <select class="form-control @error('company_id') is-invalid @enderror" 
+                                            id="company_id" name="company_id" required>
+                                        <option value="">Select Company</option>
+                                        @foreach($companies ?? [] as $company)
+                                            <option value="{{ $company->id }}" {{ old('company_id') == $company->id ? 'selected' : '' }}>
+                                                {{ $company->name }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    @error('company_id')
                                         <span class="invalid-feedback">{{ $message }}</span>
                                     @enderror
                                 </div>
@@ -27,40 +32,12 @@
 
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label for="company_name">Company Name / إسم الشركة</label>
-                                    <input type="text" class="form-control @error('company_name') is-invalid @enderror" 
-                                           id="company_name" name="company_name" 
-                                           value="{{ old('company_name') }}" 
-                                           placeholder="Enter company name">
-                                    @error('company_name')
-                                        <span class="invalid-feedback">{{ $message }}</span>
-                                    @enderror
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label for="worker_name">Worker Name / إسم العامل</label>
-                                    <input type="text" class="form-control @error('worker_name') is-invalid @enderror" 
-                                           id="worker_name" name="worker_name" 
-                                           value="{{ old('worker_name') }}" 
-                                           placeholder="Enter worker name">
-                                    @error('worker_name')
-                                        <span class="invalid-feedback">{{ $message }}</span>
-                                    @enderror
-                                </div>
-                            </div>
-
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label for="mobile_number">Mobile Number / موبايل</label>
-                                    <input type="text" class="form-control @error('mobile_number') is-invalid @enderror" 
-                                           id="mobile_number" name="mobile_number" 
-                                           value="{{ old('mobile_number') }}" 
-                                           placeholder="Enter mobile number">
-                                    @error('mobile_number')
+                                    <label for="name">Name / الاسم <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control @error('name') is-invalid @enderror" 
+                                           id="name" name="name" 
+                                           value="{{ old('name') }}" 
+                                           placeholder="Enter worker name" required>
+                                    @error('name')
                                         <span class="invalid-feedback">{{ $message }}</span>
                                     @enderror
                                 </div>
@@ -70,12 +47,12 @@
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label for="id_number">ID Number / رقم البطاقة</label>
-                                    <input type="text" class="form-control @error('id_number') is-invalid @enderror" 
-                                           id="id_number" name="id_number" 
-                                           value="{{ old('id_number') }}" 
-                                           placeholder="Enter ID number">
-                                    @error('id_number')
+                                    <label for="entity">Entity / الهيئة</label>
+                                    <input type="text" class="form-control @error('entity') is-invalid @enderror" 
+                                           id="entity" name="entity" 
+                                           value="{{ old('entity') }}" 
+                                           placeholder="Enter entity">
+                                    @error('entity')
                                         <span class="invalid-feedback">{{ $message }}</span>
                                     @enderror
                                 </div>
@@ -83,12 +60,35 @@
 
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label for="worker_job">Worker Job / وظيفة العامل</label>
-                                    <input type="text" class="form-control @error('worker_job') is-invalid @enderror" 
-                                           id="worker_job" name="worker_job" 
-                                           value="{{ old('worker_job') }}" 
-                                           placeholder="Enter worker job">
-                                    @error('worker_job')
+                                    <label for="job_type_id">Job Type / الوظيفة</label>
+                                    <select class="form-control @error('job_type_id') is-invalid @enderror" 
+                                            id="job_type_id" name="job_type_id">
+                                        <option value="">Select Job Type</option>
+                                        @foreach($jobTypes ?? [] as $jobType)
+                                            <option value="{{ $jobType->id }}" {{ old('job_type_id') == $jobType->id ? 'selected' : '' }}>
+                                                {{ $jobType->name }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    @error('job_type_id')
+                                        <span class="invalid-feedback">{{ $message }}</span>
+                                    @enderror
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="national_id">National ID / الرقم القومي <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control @error('national_id') is-invalid @enderror" 
+                                           id="national_id" name="national_id" 
+                                           value="{{ old('national_id') }}" 
+                                           placeholder="Enter national ID" required>
+                                    @error('national_id')
                                         <span class="invalid-feedback">{{ $message }}</span>
                                     @enderror
                                 </div>
@@ -98,14 +98,102 @@
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label for="access_code">Access Code / كود الدخول</label>
-                                    <input type="text" class="form-control @error('access_code') is-invalid @enderror" 
-                                           id="access_code" name="access_code" 
-                                           value="{{ old('access_code') }}" 
-                                           placeholder="Enter access code">
-                                    @error('access_code')
+                                    <label for="phone_number">Phone Number / رقم الهاتف <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control @error('phone_number') is-invalid @enderror" 
+                                           id="phone_number" name="phone_number" 
+                                           value="{{ old('phone_number') }}" 
+                                           placeholder="Enter phone number" required>
+                                    @error('phone_number')
                                         <span class="invalid-feedback">{{ $message }}</span>
                                     @enderror
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="address">Address / العنوان</label>
+                                    <input type="text" class="form-control @error('address') is-invalid @enderror" 
+                                           id="address" name="address" 
+                                           value="{{ old('address') }}" 
+                                           placeholder="Enter address">
+                                    @error('address')
+                                        <span class="invalid-feedback">{{ $message }}</span>
+                                    @enderror
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="join_date">Join Date / تاريخ الانضمام</label>
+                                    <input type="date" class="form-control @error('join_date') is-invalid @enderror" 
+                                           id="join_date" name="join_date" 
+                                           value="{{ old('join_date') }}">
+                                    @error('join_date')
+                                        <span class="invalid-feedback">{{ $message }}</span>
+                                    @enderror
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="end_date">End Date / تاريخ الانهاء</label>
+                                    <input type="date" class="form-control @error('end_date') is-invalid @enderror" 
+                                           id="end_date" name="end_date" 
+                                           value="{{ old('end_date') }}">
+                                    @error('end_date')
+                                        <span class="invalid-feedback">{{ $message }}</span>
+                                    @enderror
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="salary">Salary / الراتب</label>
+                                    <input type="number" step="0.01" class="form-control @error('salary') is-invalid @enderror" 
+                                           id="salary" name="salary" 
+                                           value="{{ old('salary') }}" 
+                                           placeholder="Enter salary">
+                                    @error('salary')
+                                        <span class="invalid-feedback">{{ $message }}</span>
+                                    @enderror
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="d-block">Options / الخيارات</label>
+                                    <div class="form-check form-check-inline">
+                                        
+                                        <label class="form-check-label" for="has_housing">
+                                            Has Housing / متوفر له سكن
+                                            <input class="form-check-input" type="checkbox" id="has_housing" 
+                                               name="has_housing" value="1" {{ old('has_housing') ? 'checked' : '' }}>
+                                            <span class="form-check-sign"></span>
+                                            
+                                        </label>
+                                    </div>
+                                    <div class="form-check form-check-inline">
+                                        
+                                        <label class="form-check-label" for="is_local_community">
+                                            Local Community / من المجتمع المحلي
+                                            <input class="form-check-input" type="checkbox" id="is_local_community" 
+                                               name="is_local_community" value="1" {{ old('is_local_community') ? 'checked' : '' }}>
+                                            <span class="form-check-sign"></span>
+                                        </label>
+                                    </div>
+                                    <div class="form-check form-check-inline">
+                                        
+                                        <label class="form-check-label" for="is_on_company_payroll">
+                                            On Company Payroll / على قوة الشركة
+                                            <input class="form-check-input" type="checkbox" id="is_on_company_payroll" 
+                                               name="is_on_company_payroll" value="1" {{ old('is_on_company_payroll', true) ? 'checked' : '' }}>
+                                               <span class="form-check-sign"></span>
+                                        </label>
+                                    </div>
                                 </div>
                             </div>
                         </div>

@@ -12,7 +12,7 @@ class CompanyController extends Controller
      */
     public function index()
     {
-        //
+        return view('themes.blk.back.companies.index')->with('companies', Company::all());
     }
 
     /**
@@ -20,7 +20,7 @@ class CompanyController extends Controller
      */
     public function create()
     {
-        //
+        return view('themes.blk.back.companies.create');
     }
 
     /**
@@ -28,7 +28,16 @@ class CompanyController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:companies,email',
+            'address' => 'nullable|string|max:255',
+            'phone_number' => 'nullable|string|max:20',
+        ]);
+
+        Company::create($request->all());
+
+        return redirect()->route('companies.index')->with('success', 'Company created successfully.');
     }
 
     /**
@@ -36,7 +45,7 @@ class CompanyController extends Controller
      */
     public function show(Company $company)
     {
-        //
+        return view('themes.blk.back.companies.show', compact('company'));
     }
 
     /**
@@ -44,7 +53,7 @@ class CompanyController extends Controller
      */
     public function edit(Company $company)
     {
-        //
+        return view('themes.blk.back.companies.edit', compact('company'));
     }
 
     /**

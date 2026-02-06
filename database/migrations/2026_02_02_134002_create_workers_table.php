@@ -13,13 +13,19 @@ return new class extends Migration
     {
         Schema::create('workers', function (Blueprint $table) {
             $table->id();
-            $table->string('project_name');
-            $table->foreignId('company_id')->constrained()->onDelete('cascade');
-            $table->string('worker_name');
-            $table->string('mobile_number');
-            $table->string('id_number')->unique();
-            $table->foreignId('job_type_id')->constrained()->onDelete('cascade');
-            $table->string('access_code')->nullable();
+            $table->foreignId('company_id')->constrained()->onDelete('cascade'); // الشركة
+            $table->string('name'); // الاسم
+            $table->string('entity')->nullable(); // الهيئة
+            $table->foreignId('job_type_id')->nullable()->constrained()->onDelete('set null'); // الوظيفة
+            $table->string('national_id')->unique(); // الرقم القومي
+            $table->string('phone_number'); // رقم الهاتف
+            $table->boolean('has_housing')->default(false); // هل متوفر له سكن
+            $table->boolean('is_local_community')->default(false); // هل من المجتمع المحلي
+            $table->text('address')->nullable(); // العنوان
+            $table->date('join_date')->nullable(); // تاريخ الانضمام
+            $table->date('end_date')->nullable(); // تاريخ الانهاء
+            $table->boolean('is_on_company_payroll')->default(true); // هل على قوة الشركة
+            $table->decimal('salary', 10, 2)->nullable(); // الراتب
             $table->timestamps();
         });
     }

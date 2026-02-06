@@ -2,6 +2,9 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\WorkerController;
+use App\Http\Controllers\CompanyController;
+use App\Http\Controllers\ProjectController;
+use App\Http\Controllers\JobTypeController;
 
 Route::get('/', function () {
     return view('welcome');
