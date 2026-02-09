@@ -18,7 +18,7 @@
   <link href="{{ asset('assets/css/black-dashboard.css?v=1.0.0') }}" rel="stylesheet" />
   <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-rtl/3.4.0/css/bootstrap-rtl.css" rel="stylesheet" />
   <!-- CSS Just for demo purpose, don't include it in your project -->
-  <link href="{{ asset('assets/demo/demo.css') }}" rel="stylesheet" />
+  <link href="{{ asset('assets/css/custom.css') }}" rel="stylesheet" />
 </head>
 
 <body class=" rtl menu-on-right ">

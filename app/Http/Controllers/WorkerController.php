@@ -20,7 +20,7 @@ class WorkerController extends Controller
      */
     public function create()
     {
-        return view('themes.blk.back.workers.create');
+        return view('themes.blk.back.workers.create')->with('companies', \App\Models\Company::all());
     }
 
     /**

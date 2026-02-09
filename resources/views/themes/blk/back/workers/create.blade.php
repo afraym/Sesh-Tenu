@@ -46,7 +46,7 @@
 
                         <div class="row">
                             <div class="col-md-6">
-                                <div class="form-group">
+                                {{-- <div class="form-group">
                                     <label for="entity">Entity / الهيئة</label>
                                     <input type="text" class="form-control @error('entity') is-invalid @enderror" 
                                            id="entity" name="entity" 
@@ -55,7 +55,7 @@
                                     @error('entity')
                                         <span class="invalid-feedback">{{ $message }}</span>
                                     @enderror
-                                </div>
+                                </div> --}}
                             </div>
 
                             <div class="col-md-6">

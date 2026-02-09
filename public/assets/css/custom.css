@@ -1,0 +1,18 @@
+/* Fix select options white background in dark mode */
+.form-control select,
+select.form-control {
+    background-color: #27293d;
+    color: #ffffff;
+}
+
+.form-control select option,
+select.form-control option {
+    background-color: #27293d;
+    color: #ffffff;
+}
+
+.form-control select:focus,
+select.form-control:focus {
+    background-color: #27293d;
+    color: #ffffff;
+}

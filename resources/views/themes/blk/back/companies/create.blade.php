@@ -58,9 +58,9 @@
                             <div class="col-md-6">
                                 <div class="form-group">
                                     <label for="logo">Company Logo / شعار الشركة</label>
-                                    <input type="file" class="form-control-file @error('logo') is-invalid @enderror" 
+                                    <input type="file" class="form-control @error('logo') is-invalid @enderror" 
                                            id="logo" name="logo" 
-                                           accept="image/*">
+                                           accept="image/*" id="inputGroupFile01">
                                     <small class="form-text text-muted">Accepted formats: JPG, PNG, GIF (Max: 2MB)</small>
                                     @error('logo')
                                         <span class="invalid-feedback d-block">{{ $message }}</span>

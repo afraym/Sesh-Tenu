@@ -52,7 +52,7 @@
                                             <td>{{ $loop->iteration + ($companies->currentPage() - 1) * $companies->perPage() }}</td>
                                             <td>
                                                 @if($company->logo)
-                                                    <img src="{{ asset('storage/' . $company->logo) }}" 
+                                                    <img src="{{ asset($company->logo) }}" 
                                                          alt="{{ $company->name }}" 
                                                          class="img-thumbnail" 
                                                          style="width: 50px; height: 50px; object-fit: cover;">
