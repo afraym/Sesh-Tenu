@@ -39,6 +39,7 @@
                                         <th>#</th>
                                         <th>Logo / الشعار</th>
                                         <th>Name / الإسم</th>
+                                        <th>Short Name / الاسم المختصر</th>
                                         <th>Phone / الهاتف</th>
                                         <th>Address / العنوان</th>
                                         <th>Workers / العمال</th>
@@ -66,6 +67,7 @@
                                             <td>
                                                 <strong>{{ $company->name }}</strong>
                                             </td>
+                                            <td>{{ $company->short_name ?? 'N/A' }}</td>
                                             <td>{{ $company->phone ?? 'N/A' }}</td>
                                             <td>{{ Str::limit($company->address ?? 'N/A', 30) }}</td>
                                             <td>
