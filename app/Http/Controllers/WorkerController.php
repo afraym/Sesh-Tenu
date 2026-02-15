@@ -95,14 +95,29 @@ class WorkerController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'nullable|email|unique:workers,email,' . $worker->id,
             'company_id' => 'required|exists:companies,id',
-            'phone' => 'nullable|string|max:20',
+            'phone_number' => 'nullable|string|max:20',
+            'address' => 'nullable|string|max:255',
+            'join_date' => 'nullable|date',
+            'end_date' => 'nullable|date|after_or_equal:join_date',
+            'salary' => 'nullable|numeric|min:0',
+            'has_housing' => 'nullable|boolean',
+            'is_local_community' => 'nullable|boolean',
+            'is_on_company_payroll' => 'nullable|boolean',
         ]); 
         $worker->name = $request->name;
-        $worker->email = $request->email;
+        $worker->entity = $request->entity;
         $worker->company_id = $request->company_id;
-        $worker->phone = $request->phone;
+        $worker->job_type_id = $request->job_type_id;
+        $worker->national_id = $request->national_id;
+        $worker->phone_number = $request->phone_number;
+        $worker->address = $request->address;
+        $worker->join_date = $request->join_date;
+        $worker->end_date = $request->end_date;
+        $worker->salary = $request->salary;
+        $worker->has_housing = $request->boolean('has_housing');
+        $worker->is_local_community = $request->boolean('is_local_community');
+        $worker->is_on_company_payroll = $request->boolean('is_on_company_payroll');
         $worker->save();
         return redirect()->route('workers.index')->with('success', 'Worker updated successfully.');
     }
