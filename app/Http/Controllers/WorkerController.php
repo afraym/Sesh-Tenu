@@ -12,7 +12,7 @@ class WorkerController extends Controller
      */
     public function index()
     {
-        //
+        return view('themes.blk.back.workers.index')->with('workers', Worker::orderBy('created_at', 'desc')->paginate(10));
     }
 
     /**
@@ -28,7 +28,19 @@ class WorkerController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'nullable|email|unique:workers,email',
+            'company_id' => 'required|exists:companies,id',
+            'phone' => 'nullable|string|max:20',
+        ]); 
+        $worker = new Worker();
+        $worker->name = $request->name;
+        $worker->email = $request->email;
+        $worker->company_id = $request->company_id;
+        $worker->phone = $request->phone;
+        $worker->save();
+        return redirect()->route('workers.index')->with('success', 'Worker created successfully.');
     }
 
     /**
@@ -36,7 +48,7 @@ class WorkerController extends Controller
      */
     public function show(Worker $worker)
     {
-        //
+        return view('themes.blk.back.workers.show', compact('worker'));
     }
 
     /**
@@ -44,7 +56,7 @@ class WorkerController extends Controller
      */
     public function edit(Worker $worker)
     {
-        //
+        return view('themes.blk.back.workers.edit', ['worker' => $worker, 'companies' => \App\Models\Company::all()]);
     }
 
     /**
@@ -52,7 +64,18 @@ class WorkerController extends Controller
      */
     public function update(Request $request, Worker $worker)
     {
-        //
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'nullable|email|unique:workers,email,' . $worker->id,
+            'company_id' => 'required|exists:companies,id',
+            'phone' => 'nullable|string|max:20',
+        ]); 
+        $worker->name = $request->name;
+        $worker->email = $request->email;
+        $worker->company_id = $request->company_id;
+        $worker->phone = $request->phone;
+        $worker->save();
+        return redirect()->route('workers.index')->with('success', 'Worker updated successfully.');
     }
 
     /**
@@ -60,6 +83,7 @@ class WorkerController extends Controller
      */
     public function destroy(Worker $worker)
     {
-        //
+        $worker->delete();
+        return redirect()->route('workers.index')->with('success', 'Worker deleted successfully.'); 
     }
 }

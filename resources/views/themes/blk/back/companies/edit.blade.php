@@ -28,6 +28,21 @@
 
 							<div class="col-md-6">
 								<div class="form-group">
+									<label for="short_name">Short Name / الاسم المختصر</label>
+									<input type="text" class="form-control @error('short_name') is-invalid @enderror"
+										   id="short_name" name="short_name"
+										   value="{{ old('short_name', $company->short_name) }}"
+										   placeholder="Enter short name">
+									@error('short_name')
+										<span class="invalid-feedback">{{ $message }}</span>
+									@enderror
+								</div>
+							</div>
+						</div>
+
+						<div class="row">
+							<div class="col-md-6">
+								<div class="form-group">
 									<label for="email">Email</label>
 									<input type="email" class="form-control @error('email') is-invalid @enderror"
 										   id="email" name="email"
