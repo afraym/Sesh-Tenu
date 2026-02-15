@@ -12,7 +12,7 @@ class ProjectController extends Controller
      */
     public function index()
     {
-        //
+        return view('themes.blk.back.projects.index')->with('projects', Project::all());
     }
 
     /**
@@ -20,7 +20,7 @@ class ProjectController extends Controller
      */
     public function create()
     {
-        //
+        return view('themes.blk.back.projects.create', ['companies' => \App\Models\Company::all()]);
     }
 
     /**
@@ -28,7 +28,15 @@ class ProjectController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $request->validate([
+            'name' => 'required',
+            'company_id' => 'required|exists:companies,id',
+        ]);
+        $project = new Project();
+        $project->name = $request->name;
+        $project->company_id = $request->company_id;        
+        $project->save();
+        return redirect()->route('projects.index')->with('success', 'Project created successfully.');
     }
 
     /**
@@ -36,7 +44,7 @@ class ProjectController extends Controller
      */
     public function show(Project $project)
     {
-        //
+        return view('themes.blk.back.projects.show')->with('project', $project);
     }
 
     /**
@@ -44,7 +52,7 @@ class ProjectController extends Controller
      */
     public function edit(Project $project)
     {
-        //
+        return view('themes.blk.back.projects.edit', ['project' => $project, 'companies' => \App\Models\Company::all()]);
     }
 
     /**
@@ -52,7 +60,10 @@ class ProjectController extends Controller
      */
     public function update(Request $request, Project $project)
     {
-        //
+        $request->validate([
+            'name' => 'required',
+            'company_id' => 'required|exists:companies,id',
+        ]);
     }
 
     /**
@@ -60,6 +71,7 @@ class ProjectController extends Controller
      */
     public function destroy(Project $project)
     {
-        //
+        $project->delete();
+        return redirect()->route('projects.index')->with('success', 'Project deleted successfully.');
     }
 }
