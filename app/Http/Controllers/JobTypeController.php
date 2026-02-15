@@ -12,7 +12,7 @@ class JobTypeController extends Controller
      */
     public function index()
     {
-        return view('themes.blk.back.jobtypes.index');
+        return view('themes.blk.back.jobtypes.index')->with('jobtypes', Jobtype::orderBy('created_at', 'desc')->paginate(10));
     }
 
     /**
@@ -28,38 +28,56 @@ class JobTypeController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'is_active' => 'nullable|boolean',
+            'description' => 'nullable|string|max:1000',
+        ]);
+        $jobtype = new Jobtype();
+        $jobtype->name = $request->name;
+        $jobtype->is_active = $request->is_active ?? 0;
+        $jobtype->description = $request->description ?? null;
+        $jobtype->save();
+        return redirect()->route('jobtypes.index')->with('success', 'Job type created successfully.');
     }
 
     /**
      * Display the specified resource.
      */
-    public function show(Job_type $job_type)
+    public function show(Jobtype $jobtype)
     {
-        //
+        return view('themes.blk.back.jobtypes.show')->with('jobtype', $jobtype);
     }
 
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(Job_type $job_type)
+    public function edit(Jobtype $jobtype)
     {
-        //
+        return view('themes.blk.back.jobtypes.edit')->with('jobtype', $jobtype);
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Job_type $job_type)
+    public function update(Request $request, Jobtype $jobtype)
     {
-        //
+        $request->validate([
+            'name' => 'required|string|max:255',
+        ]);
+        $jobtype->name = $request->name;
+        $jobtype->is_active = $request->is_active ?? 0;
+        $jobtype->description = $request->description ?? null;
+        $jobtype->save();
+        return redirect()->route('jobtypes.index')->with('success', 'Job type updated successfully.');
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Job_type $job_type)
+    public function destroy(Jobtype $jobtype   )
     {
-        //
+        $jobtype->delete();
+        return redirect()->route('jobtypes.index')->with('success', 'Job type deleted successfully.');
     }
 }

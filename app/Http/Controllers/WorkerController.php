@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Company;
+use App\Models\JobType;
 use App\Models\Worker;
 use Illuminate\Http\Request;
 
@@ -20,7 +22,10 @@ class WorkerController extends Controller
      */
     public function create()
     {
-        return view('themes.blk.back.workers.create')->with('companies', \App\Models\Company::all());
+        return view('themes.blk.back.workers.create', [
+            'companies' => Company::orderBy('name')->get(),
+            'jobtypes' => JobType::where('is_active', true)->orderBy('name')->get(),
+        ]);
     }
 
     /**
@@ -30,16 +35,36 @@ class WorkerController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'nullable|email|unique:workers,email',
+            'entity' => 'nullable|string|max:255',
             'company_id' => 'required|exists:companies,id',
-            'phone' => 'nullable|string|max:20',
+            'job_type_id' => 'nullable|exists:job_types,id',
+            'national_id' => 'required|string|max:255|unique:workers,national_id',
+            'phone_number' => 'required|string|max:20',
+            'address' => 'nullable|string|max:255',
+            'join_date' => 'nullable|date',
+            'end_date' => 'nullable|date|after_or_equal:join_date',
+            'salary' => 'nullable|numeric|min:0',
+            'has_housing' => 'nullable|boolean',
+            'is_local_community' => 'nullable|boolean',
+            'is_on_company_payroll' => 'nullable|boolean',
         ]); 
+
         $worker = new Worker();
         $worker->name = $request->name;
-        $worker->email = $request->email;
+        $worker->entity = $request->entity;
         $worker->company_id = $request->company_id;
-        $worker->phone = $request->phone;
+        $worker->job_type_id = $request->job_type_id;
+        $worker->national_id = $request->national_id;
+        $worker->phone_number = $request->phone_number;
+        $worker->address = $request->address;
+        $worker->join_date = $request->join_date;
+        $worker->end_date = $request->end_date;
+        $worker->salary = $request->salary;
+        $worker->has_housing = $request->boolean('has_housing');
+        $worker->is_local_community = $request->boolean('is_local_community');
+        $worker->is_on_company_payroll = $request->boolean('is_on_company_payroll', true);
         $worker->save();
+
         return redirect()->route('workers.index')->with('success', 'Worker created successfully.');
     }
 
@@ -56,7 +81,11 @@ class WorkerController extends Controller
      */
     public function edit(Worker $worker)
     {
-        return view('themes.blk.back.workers.edit', ['worker' => $worker, 'companies' => \App\Models\Company::all()]);
+        return view('themes.blk.back.workers.edit', [
+            'worker' => $worker,
+            'companies' => Company::orderBy('name')->get(),
+            'jobtypes' => JobType::where('is_active', true)->orderBy('name')->get(),
+        ]);
     }
 
     /**

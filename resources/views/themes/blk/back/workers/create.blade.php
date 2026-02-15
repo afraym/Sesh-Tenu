@@ -64,7 +64,7 @@
                                     <select class="form-control @error('job_type_id') is-invalid @enderror" 
                                             id="job_type_id" name="job_type_id">
                                         <option value="">Select Job Type</option>
-                                        @foreach($jobTypes ?? [] as $jobType)
+                                        @foreach($jobtypes ?? [] as $jobType)
                                             <option value="{{ $jobType->id }}" {{ old('job_type_id') == $jobType->id ? 'selected' : '' }}>
                                                 {{ $jobType->name }}
                                             </option>
