@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Company;
 use App\Models\JobType;
 use App\Models\Worker;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 
 class WorkerController extends Controller
@@ -129,5 +130,35 @@ class WorkerController extends Controller
     {
         $worker->delete();
         return redirect()->route('workers.index')->with('success', 'Worker deleted successfully.'); 
+    }
+
+    public function exportPdf(Worker $worker)
+    {
+        $worker->load(['company', 'jobType']);
+
+        $pdf = Pdf::loadView('themes.blk.back.workers.export', [
+            'worker' => $worker,
+        ])->setPaper('a4', 'portrait')
+          ->setOptions([
+              'defaultFont' => 'ArialCustom',
+              'isHtml5ParserEnabled' => true,
+              'isRemoteEnabled' => true,
+              'chroot' => public_path(),
+          ]);
+
+        return $pdf->download('worker-' . $worker->id . '.pdf');
+    }
+
+    public function exportWord(Worker $worker)
+    {
+        $worker->load(['company', 'jobType']);
+
+        $content = view('themes.blk.back.workers.export', [
+            'worker' => $worker,
+        ])->render();
+
+        return response($content)
+            ->header('Content-Type', 'application/msword; charset=UTF-8')
+            ->header('Content-Disposition', 'attachment; filename="worker-' . $worker->id . '.doc"');
     }
 }
