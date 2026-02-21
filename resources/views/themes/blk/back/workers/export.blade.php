@@ -8,11 +8,14 @@
 
     $companyName = optional($worker->company)->name ?: (optional($worker->company)->short_name ?? '-');
 
-    $logoPath = public_path('logos/energychina.png');
-    $hasLogo = file_exists($logoPath);
+    $logoAbsolute = public_path('logos/energychina.png');
+    $logoPath = 'file://' . str_replace('\\', '/', $logoAbsolute);
+    $hasLogo = file_exists($logoAbsolute);
 
-    $arialRegular = 'file://' . str_replace('\\', '/', public_path('assets/fonts/arial/ARIAL.TTF'));
-    $arialBold = 'file://' . str_replace('\\', '/', public_path('assets/fonts/arial/ARIALBD.TTF'));
+    $arialRegularAbsolute = public_path('assets/fonts/arial/ARIAL.TTF');
+    $arialBoldAbsolute = public_path('assets/fonts/arial/ARIALBD.TTF');
+    $arialRegular = 'file://' . str_replace('\\', '/', $arialRegularAbsolute);
+    $arialBold = 'file://' . str_replace('\\', '/', $arialBoldAbsolute);
 
     $baseDate = $worker->join_date ? $worker->join_date->copy() : now();
     $monthStart = $baseDate->copy()->startOfMonth();
@@ -27,8 +30,25 @@
     <style>
         @page { margin: 8mm; }
 
+        @if(file_exists($arialRegularAbsolute) && file_exists($arialBoldAbsolute))
+        /* Embed local fonts so DOMPDF can resolve them on Linux servers */
+        @font-face {
+            font-family: 'ArialLocal';
+            src: url('{{ $arialRegular }}') format('truetype');
+            font-weight: 400;
+            font-style: normal;
+        }
+
+        @font-face {
+            font-family: 'ArialLocal';
+            src: url('{{ $arialBold }}') format('truetype');
+            font-weight: 700;
+            font-style: normal;
+        }
+        @endif
+
         body {
-            font-family: 'Times New Roman', 'Arial', sans-serif;
+            font-family: 'ArialLocal', 'Times New Roman', 'Arial', sans-serif;
             font-size: 11px;
             color: #000;
             margin: 0;
