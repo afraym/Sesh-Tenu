@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Company;
 use App\Models\JobType;
 use App\Models\Worker;
+use App\Models\Project;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 
@@ -135,9 +136,11 @@ class WorkerController extends Controller
     public function exportPdf(Worker $worker)
     {
         $worker->load(['company', 'jobType']);
+        $project = Project::latest('id')->with('company')->first();
 
         $pdf = Pdf::loadView('themes.blk.back.workers.export', [
             'worker' => $worker,
+            'project' => $project,
         ])->setPaper('a4', 'portrait')
           ->setOptions([
               'defaultFont' => 'ArialCustom',
@@ -152,13 +155,26 @@ class WorkerController extends Controller
     public function exportWord(Worker $worker)
     {
         $worker->load(['company', 'jobType']);
+        $project = Project::latest('id')->with('company')->first();
 
         $content = view('themes.blk.back.workers.export', [
             'worker' => $worker,
+            'project' => $project,
         ])->render();
 
         return response($content)
             ->header('Content-Type', 'application/msword; charset=UTF-8')
             ->header('Content-Disposition', 'attachment; filename="worker-' . $worker->id . '.doc"');
+    }
+
+    public function preview(Worker $worker)
+    {
+        $worker->load(['company', 'jobType']);
+        $project = Project::latest('id')->with('company')->first();
+
+        return view('themes.blk.back.workers.export', [
+            'worker' => $worker,
+            'project' => $project,
+        ]);
     }
 }

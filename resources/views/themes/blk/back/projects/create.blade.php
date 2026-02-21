@@ -15,10 +15,9 @@
                             <div class="col-md-6">
                                 <div class="form-group">
                                     <label for="name">Project Name / إسم المشروع <span class="text-danger">*</span></label>
-                                    <input type="text" class="form-control @error('name') is-invalid @enderror" 
-                                           id="name" name="name" 
-                                           value="{{ old('name') }}" 
-                                           placeholder="Enter Project name" required>
+                                    <textarea class="form-control @error('name') is-invalid @enderror" 
+                                              id="name" name="name" 
+                                              placeholder="Enter Project name" required>{{ old('name') }}</textarea>
                                     @error('name')
                                         <span class="invalid-feedback">{{ $message }}</span>
                                     @enderror
