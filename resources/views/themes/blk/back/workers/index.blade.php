@@ -75,9 +75,9 @@
 											</td>
 											<td class="text-center">
 												<div class="btn-group" role="group">
-													<a href="{{ route('workers.export.pdf', $worker->id) }}" class="btn btn-sm btn-primary" title="PDF" target="_blank">
+													{{-- <a href="{{ route('workers.export.pdf', $worker->id) }}" class="btn btn-sm btn-primary" title="PDF" target="_blank">
 														<i class="tim-icons icon-paper"></i>
-													</a>
+													</a> --}}
 													<a href="{{ route('workers.export.word', $worker->id) }}" class="btn btn-sm btn-default" title="Word">
 														<i class="tim-icons icon-single-copy-04"></i>
 													</a>
