@@ -4,10 +4,10 @@
 =========================================================
 
 * Product Page: https://www.creative-tim.com/product/blk-design-system
-* Copyright 2019 Creative Tim (https://www.creative-tim.com)
+* Copyright 2019 Afraym (https://www.creative-tim.com)
 * Licensed under MIT
 
-* Coded by Creative Tim
+* Coded by Afraym
 
 =========================================================
 
@@ -25,7 +25,7 @@
 <link rel="icon" type="image/png" sizes="16x16" href="/assets/img//favicon-16x16.png">
 <link rel="manifest" href="/site.webmanifest">
   <title>
-    Blk• Design System by Creative Tim
+    Blk• Design System by Afraym
   </title>
   <!--     Fonts and icons     -->
   <link href="https://fonts.googleapis.com/css?family=Poppins:200,300,400,600,700,800" rel="stylesheet" />
@@ -43,7 +43,7 @@
   <nav class="navbar navbar-expand-lg fixed-top navbar-transparent " color-on-scroll="100">
     <div class="container">
       <div class="navbar-translate">
-        <a class="navbar-brand" href="https://demos.creative-tim.com/blk-design-system/index.html" rel="tooltip" title="Designed and Coded by Creative Tim" data-placement="bottom" target="_blank">
+        <a class="navbar-brand" href="https://demos.creative-tim.com/blk-design-system/index.html" rel="tooltip" title="Designed and Coded by Afraym" data-placement="bottom" target="_blank">
           <span>ST•</span> Sish Tenu System
         </a>
         <button class="navbar-toggler navbar-toggler" type="button" data-toggle="collapse" data-target="#navigation" aria-controls="navigation-index" aria-expanded="false" aria-label="Toggle navigation">

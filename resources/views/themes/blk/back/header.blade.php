@@ -34,10 +34,10 @@
       <div class="sidebar-wrapper">
         <div class="logo">
           <a href="javascript:void(0)" class="simple-text logo-mini">
-            ط م
+           س ت
           </a>
           <a href="javascript:void(0)" class="simple-text logo-normal">
-            توقيت الإبداعية
+       سش تنو
           </a>
         </div>
         <ul class="nav">
