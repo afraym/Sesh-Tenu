@@ -13,6 +13,15 @@
 							<h4 class="card-title mb-0">Workers List / قائمة العمال</h4>
 						</div>
 						<div class="col text-right">
+							<a href="{{ route('workers.export.pdf.merged') }}" class="btn btn-sm btn-success" title="Export all as merged PDF (HTML-based)" target="_blank">
+								<i class="tim-icons icon-paper"></i> PDF All (HTML)
+							</a>
+							<a href="{{ route('workers.export.wordpdf.all') }}" class="btn btn-sm btn-primary" title="Export all as merged PDF (DOCX->PDF via LibreOffice)" target="_blank">
+								<i class="tim-icons icon-paper"></i> PDF All (Word)
+							</a>
+							<a href="{{ route('workers.export.word.all') }}" class="btn btn-sm btn-info" title="Export all as DOCX files in ZIP" target="_blank">
+								<i class="tim-icons icon-single-copy-04"></i> Word All (ZIP)
+							</a>
 							<a href="{{ route('workers.create') }}" class="btn btn-primary btn-sm">
 								<i class="tim-icons icon-simple-add"></i> Add New Worker
 							</a>
@@ -75,9 +84,10 @@
 											</td>
 											<td class="text-center">
 												<div class="btn-group" role="group">
-													{{-- <a href="{{ route('workers.export.pdf', $worker->id) }}" class="btn btn-sm btn-primary" title="PDF" target="_blank">
+												
+													<a href="{{ route('workers.export.wordpdf', $worker->id) }}" class="btn btn-sm btn-primary" title="Word to PDF" target="_blank">
 														<i class="tim-icons icon-paper"></i>
-													</a> --}}
+													</a>
 													<a href="{{ route('workers.export.word', $worker->id) }}" class="btn btn-sm btn-default" title="Word">
 														<i class="tim-icons icon-single-copy-04"></i>
 													</a>
