@@ -679,11 +679,12 @@ class WorkerController extends Controller
 
         if ($libreOfficePath) {
             foreach ($docxPaths as $docxPath) {
+                // Use escapeshellarg for better cross-platform compatibility
                 $command = sprintf(
-                    '"%s" --headless --convert-to pdf --outdir "%s" "%s" 2>&1',
-                    $libreOfficePath,
-                    $exportPath,
-                    $docxPath
+                    '%s --headless --convert-to pdf --outdir %s %s 2>&1',
+                    escapeshellarg($libreOfficePath),
+                    escapeshellarg($exportPath),
+                    escapeshellarg($docxPath)
                 );
 
                 exec($command, $output, $returnCode);
@@ -691,23 +692,42 @@ class WorkerController extends Controller
                 $pdfPath = str_replace('.docx', '.pdf', $docxPath);
                 if (file_exists($pdfPath) && filesize($pdfPath) > 100) {
                     $pdfPaths[] = $pdfPath;
+                    \Log::info("LibreOffice conversion successful for: {$docxPath}");
                 } else {
-                    \Log::warning("LibreOffice conversion failed for: {$docxPath}. Output: " . implode("\n", $output));
+                    \Log::warning("LibreOffice conversion failed for: {$docxPath}. Return code: {$returnCode}. Output: " . implode("\n", $output));
                 }
+                
+                // Clear output array for next iteration
+                $output = [];
             }
         }
 
         if (empty($pdfPaths)) {
             // LibreOffice not available or conversion failed
-            // Return info about the DOCX files location
+            $isWindows = strtoupper(substr(PHP_OS, 0, 3)) === 'WIN';
+            
             $message = "DOCX files saved to: storage/app/{$exportFolder}\n\n";
             $message .= "LibreOffice not found or conversion failed.\n\n";
-            $message .= "To enable automatic PDF conversion:\n";
-            $message .= "1. Install LibreOffice from https://www.libreoffice.org/\n";
-            $message .= "2. Add it to your PATH, or place soffice.exe in one of these locations:\n";
-            $message .= "   - C:\\Program Files\\LibreOffice\\program\\soffice.exe\n";
-            $message .= "   - C:\\Program Files (x86)\\LibreOffice\\program\\soffice.exe\n\n";
-            $message .= "Alternatively, use the 'PDF All' button for HTML-based PDF export.";
+            $message .= "To enable automatic PDF conversion:\n\n";
+            
+            if ($isWindows) {
+                $message .= "Windows Installation:\n";
+                $message .= "1. Install LibreOffice from https://www.libreoffice.org/\n";
+                $message .= "2. Add it to your PATH, or ensure soffice.exe is in one of these locations:\n";
+                $message .= "   - C:\\Program Files\\LibreOffice\\program\\soffice.exe\n";
+                $message .= "   - C:\\Program Files (x86)\\LibreOffice\\program\\soffice.exe\n";
+            } else {
+                $message .= "Ubuntu/Linux Installation:\n";
+                $message .= "Run the following commands:\n";
+                $message .= "   sudo apt update\n";
+                $message .= "   sudo apt install libreoffice --no-install-recommends\n";
+                $message .= "   # Or via snap: sudo snap install libreoffice\n\n";
+                $message .= "Verify installation:\n";
+                $message .= "   which soffice\n";
+                $message .= "   soffice --version\n";
+            }
+            
+            $message .= "\n\nAlternatively, use the 'PDF All' button for HTML-based PDF export.";
 
             abort(500, $message);
         }
@@ -833,34 +853,43 @@ class WorkerController extends Controller
      */
     private function findLibreOffice()
     {
-        // Common Windows paths
-        $paths = [
-            'C:\\Program Files\\LibreOffice\\program\\soffice.exe',
-            'C:\\Program Files (x86)\\LibreOffice\\program\\soffice.exe',
-            'C:\\LibreOffice\\program\\soffice.exe',
-        ];
-
-        // Check if in PATH
-        exec('where soffice 2>nul', $output, $returnCode);
+        $isWindows = strtoupper(substr(PHP_OS, 0, 3)) === 'WIN';
+        
+        // Try to find in PATH first (works on all systems)
+        if ($isWindows) {
+            exec('where soffice 2>nul', $output, $returnCode);
+        } else {
+            exec('which soffice 2>/dev/null', $output, $returnCode);
+            if ($returnCode !== 0 || empty($output[0])) {
+                exec('which libreoffice 2>/dev/null', $output, $returnCode);
+            }
+        }
+        
         if ($returnCode === 0 && !empty($output[0])) {
             return trim($output[0]);
         }
 
-        // Check common paths
-        foreach ($paths as $path) {
-            if (file_exists($path)) {
-                return $path;
-            }
+        // Check common paths based on OS
+        if ($isWindows) {
+            $paths = [
+                'C:\\Program Files\\LibreOffice\\program\\soffice.exe',
+                'C:\\Program Files (x86)\\LibreOffice\\program\\soffice.exe',
+                'C:\\LibreOffice\\program\\soffice.exe',
+            ];
+        } else {
+            // Linux/Unix paths (including Ubuntu)
+            $paths = [
+                '/usr/bin/soffice',
+                '/usr/bin/libreoffice',
+                '/usr/local/bin/soffice',
+                '/usr/local/bin/libreoffice',
+                '/snap/bin/libreoffice',
+                '/opt/libreoffice/program/soffice',
+                '/Applications/LibreOffice.app/Contents/MacOS/soffice', // macOS
+            ];
         }
 
-        // Try Linux/Mac paths as fallback
-        $unixPaths = [
-            '/usr/bin/soffice',
-            '/usr/bin/libreoffice',
-            '/Applications/LibreOffice.app/Contents/MacOS/soffice',
-        ];
-
-        foreach ($unixPaths as $path) {
+        foreach ($paths as $path) {
             if (file_exists($path)) {
                 return $path;
             }
