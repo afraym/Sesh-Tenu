@@ -149,9 +149,10 @@ class WorkerController extends Controller
             'project' => $project,
         ])->setPaper('a4', 'portrait')
           ->setOptions([
-              'defaultFont' => 'ArialCustom',
+              'defaultFont' => 'DejaVu Sans',
               'isHtml5ParserEnabled' => true,
               'isRemoteEnabled' => true,
+              'isFontSubsettingEnabled' => true,
               'chroot' => public_path(),
           ]);
 
@@ -206,9 +207,10 @@ class WorkerController extends Controller
                 'project' => $project,
             ])->setPaper('a4', 'portrait')
               ->setOptions([
-                  'defaultFont' => 'ArialCustom',
+                  'defaultFont' => 'DejaVu Sans',
                   'isHtml5ParserEnabled' => true,
                   'isRemoteEnabled' => true,
+                  'isFontSubsettingEnabled' => true,
                   'chroot' => public_path(),
               ]);
 
@@ -255,8 +257,7 @@ class WorkerController extends Controller
             abort(404, 'Word template not found. Add a template at storage/app/templates/worker-timesheet.docx with the expected placeholders.');
         }
 
-        $baseDate = $worker->join_date ? Carbon::parse($worker->join_date) : now();
-        $monthStart = $baseDate->copy()->startOfMonth();
+        $monthStart = now()->startOfMonth();
         $daysInMonth = $monthStart->daysInMonth;
 
         $weekdayRows = [];
@@ -357,8 +358,7 @@ class WorkerController extends Controller
         $docxPaths = [];
 
         foreach ($workers as $worker) {
-            $baseDate = $worker->join_date ? Carbon::parse($worker->join_date) : now();
-            $monthStart = $baseDate->copy()->startOfMonth();
+            $monthStart = now()->startOfMonth();
             $daysInMonth = $monthStart->daysInMonth;
 
             $weekdayRows = [];
@@ -430,6 +430,10 @@ class WorkerController extends Controller
             $docxPath = $tempDir . DIRECTORY_SEPARATOR . $fileName;
 
             $processor->saveAs($docxPath);
+            
+            // Add red shading to Friday cells
+            $this->addRedShadingToFridayCells($docxPath);
+            
             $docxPaths[] = $docxPath;
         }
 
@@ -474,12 +478,10 @@ class WorkerController extends Controller
             abort(404, 'Word template not found. Add a template at storage/app/templates/worker-timesheet.docx with the expected placeholders.');
         }
 
-        $baseDate = $worker->join_date ? Carbon::parse($worker->join_date) : now();
-        $monthStart = $baseDate->copy()->startOfMonth();
+        $monthStart = now()->startOfMonth();
         $daysInMonth = $monthStart->daysInMonth;
 
         $weekdayRows = [];
-        $weekendRows = [];
 
         for ($i = 0; $i < $daysInMonth; $i++) {
             $day = $monthStart->copy()->addDays($i);
@@ -496,20 +498,6 @@ class WorkerController extends Controller
                 'engineer' => '',
             ];
 
-            if ($day->isFriday()) {
-                $weekendRows[] = [
-                    'week_serial' => $base['serial'],
-                    'week_date' => $base['date'],
-                    'week_start' => $base['start'],
-                    'week_end' => $base['end'],
-                    'week_break' => $base['break'],
-                    'week_hours' => $base['hours'],
-                    'week_location' => $base['location'],
-                    'week_note' => $base['note'],
-                    'week_supervisor' => $base['supervisor'],
-                    'week_engineer' => $base['engineer'],
-                ];
-            } else {
                 $weekdayRows[] = [
                     'row_serial' => $base['serial'],
                     'row_date' => $base['date'],
@@ -522,7 +510,7 @@ class WorkerController extends Controller
                     'row_supervisor' => $base['supervisor'],
                     'row_engineer' => $base['engineer'],
                 ];
-            }
+            
         }
 
         $processor = new TemplateProcessor($templatePath);
@@ -541,13 +529,15 @@ class WorkerController extends Controller
         ]);
 
         $processor->cloneRowAndSetValues('row_serial', $weekdayRows);
-        $processor->cloneRowAndSetValues('week_serial', $weekendRows);
 
         Storage::makeDirectory('temp');
         $docxPath = Storage::path('temp/worker-' . $worker->id . '.docx');
         $pdfPath = Storage::path('temp/worker-' . $worker->id . '.pdf');
 
         $processor->saveAs($docxPath);
+        
+        // Add red shading to Friday cells
+        $this->addRedShadingToFridayCells($docxPath);
 
         Settings::setPdfRenderer(Settings::PDF_RENDERER_DOMPDF, base_path('vendor/dompdf/dompdf'));
 
@@ -605,8 +595,7 @@ class WorkerController extends Controller
         // Generate DOCX files
         $docxPaths = [];
         foreach ($workers as $worker) {
-            $baseDate = $worker->join_date ? Carbon::parse($worker->join_date) : now();
-            $monthStart = $baseDate->copy()->startOfMonth();
+            $monthStart = now()->startOfMonth();
             $daysInMonth = $monthStart->daysInMonth;
 
             $weekdayRows = [];
@@ -677,6 +666,10 @@ class WorkerController extends Controller
             $fileName = 'worker-' . $worker->id . '.docx';
             $docxPath = $exportPath . DIRECTORY_SEPARATOR . $fileName;
             $processor->saveAs($docxPath);
+            
+            // Add red shading to Friday cells
+            $this->addRedShadingToFridayCells($docxPath);
+            
             $docxPaths[] = $docxPath;
         }
 

@@ -48,7 +48,7 @@
         @endif
 
         body {
-            font-family: 'ArialLocal', 'Times New Roman', 'Arial', sans-serif;
+            font-family: 'DejaVu Sans', 'ArialLocal', 'Arial', sans-serif;
             font-size: 11px;
             color: #000;
             margin: 0;
