@@ -16,6 +16,11 @@ class Equipment extends Model
         'model_year',
         'equipment_code',
         'equipment_number',
+        'manufacture',
+        'entry_per_ser',
+        'reg_no',
+        'equip_reg_issue',
+        'custom_clearance',
     ];
 
     /**

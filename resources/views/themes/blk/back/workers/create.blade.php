@@ -17,12 +17,20 @@
                                     <label for="company_id">Company / الشركة <span class="text-danger">*</span></label>
                                     <select class="form-control @error('company_id') is-invalid @enderror" 
                                             id="company_id" name="company_id" required>
-                                        <option value="">Select Company</option>
-                                        @foreach($companies ?? [] as $company)
-                                            <option value="{{ $company->id }}" {{ old('company_id') == $company->id ? 'selected' : '' }}>
-                                                {{ $company->name }}
+                                        <option value="">اختر شركة</option>
+                                        
+                                            
+                                        @if( !auth()->user()->isSuperAdmin())
+                                            <option value="{{ auth()->user()->company_id }}" selected>
+                                                {{ auth()->user()->company->name }}
                                             </option>
-                                        @endforeach
+                                            @else
+                                            @foreach($companies ?? [] as $company)
+                                                <option value="{{ $company->id }}" {{ old('company_id') == $company->id ? 'selected' : '' }}>
+                                                    {{ $company->name }}
+                                                </option>
+                                            @endforeach
+                                        @endif
                                     </select>
                                     @error('company_id')
                                         <span class="invalid-feedback">{{ $message }}</span>

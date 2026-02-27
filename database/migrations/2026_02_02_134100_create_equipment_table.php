@@ -21,6 +21,11 @@ return new class extends Migration
             $table->string('model_year')->nullable(); // موديل المعدة
             $table->string('equipment_code')->unique(); // كود المعدة
             $table->string('equipment_number')->nullable(); // رقم شاسية المعدة
+            $table->string('manufacture')->nullable(); // المصنع
+            $table->string('entry_per_ser')->nullable(); // تصريح الدخول
+            $table->string('reg_no')->nullable(); // رقم التسجيل
+            $table->string('equip_reg_issue')->nullable(); // رقم رخصة المعدة
+            $table->string('custom_clearance')->nullable(); // الافراج الجمركي
             $table->timestamps();
         });
     }

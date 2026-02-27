@@ -31,4 +31,20 @@ class Company extends Model
     {
         return $this->hasMany(Equipment::class);
     }
+
+    /**
+     * Get the users for the company.
+     */
+    public function users(): HasMany
+    {
+        return $this->hasMany(User::class);
+    }
+
+    /**
+     * Get the company owner.
+     */
+    public function owner()
+    {
+        return $this->belongsTo(User::class, 'user_id'); // or hasOne
+    }
 }

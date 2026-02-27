@@ -53,6 +53,19 @@
               <p>إضافة عامل</p>
             </a>
           </li>
+          <li class="{{ request()->routeIs('equipment.index') ? 'active' : '' }}">
+            <a href="{{ route('equipment.index') }}">
+              <i class="tim-icons icon-delivery-fast"></i>
+              <p>المعدات</p>
+            </a>
+          </li>
+          <li class="{{ request()->routeIs('equipment.create') ? 'active' : '' }}">
+            <a href="{{ route('equipment.create') }}">
+              <i class="tim-icons icon-simple-add"></i>
+              <p>إضافة معدة</p>
+            </a>
+          </li>
+          @if(auth()->check() && auth()->user()->isSuperAdmin())
             <li class="{{ request()->routeIs('companies.index') ? 'active' : '' }}">
                 <a href="{{ route('companies.index') }}">
                 <i class="tim-icons icon-bank"></i>
@@ -82,6 +95,26 @@
                 <i class="tim-icons icon-bullet-list-67"></i>
                 <p>أنواع الوظائف</p>
                 </a>
+            </li>
+            <li class="{{ request()->routeIs('jobtypes.create') ? 'active' : '' }}">
+                <a href="{{ route('jobtypes.create') }}">
+                <i class="tim-icons icon-simple-add"></i>
+                <p>إضافة نوع وظيفة</p>
+                </a>
+            </li>
+            <li class="{{ request()->routeIs('users.index') ? 'active' : '' }}">
+                <a href="{{ route('users.index') }}">
+                <i class="tim-icons icon-single-02"></i>
+                <p>المستخدمين</p>
+                </a>
+            </li>
+            <li class="{{ request()->routeIs('users.create') ? 'active' : '' }}">
+                <a href="{{ route('users.create') }}">
+                <i class="tim-icons icon-simple-add"></i>
+                <p>إضافة مستخدم</p>
+                </a>
+            </li>
+            @endif
         </ul>
       </div>
     </div>
@@ -97,7 +130,11 @@
                 <span class="navbar-toggler-bar bar3"></span>
               </button>
             </div>
-            <a class="navbar-brand" href="javascript:void(0)">RTL</a>
+          <a class="navbar-brand">
+            @if(auth()->check() && auth()->user()->company)
+              <img src="{{ asset(auth()->user()->company->logo)  }}" alt="{{ auth()->user()->company->name }}" class="company-logo" style="width: 90px;height: 90px;">
+            @endif
+          </a>
           </div>
           <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navigation" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-bar navbar-kebab"></span>
@@ -138,12 +175,14 @@
                   </p>
                 </a>
                 <ul class="dropdown-menu dropdown-navbar">
-                  <li class="nav-link"><a href="javascript:void(0)" class="nav-item dropdown-item">Profile</a></li>
-                  <li class="nav-link"><a href="javascript:void(0)" class="nav-item dropdown-item">Settings</a></li>
+                  {{-- <li class="nav-link"><a href="javascript:void(0)" class="nav-item dropdown-item">Profile</a></li>
+                  <li class="nav-link"><a href="javascript:void(0)" class="nav-item dropdown-item">Settings</a></li> --}}
                   <li class="dropdown-divider"></li>
-                  <li class="nav-link"><a href="javascript:void(0)" class="nav-item dropdown-item">Log out</a></li>
-                </ul>
-              </li>
+<li class="nav-link"><a href="#" class="nav-item dropdown-item" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">خروج</a></li>                </ul>
+                <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">
+                @csrf
+                </form>
+                
               <li class="separator d-lg-none"></li>
             </ul>
           </div>

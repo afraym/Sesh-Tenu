@@ -20,9 +20,29 @@ class WorkerController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        return view('themes.blk.back.workers.index')->with('workers', Worker::orderBy('created_at', 'desc')->paginate(10));
+        $user = auth()->user();
+        $query = Worker::query();
+
+        // Filter by company if not super admin
+        if (!$user->isSuperAdmin()) {
+            $query->where('company_id', $user->company_id);
+        }
+
+        // Filter by company from dropdown
+        $companyId = $request->input('company_id');
+        if ($companyId) {
+            $query->where('company_id', $companyId);
+        }
+
+        $companies = Company::orderBy('name')->get();
+
+        return view('themes.blk.back.workers.index', [
+            'workers' => $query->orderBy('created_at', 'desc')->paginate(50),
+            'companies' => $companies,
+            'selectedCompanyId' => $companyId,
+        ]);
     }
 
     /**

@@ -27,6 +27,27 @@
 							</a>
 						</div>
 					</div>
+					@if(auth()->check() && auth()->user()->isSuperAdmin())
+					<div class="row mt-3">
+						<div class="col-md-6">
+							<form method="GET" action="{{ route('workers.index') }}">
+								<div class="input-group">
+									<select name="company_id" class="form-control">
+										<option value="">All Companies / جميع الشركات</option>
+										@foreach($companies ?? [] as $company)
+											<option value="{{ $company->id }}" @if(isset($selectedCompanyId) && $selectedCompanyId == $company->id) selected @endif>
+												{{ $company->name }}
+											</option>
+										@endforeach
+									</select>
+									<div class="input-group-append">
+										<button class="btn btn-outline-secondary" type="submit">Filter</button>
+									</div>
+								</div>
+							</form>
+						</div>
+					</div>
+					@endif
 				</div>
 				<div class="card-body">
 					@if(session('success'))

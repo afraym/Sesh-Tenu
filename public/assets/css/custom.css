@@ -16,3 +16,8 @@ select.form-control:focus {
     background-color: #27293d;
     color: #ffffff;
 }
+
+.sidebar .nav li>a, .off-canvas-sidebar .nav li>a {
+    font-size: 0.92475rem !important;
+    font-weight: 600 !important;
+}
