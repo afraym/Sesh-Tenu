@@ -9,7 +9,7 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\EquipmentController;
 
 Route::get('/', function () {
-    return view('welcome');
+    return auth()->check() ? redirect('/admin/workers') : view('welcome');
 });
 
 Auth::routes();
