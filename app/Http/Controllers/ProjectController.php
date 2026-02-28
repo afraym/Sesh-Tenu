@@ -36,7 +36,7 @@ class ProjectController extends Controller
         $project->name = $request->name;
         $project->company_id = $request->company_id;        
         $project->save();
-        return redirect()->route('projects.index')->with('success', 'Project created successfully.');
+        return redirect()->route('projects.index')->with('success', 'تم إضافة المشروع بنجاح');
     }
 
     /**

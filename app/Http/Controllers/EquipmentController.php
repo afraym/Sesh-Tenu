@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Equipment;
+use App\Models\Project;
 use Illuminate\Http\Request;
 
 class EquipmentController extends Controller
@@ -22,7 +23,8 @@ class EquipmentController extends Controller
     public function create()
     {
         $companies = \App\Models\Company::orderBy('name')->get();
-        return view('back.equipment.create', compact('companies'));
+        $projects = Project::orderBy('name')->get(['id', 'name']);
+        return view('back.equipment.create', compact('companies', 'projects'));
     }
 
     /**
@@ -31,7 +33,7 @@ class EquipmentController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'project_name' => 'required|string|max:255',
+            'project_id' => 'required|exists:projects,id',
             'company_id' => 'required|exists:companies,id',
             'previous_driver' => 'nullable|string|max:255',
             'current_driver' => 'nullable|string|max:255',
@@ -46,8 +48,25 @@ class EquipmentController extends Controller
             'custom_clearance' => 'nullable|string|max:255',
         ]);
 
-        $equipment = Equipment::create($request->all());
-        return redirect()->route('equipment.index')->with('success', 'Equipment created successfully.');
+        $project = Project::findOrFail($request->project_id);
+
+        Equipment::create([
+            'project_name' => $project->name,
+            'company_id' => $request->company_id,
+            'previous_driver' => $request->previous_driver,
+            'current_driver' => $request->current_driver,
+            'equipment_type' => $request->equipment_type,
+            'model_year' => $request->model_year,
+            'equipment_code' => $request->equipment_code,
+            'equipment_number' => $request->equipment_number,
+            'manufacture' => $request->manufacture,
+            'entry_per_ser' => $request->entry_per_ser,
+            'reg_no' => $request->reg_no,
+            'equip_reg_issue' => $request->equip_reg_issue,
+            'custom_clearance' => $request->custom_clearance,
+        ]);
+
+        return redirect()->route('equipment.index')->with('success', 'تم إضافة المُعدة بنجاح');
     }
 
     /**
@@ -64,7 +83,10 @@ class EquipmentController extends Controller
      */
     public function edit(Equipment $equipment)
     {
-        //
+        $companies = \App\Models\Company::orderBy('name')->get();
+        $projects = Project::orderBy('name')->get(['id', 'name']);
+
+        return view('back.equipments.edit', compact('equipment', 'companies', 'projects'));
     }
 
     /**

@@ -14,7 +14,14 @@
                             <div class="col-md-6">
                                 <div class="form-group">
                                     <label for="project_name">اسم المشروع / Project Name <span class="text-danger">*</span></label>
-                                    <input type="text" class="form-control" id="project_name" name="project_name" required>
+                                        <select name="project_id" id="project_id" class="form-control" required>
+                                        <option value="">-- اختار مشروع --</option>
+                                        @foreach($projects as $project)
+                                            <option value="{{ $project->id }}" {{ (string)$selectedProjectId === (string)$project->id ? 'selected' : '' }}>
+                                                {{ $project->name }}
+                                            </option>
+                                        @endforeach
+                                    </select>
                                 </div>
                             </div>
                             <div class="col-md-6">
@@ -129,3 +136,4 @@
     </div>
 </div>
 @endsection
+
