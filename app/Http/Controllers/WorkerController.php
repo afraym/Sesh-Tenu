@@ -38,7 +38,7 @@ class WorkerController extends Controller
 
         $companies = Company::orderBy('name')->get();
 
-        return view('themes.blk.back.workers.index', [
+        return view('back.workers.index', [
             'workers' => $query->orderBy('created_at', 'desc')->paginate(50),
             'companies' => $companies,
             'selectedCompanyId' => $companyId,
@@ -50,7 +50,7 @@ class WorkerController extends Controller
      */
     public function create()
     {
-        return view('themes.blk.back.workers.create', [
+        return view('back.workers.create', [
             'companies' => Company::orderBy('name')->get(),
             'jobtypes' => JobType::where('is_active', true)->orderBy('name')->get(),
         ]);
@@ -101,7 +101,7 @@ class WorkerController extends Controller
      */
     public function show(Worker $worker)
     {
-        return view('themes.blk.back.workers.show', compact('worker'));
+        return view('back.workers.show', compact('worker'));
     }
 
     /**
@@ -109,7 +109,7 @@ class WorkerController extends Controller
      */
     public function edit(Worker $worker)
     {
-        return view('themes.blk.back.workers.edit', [
+        return view('back.workers.edit', [
             'worker' => $worker,
             'companies' => Company::orderBy('name')->get(),
             'jobtypes' => JobType::where('is_active', true)->orderBy('name')->get(),
@@ -164,7 +164,7 @@ class WorkerController extends Controller
         $worker->load(['company', 'jobType']);
         $project = Project::latest('id')->with('company')->first();
 
-        $pdf = Pdf::loadView('themes.blk.back.workers.export', [
+        $pdf = Pdf::loadView('back.workers.export', [
             'worker' => $worker,
             'project' => $project,
         ])->setPaper('a4', 'portrait')
@@ -222,7 +222,7 @@ class WorkerController extends Controller
         $pdfPaths = [];
 
         foreach ($workers as $worker) {
-            $pdf = Pdf::loadView('themes.blk.back.workers.export', [
+            $pdf = Pdf::loadView('back.workers.export', [
                 'worker' => $worker,
                 'project' => $project,
             ])->setPaper('a4', 'portrait')
@@ -923,7 +923,7 @@ class WorkerController extends Controller
         $worker->load(['company', 'jobType']);
         $project = Project::latest('id')->with('company')->first();
 
-        return view('themes.blk.back.workers.export', [
+        return view('back.workers.export', [
             'worker' => $worker,
             'project' => $project,
         ]);

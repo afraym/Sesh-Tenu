@@ -13,7 +13,7 @@ class EquipmentController extends Controller
     public function index()
     {
         $equipments = Equipment::with('company')->orderBy('created_at', 'desc')->paginate(30);
-        return view('themes.blk.back.equipment.index', compact('equipments'));
+        return view('back.equipment.index', compact('equipments'));
     }
 
     /**
@@ -22,7 +22,7 @@ class EquipmentController extends Controller
     public function create()
     {
         $companies = \App\Models\Company::orderBy('name')->get();
-        return view('themes.blk.back.equipment.create', compact('companies'));
+        return view('back.equipment.create', compact('companies'));
     }
 
     /**
@@ -56,7 +56,7 @@ class EquipmentController extends Controller
     public function show(Equipment $equipment)
     {
         $equipment->load('company');
-        return view('themes.blk.back.equipment.show', compact('equipment'));
+        return view('back.equipment.show', compact('equipment'));
     }
 
     /**

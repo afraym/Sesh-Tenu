@@ -12,7 +12,7 @@ class JobTypeController extends Controller
      */
     public function index()
     {
-        return view('themes.blk.back.jobtypes.index')->with('jobtypes', Jobtype::orderBy('created_at', 'desc')->paginate(10));
+        return view('back.jobtypes.index')->with('jobtypes', Jobtype::orderBy('created_at', 'desc')->paginate(10));
     }
 
     /**
@@ -20,7 +20,7 @@ class JobTypeController extends Controller
      */
     public function create()
     {
-        return view('themes.blk.back.jobtypes.create');
+        return view('back.jobtypes.create');
     }
 
     /**
@@ -46,7 +46,7 @@ class JobTypeController extends Controller
      */
     public function show(Jobtype $jobtype)
     {
-        return view('themes.blk.back.jobtypes.show')->with('jobtype', $jobtype);
+        return view('back.jobtypes.show')->with('jobtype', $jobtype);
     }
 
     /**
@@ -54,7 +54,7 @@ class JobTypeController extends Controller
      */
     public function edit(Jobtype $jobtype)
     {
-        return view('themes.blk.back.jobtypes.edit')->with('jobtype', $jobtype);
+        return view('back.jobtypes.edit')->with('jobtype', $jobtype);
     }
 
     /**

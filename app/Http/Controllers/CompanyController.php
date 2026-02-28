@@ -12,7 +12,7 @@ class CompanyController extends Controller
      */
     public function index()
     {
-        return view('themes.blk.back.companies.index')->with('companies', Company::orderBy('created_at', 'desc')->paginate(10));
+        return view('back.companies.index')->with('companies', Company::orderBy('created_at', 'desc')->paginate(10));
     }
 
     /**
@@ -20,7 +20,7 @@ class CompanyController extends Controller
      */
     public function create()
     {
-        return view('themes.blk.back.companies.create');
+        return view('back.companies.create');
     }
 
     /**
@@ -57,7 +57,7 @@ class CompanyController extends Controller
      */
     public function show(Company $company)
     {
-        return view('themes.blk.back.companies.show', compact('company'));
+        return view('back.companies.show', compact('company'));
     }
 
     /**
@@ -65,7 +65,7 @@ class CompanyController extends Controller
      */
     public function edit(Company $company)
     {
-        return view('themes.blk.back.companies.edit', compact('company'));
+        return view('back.companies.edit', compact('company'));
     }
 
     /**

@@ -16,7 +16,7 @@ class UserController extends Controller
     public function index()
     {
         $users = User::with('company')->paginate(15);
-        return view('themes.blk.back.users.index', compact('users'));
+        return view('back.users.index', compact('users'));
     }
 
     /**
@@ -25,7 +25,7 @@ class UserController extends Controller
     public function create()
     {
         $companies = Company::all();
-        return view('themes.blk.back.users.create', compact('companies'));
+        return view('back.users.create', compact('companies'));
     }
 
     /**
@@ -68,7 +68,7 @@ class UserController extends Controller
      */
     public function show(User $user)
     {
-        return view('themes.blk.back.users.show', compact('user'));
+        return view('back.users.show', compact('user'));
     }
 
     /**
@@ -77,7 +77,7 @@ class UserController extends Controller
     public function edit(User $user)
     {
         $companies = Company::all();
-        return view('themes.blk.back.users.edit', compact('user', 'companies'));
+        return view('back.users.edit', compact('user', 'companies'));
     }
 
     /**

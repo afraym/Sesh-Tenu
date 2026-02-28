@@ -12,7 +12,7 @@ class ProjectController extends Controller
      */
     public function index()
     {
-        return view('themes.blk.back.projects.index')->with('projects', Project::all());
+        return view('back.projects.index')->with('projects', Project::all());
     }
 
     /**
@@ -20,7 +20,7 @@ class ProjectController extends Controller
      */
     public function create()
     {
-        return view('themes.blk.back.projects.create', ['companies' => \App\Models\Company::all()]);
+        return view('back.projects.create', ['companies' => \App\Models\Company::all()]);
     }
 
     /**
@@ -44,7 +44,7 @@ class ProjectController extends Controller
      */
     public function show(Project $project)
     {
-        return view('themes.blk.back.projects.show')->with('project', $project);
+        return view('back.projects.show')->with('project', $project);
     }
 
     /**
@@ -52,7 +52,7 @@ class ProjectController extends Controller
      */
     public function edit(Project $project)
     {
-        return view('themes.blk.back.projects.edit', ['project' => $project, 'companies' => \App\Models\Company::all()]);
+        return view('back.projects.edit', ['project' => $project, 'companies' => \App\Models\Company::all()]);
     }
 
     /**
