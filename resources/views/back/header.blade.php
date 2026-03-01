@@ -27,11 +27,11 @@
 
 <body class=" rtl menu-on-right ">
   <div class="wrapper">
-    <div class="sidebar">
+    <div class="sidebar" data="blue">
       <!--
         Tip 1: You can change the color of the sidebar using: data-color="blue | green | orange | red"
     -->
-      <div class="sidebar-wrapper">
+      <div class="sidebar-wrapper" >
         <div class="logo">
           <a href="javascript:void(0)" class="simple-text logo-mini">
            س ت

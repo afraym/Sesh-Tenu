@@ -71,7 +71,7 @@
 									<tr>
 										<th>#</th>
 										<th>Name / الاسم</th>
-										<th>Company / الشركة</th>
+										{{-- <th>Company / الشركة</th> --}}
 										<th>Job Type / الوظيفة</th>
 										<th>National ID</th>
 										<th>Phone</th>
@@ -91,7 +91,7 @@
 												@endif
 											</td>
 											<td><strong>{{ $worker->name }}</strong></td>
-											<td>{{ optional($worker->company)->name ?? 'N/A' }}</td>
+											{{-- <td>{{ optional($worker->company)->name ?? 'N/A' }}</td> --}}
 											<td>{{ optional($worker->jobType)->name ?? 'N/A' }}</td>
 											<td>{{ $worker->national_id }}</td>
 											<td>{{ $worker->phone_number }}</td>
