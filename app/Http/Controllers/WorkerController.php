@@ -6,13 +6,9 @@ use App\Models\Company;
 use App\Models\JobType;
 use App\Models\Worker;
 use App\Models\Project;
-use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
-use setasign\Fpdi\Fpdi;
-use PhpOffice\PhpWord\IOFactory;
-use PhpOffice\PhpWord\Settings;
+use Illuminate\Http\Request;
 use PhpOffice\PhpWord\TemplateProcessor;
 
 class WorkerController extends Controller
@@ -22,27 +18,16 @@ class WorkerController extends Controller
      */
     public function index(Request $request)
     {
-        $user = auth()->user();
-        $query = Worker::query();
+        $query = Worker::query()->with(['company', 'jobType']);
 
-        // Filter by company if not super admin
-        if (!$user->isSuperAdmin()) {
-            $query->where('company_id', $user->company_id);
+        if ($request->filled('job_type_id')) {
+            $query->where('job_type_id', $request->job_type_id);
         }
 
-        // Filter by company from dropdown
-        $companyId = $request->input('company_id');
-        if ($companyId) {
-            $query->where('company_id', $companyId);
-        }
+        $workers = $query->latest()->paginate(15)->withQueryString();
+        $jobTypes = JobType::orderBy('name')->get(['id', 'name']);
 
-        $companies = Company::orderBy('name')->get();
-
-        return view('back.workers.index', [
-            'workers' => $query->orderBy('created_at', 'desc')->paginate(50),
-            'companies' => $companies,
-            'selectedCompanyId' => $companyId,
-        ]);
+        return view('back.workers.index', compact('workers', 'jobTypes'));
     }
 
     /**
@@ -191,12 +176,6 @@ class WorkerController extends Controller
             abort(404, 'Word template not found. Add a template at storage/app/templates/worker-timesheet.docx with the expected placeholders.');
         }
 
-        $templatePath = storage_path('app/templates/worker-timesheet.docx');
-
-        if (! file_exists($templatePath)) {
-            abort(404, 'Word template not found. Add a template at storage/app/templates/worker-timesheet.docx with the expected placeholders.');
-        }
-
         $ids = collect(explode(',', (string) $request->query('ids')))
             ->filter(fn ($v) => trim($v) !== '')
             ->map(fn ($v) => (int) $v)
@@ -265,7 +244,15 @@ class WorkerController extends Controller
             ['Content-Type' => 'application/pdf']
         )->deleteFileAfterSend(true);
     }
+    private function rtl(string $text): string
+    {
+    return "\u{200F}" . trim($text) . "\u{200F}"; // Right-to-left mark
+    }
 
+    private function ltr(string $text): string
+    {
+    return "\u{200E}" . trim($text) . "\u{200E}"; // Left-to-right mark
+    }
     public function exportWord(Worker $worker)
     {
         $worker->load(['company', 'jobType']);
@@ -296,33 +283,42 @@ class WorkerController extends Controller
                 'supervisor' => '',
                 'engineer' => '',
             ];
-                $weekdayRows[] = [
-                    'row_serial' => $base['serial'],
-                    'row_date' => $base['date'],
-                    'row_start' => $base['start'],
-                    'row_end' => $base['end'],
-                    'row_break' => $base['break'],
-                    'row_hours' => $base['hours'],
-                    'row_location' => $base['location'],
-                    'row_note' => $base['note'],
-                    'row_supervisor' => $base['supervisor'],
-                    'row_engineer' => $base['engineer'],
-                ];
-            
+
+            $weekdayRows[] = [
+                'row_serial' => $base['serial'],
+                'row_date' => $base['date'],
+                'row_start' => $base['start'],
+                'row_end' => $base['end'],
+                'row_break' => $base['break'],
+                'row_hours' => $base['hours'],
+                'row_location' => $base['location'],
+                'row_note' => $base['note'],
+                'row_supervisor' => $base['supervisor'],
+                'row_engineer' => $base['engineer'],
+            ];
         }
 
+
+$companyAr = $worker->company->name_ar ?? $worker->company->name ?? '';
+$companyEn = $worker->company->name_en ?? $worker->company->short_name ?? '';
+$consortiumFixed = 
+     $this->rtl(' للمقاولات ')
+    . $this->ltr(' FM+ ')
+    . $this->rtl(' تحالف الشيماء الزراعية للمقاولات والتوريدات ');
         $processor = new TemplateProcessor($templatePath);
 
         $processor->setValues([
-            'project_name_en' => optional($project)->name ?? '-',
-            'company_name' => optional($worker->company)->name ?: (optional($worker->company)->short_name ?? '-'),
+            'project_name_en' => optional($project)->name ?? 'محطة كهرباء أبيدوس2 للطاقة الشمسية بقدرة 1000 ميجاوات 
+PV Power Plant Abydos 2 Solar (MW1000)',
+    'company_name' => $consortiumFixed,
+            // 'company_name' => optional($worker->company)->name ?: (optional($worker->company)->short_name ?? $consortiumFixed),
             'consortium_name' => optional(optional($project)->company)->name
                 ?? (optional($worker->company)->name ?: (optional($worker->company)->short_name ?? '-')),
             'worker_name' => $worker->name ?? '-',
             'worker_job' => optional($worker->jobType)->name ?? '-',
             'worker_id' => $worker->national_id ?? '-',
             'worker_phone' => $worker->phone_number ?? '-',
-            'access_code' => $worker->entity ?? $worker->id,
+            'access_code' => $worker->entity ?? " ",
             'report_month' => $monthStart->format('F Y'),
         ]);
 
@@ -345,143 +341,137 @@ class WorkerController extends Controller
         )->deleteFileAfterSend(true);
     }
 
-    public function exportWordAll(Request $request)
-    {
-        $templatePath = storage_path('app/templates/worker-timesheet.docx');
+public function exportWordAll(Request $request)
+{
+    $templatePath = storage_path('app/templates/worker-timesheet.docx');
 
-        if (! file_exists($templatePath)) {
-            abort(404, 'Word template not found. Add a template at storage/app/templates/worker-timesheet.docx with the expected placeholders.');
-        }
-
-        $ids = collect(explode(',', (string) $request->query('ids')))
-            ->filter(fn ($v) => trim($v) !== '')
-            ->map(fn ($v) => (int) $v)
-            ->values();
-
-        $project = Project::latest('id')->with('company')->first();
-
-        $workers = Worker::with(['company', 'jobType'])
-            ->when($ids->isNotEmpty(), function ($query) use ($ids) {
-                $query->whereIn('id', $ids);
-                $query->orderByRaw('FIELD(id,' . $ids->implode(',') . ')');
-            }, function ($query) {
-                $query->orderBy('id');
-            })
-            ->get();
-
-        if ($workers->isEmpty()) {
-            abort(404, 'No workers to export.');
-        }
-
-        Storage::makeDirectory('temp');
-        $tempDir = Storage::path('temp');
-        $docxPaths = [];
-
-        foreach ($workers as $worker) {
-            $monthStart = now()->startOfMonth();
-            $daysInMonth = $monthStart->daysInMonth;
-
-            $weekdayRows = [];
-            $weekendRows = [];
-
-            for ($i = 0; $i < $daysInMonth; $i++) {
-                $day = $monthStart->copy()->addDays($i);
-                $base = [
-                    'serial' => $i + 1,
-                    'date' => $day->format('j/n/Y'),
-                    'start' => '',
-                    'end' => '',
-                    'break' => '',
-                    'hours' => '',
-                    'location' => '',
-                    'note' => '',
-                    'supervisor' => '',
-                    'engineer' => '',
-                ];
-
-                if ($day->isFriday()) {
-                    $weekendRows[] = [
-                        'week_serial' => $base['serial'],
-                        'week_date' => $base['date'],
-                        'week_start' => $base['start'],
-                        'week_end' => $base['end'],
-                        'week_break' => $base['break'],
-                        'week_hours' => $base['hours'],
-                        'week_location' => $base['location'],
-                        'week_note' => $base['note'],
-                        'week_supervisor' => $base['supervisor'],
-                        'week_engineer' => $base['engineer'],
-                    ];
-                } else {
-                    $weekdayRows[] = [
-                        'row_serial' => $base['serial'],
-                        'row_date' => $base['date'],
-                        'row_start' => $base['start'],
-                        'row_end' => $base['end'],
-                        'row_break' => $base['break'],
-                        'row_hours' => $base['hours'],
-                        'row_location' => $base['location'],
-                        'row_note' => $base['note'],
-                        'row_supervisor' => $base['supervisor'],
-                        'row_engineer' => $base['engineer'],
-                    ];
-                }
-            }
-
-            $processor = new TemplateProcessor($templatePath);
-
-            $processor->setValues([
-                'project_name_en' => optional($project)->name ?? '-',
-                'company_name' => optional($worker->company)->name ?: (optional($worker->company)->short_name ?? '-'),
-                'consortium_name' => optional(optional($project)->company)->name
-                    ?? (optional($worker->company)->name ?: (optional($worker->company)->short_name ?? '-')),
-                'worker_name' => $worker->name ?? '-',
-                'worker_job' => optional($worker->jobType)->name ?? '-',
-                'worker_id' => $worker->national_id ?? '-',
-                'worker_phone' => $worker->phone_number ?? '-',
-                'access_code' => $worker->entity ?? $worker->id,
-                'report_month' => $monthStart->format('F Y'),
-            ]);
-
-            $processor->cloneRowAndSetValues('row_serial', $weekdayRows);
-            $processor->cloneRowAndSetValues('week_serial', $weekendRows);
-
-            $fileName = 'worker-' . $worker->id . '-' . preg_replace('/[^a-zA-Z0-9]/', '', $worker->name) . '.docx';
-            $docxPath = $tempDir . DIRECTORY_SEPARATOR . $fileName;
-
-            $processor->saveAs($docxPath);
-            
-            // Add red shading to Friday cells
-            $this->addRedShadingToFridayCells($docxPath);
-            
-            $docxPaths[] = $docxPath;
-        }
-
-        // Create ZIP archive
-        $zipPath = $tempDir . DIRECTORY_SEPARATOR . 'workers-timesheets.zip';
-        $zip = new \ZipArchive();
-
-        if ($zip->open($zipPath, \ZipArchive::CREATE | \ZipArchive::OVERWRITE) !== true) {
-            abort(500, 'Could not create ZIP archive.');
-        }
-
-        foreach ($docxPaths as $docxPath) {
-            $zip->addFile($docxPath, basename($docxPath));
-        }
-
-        $zip->close();
-
-        // Clean up individual files
-        foreach ($docxPaths as $docxPath) {
-            @unlink($docxPath);
-        }
-
-        return response()->download(
-            $zipPath,
-            'workers-timesheets.zip',
-            ['Content-Type' => 'application/zip']
-        )->deleteFileAfterSend(true);
+    if (! file_exists($templatePath)) {
+        abort(404, 'Word template not found. Add a template at storage/app/templates/worker-timesheet.docx with the expected placeholders.');
     }
+
+    $ids = collect(explode(',', (string) $request->query('ids')))
+        ->filter(fn ($v) => trim($v) !== '')
+        ->map(fn ($v) => (int) $v)
+        ->values();
+
+    $jobTypeId = $request->filled('job_type_id') ? (int) $request->query('job_type_id') : null;
+
+    $project = Project::latest('id')->with('company')->first();
+
+$workers = Worker::with(['company', 'jobType'])
+    ->where('is_on_company_payroll', 1) // ignore workers not on payroll
+    ->when($jobTypeId, function ($query) use ($jobTypeId) {
+        $query->where('job_type_id', $jobTypeId);
+    })
+    ->when($ids->isNotEmpty(), function ($query) use ($ids) {
+        $query->whereIn('id', $ids);
+        $query->orderByRaw('FIELD(id,' . $ids->implode(',') . ')');
+    }, function ($query) {
+        $query->orderBy('id');
+    })
+    ->get();
+
+    if ($workers->isEmpty()) {
+        abort(404, 'No workers to export.');
+    }
+
+    Storage::makeDirectory('temp');
+    $tempDir = Storage::path('temp');
+    $docxPaths = [];
+
+    foreach ($workers as $worker) {
+        $monthStart = now()->startOfMonth();
+        $daysInMonth = $monthStart->daysInMonth;
+
+        // Same logic as exportWord: single rows array for all days
+        $weekdayRows = [];
+
+        for ($i = 0; $i < $daysInMonth; $i++) {
+            $day = $monthStart->copy()->addDays($i);
+            $base = [
+                'serial' => $i + 1,
+                'date' => $day->format('j/n/Y'),
+                'start' => '',
+                'end' => '',
+                'break' => '',
+                'hours' => '',
+                'location' => '',
+                'note' => '',
+                'supervisor' => '',
+                'engineer' => '',
+            ];
+
+            $weekdayRows[] = [
+                'row_serial' => $base['serial'],
+                'row_date' => $base['date'],
+                'row_start' => $base['start'],
+                'row_end' => $base['end'],
+                'row_break' => $base['break'],
+                'row_hours' => $base['hours'],
+                'row_location' => $base['location'],
+                'row_note' => $base['note'],
+                'row_supervisor' => $base['supervisor'],
+                'row_engineer' => $base['engineer'],
+            ];
+        }
+
+        $processor = new TemplateProcessor($templatePath);
+$consortiumFixed = 
+     $this->rtl(' للمقاولات ')
+    . $this->ltr(' FM+ ')
+    . $this->rtl(' تحالف الشيماء الزراعية للمقاولات والتوريدات ');
+        $processor->setValues([
+            'project_name_en' => optional($project)->name ?? 'محطة كهرباء أبيدوس2 للطاقة الشمسية بقدرة 1000 ميجاوات 
+PV Power Plant Abydos 2 Solar (MW1000)',
+'company_name' => $consortiumFixed,
+            // 'company_name' => optional($worker->company)->name ?: (optional($worker->company)->short_name ?? '-'),
+            'consortium_name' => optional(optional($project)->company)->name
+                ?? (optional($worker->company)->name ?: (optional($worker->company)->short_name ?? '-')),
+            'worker_name' => $worker->name ?? '-',
+            'worker_job' => optional($worker->jobType)->name ?? '-',
+            'worker_id' => $worker->national_id ?? '-',
+            'worker_phone' => $worker->phone_number ?? '-',
+            'access_code' => $worker->entity ?? "",
+            'report_month' => $monthStart->format('F Y'),
+        ]);
+
+        // Same as exportWord
+        $processor->cloneRowAndSetValues('row_serial', $weekdayRows);
+
+        $fileName = 'worker-' . $worker->id . '-' . preg_replace('/[^a-zA-Z0-9]/', '', $worker->name) . '.docx';
+        $docxPath = $tempDir . DIRECTORY_SEPARATOR . $fileName;
+
+        $processor->saveAs($docxPath);
+
+        // Same post-process as exportWord
+        $this->addRedShadingToFridayCells($docxPath);
+
+        $docxPaths[] = $docxPath;
+    }
+
+    $zipPath = $tempDir . DIRECTORY_SEPARATOR . 'workers-timesheets.zip';
+    $zip = new \ZipArchive();
+
+    if ($zip->open($zipPath, \ZipArchive::CREATE | \ZipArchive::OVERWRITE) !== true) {
+        abort(500, 'Could not create ZIP archive.');
+    }
+
+    foreach ($docxPaths as $docxPath) {
+        $zip->addFile($docxPath, basename($docxPath));
+    }
+
+    $zip->close();
+
+    foreach ($docxPaths as $docxPath) {
+        @unlink($docxPath);
+    }
+
+    return response()->download(
+        $zipPath,
+        'workers-timesheets.zip',
+        ['Content-Type' => 'application/zip']
+    )->deleteFileAfterSend(true);
+}
 
     public function exportWordPdf(Worker $worker)
     {
@@ -518,19 +508,18 @@ class WorkerController extends Controller
                 'engineer' => '',
             ];
 
-                $weekdayRows[] = [
-                    'row_serial' => $base['serial'],
-                    'row_date' => $base['date'],
-                    'row_start' => $base['start'],
-                    'row_end' => $base['end'],
-                    'row_break' => $base['break'],
-                    'row_hours' => $base['hours'],
-                    'row_location' => $base['location'],
-                    'row_note' => $base['note'],
-                    'row_supervisor' => $base['supervisor'],
-                    'row_engineer' => $base['engineer'],
-                ];
-            
+            $weekdayRows[] = [
+                'row_serial' => $base['serial'],
+                'row_date' => $base['date'],
+                'row_start' => $base['start'],
+                'row_end' => $base['end'],
+                'row_break' => $base['break'],
+                'row_hours' => $base['hours'],
+                'row_location' => $base['location'],
+                'row_note' => $base['note'],
+                'row_supervisor' => $base['supervisor'],
+                'row_engineer' => $base['engineer'],
+            ];
         }
 
         $processor = new TemplateProcessor($templatePath);
@@ -928,4 +917,56 @@ class WorkerController extends Controller
             'project' => $project,
         ]);
     }
+
+    // public function exportWordByJobType(Request $request)
+    // {
+    //     $data = $request->validate([
+    //         'job_type_id' => ['required', 'exists:job_types,id'],
+    //     ]);
+
+    //     $jobType = JobType::findOrFail($data['job_type_id']);
+
+    //     $workers = Worker::with(['company', 'jobType'])
+    //         ->where('job_type_id', $jobType->id)
+    //         ->orderBy('name')
+    //         ->get();
+
+    //     if ($workers->isEmpty()) {
+    //         return back()->with('error', 'No workers found for selected job type.');
+    //     }
+
+    //     $templatePath = storage_path('app/templates/workers-by-job-type.docx');
+    //     if (!is_file($templatePath)) {
+    //         abort(404, 'Template not found: storage/app/templates/workers-by-job-type.docx');
+    //     }
+
+    //     $processor = new TemplateProcessor($templatePath);
+
+    //     // Header placeholders
+    //     $processor->setValue('job_type_name', $jobType->name);
+    //     $processor->setValue('report_date', now()->format('Y-m-d'));
+
+    //     // Table row placeholders in template:
+    //     // ${worker_name}, ${company_name}, ${job_type}, ${phone}
+    //     $processor->cloneRow('worker_name', $workers->count());
+
+    //     foreach ($workers as $i => $worker) {
+    //         $n = $i + 1;
+    //         $processor->setValue("worker_name#{$n}", $worker->name ?? '');
+    //         $processor->setValue("company_name#{$n}", $worker->company->name ?? '');
+    //         $processor->setValue("job_type#{$n}", $worker->jobType->name ?? '');
+    //         $processor->setValue("phone#{$n}", $worker->phone ?? '');
+    //     }
+
+    //     $fileName = 'workers-' . $jobType->name . '-' . now()->format('Ymd_His') . '.docx';
+    //     $outPath = storage_path('app/temp/' . $fileName);
+
+    //     if (!is_dir(dirname($outPath))) {
+    //         mkdir(dirname($outPath), 0775, true);
+    //     }
+
+    //     $processor->saveAs($outPath);
+
+    //     return response()->download($outPath, $fileName)->deleteFileAfterSend(true);
+    // }
 }

@@ -13,7 +13,7 @@
 							<h4 class="card-title mb-0">Workers List / قائمة العمال</h4>
 						</div>
 						<div class="col text-right">
-							<a href="{{ route('workers.export.pdf.merged') }}" class="btn btn-sm btn-success" title="Export all as merged PDF (HTML-based)" target="_blank">
+							{{-- <a href="{{ route('workers.export.pdf.merged') }}" class="btn btn-sm btn-success" title="Export all as merged PDF (HTML-based)" target="_blank">
 								<i class="tim-icons icon-paper"></i> PDF All (HTML)
 							</a>
 							<a href="{{ route('workers.export.wordpdf.all') }}" class="btn btn-sm btn-primary" title="Export all as merged PDF (DOCX->PDF via LibreOffice)" target="_blank">
@@ -21,7 +21,11 @@
 							</a>
 							<a href="{{ route('workers.export.word.all') }}" class="btn btn-sm btn-info" title="Export all as DOCX files in ZIP" target="_blank">
 								<i class="tim-icons icon-single-copy-04"></i> Word All (ZIP)
-							</a>
+							</a> --}}
+							<a href="{{ route('workers.export.word.all', ['job_type_id' => request('job_type_id')]) }}" class="btn btn-primary">
+    Export Word (Filtered)
+</a>
+
 							<a href="{{ route('workers.create') }}" class="btn btn-primary btn-sm">
 								<i class="tim-icons icon-simple-add"></i> Add New Worker
 							</a>
@@ -45,6 +49,28 @@
 									</div>
 								</div>
 							</form>
+						</div>
+						<div class="col-md-6">
+								<form method="GET" action="{{ route('workers.index') }}" class="mb-3">
+    <div style="display:flex; gap:8px; align-items:center;">
+        <select name="job_type_id" class="form-control" style="max-width:260px;">
+            <option value="">All Job Types</option>
+            @foreach($jobTypes as $jobType)
+                <option value="{{ $jobType->id }}" {{ (string)request('job_type_id') === (string)$jobType->id ? 'selected' : '' }}>
+                    {{ $jobType->name }}
+                </option>
+            @endforeach
+        </select>
+
+        <button type="submit" class="btn btn-primary">Filter</button>
+        <a href="{{ route('workers.index') }}" class="btn btn-secondary">Reset</a>
+    </div>
+</form>
+						</div>
+					</div>
+					<div class="row">
+						<div class="col-md-6">
+							
 						</div>
 					</div>
 					@endif
@@ -143,5 +169,8 @@
 			</div>
 		</div>
 	</div>
-</div>
+
+
+
 @endsection
+
