@@ -40,6 +40,11 @@
                                         <td>{{ $equipment->entry_per_ser ?? 'غير متوفر' }}</td>
                                         <td>
                                             <a href="{{ route('equipment.show', $equipment->id) }}" class="btn btn-info btn-sm" title="View"><i class="tim-icons icon-notes"></i></a>
+                                            <a href="{{ route('equipment.exportWord', $equipment->id) }}"
+                                               class="btn btn-sm btn-primary"
+                                               target="_blank">
+                                                Print Word
+                                            </a>
                                         </td>
                                     </tr>
                                 @endforeach

@@ -33,4 +33,6 @@ Route::group(['prefix' => 'admin', 'middleware' => ['auth']], function () {
     Route::resource('workers', WorkerController::class);
     Route::resource('equipment', EquipmentController::class);
     
+    Route::get('/equipment/{equipment}/export-word', [EquipmentController::class, 'exportWord'])
+        ->name('equipment.exportWord');
 });

@@ -14,7 +14,10 @@
                             <div class="col-md-6">
                                 <div class="form-group">
                                     <label for="project_name">اسم المشروع / Project Name <span class="text-danger">*</span></label>
-                                        <select name="project_id" id="project_id" class="form-control" required>
+                                    @php
+                                        $selectedProjectId = old('project_id');
+                                    @endphp
+                                    <select name="project_id" id="project_id" class="form-control" required>
                                         <option value="">-- اختار مشروع --</option>
                                         @foreach($projects as $project)
                                             <option value="{{ $project->id }}" {{ (string)$selectedProjectId === (string)$project->id ? 'selected' : '' }}>
