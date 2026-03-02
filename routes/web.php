@@ -1,6 +1,10 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Models\Company;
+use App\Models\Equipment;
+use App\Models\Project as ProjectModel;
+use App\Models\Worker;
 use App\Http\Controllers\WorkerController;
 use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\ProjectController;
@@ -10,7 +14,19 @@ use App\Http\Controllers\EquipmentController;
 use App\Http\Controllers\WorkerDocumentController;
 
 Route::get('/', function () {
-    return auth()->check() ? redirect('/admin/workers') : view('welcome');
+    if (auth()->check()) {
+        return redirect('/admin/workers');
+    }
+
+    $project = ProjectModel::latest('id')->with('company')->first();
+    $stats = [
+        'workers' => Worker::count(),
+        'equipment' => Equipment::count(),
+        'companies' => Company::count(),
+        'projects' => ProjectModel::count(),
+    ];
+
+    return view('welcome', compact('project', 'stats'));
 });
 
 Auth::routes();

@@ -20,7 +20,7 @@ class WorkerController extends Controller
             $query->where('job_type_id', $request->job_type_id);
         }
 
-        $workers = $query->latest()->paginate(15)->withQueryString();
+        $workers = $query->latest()->paginate(100)->withQueryString();
         $jobTypes = JobType::orderBy('name')->get(['id', 'name']);
 
         return view('back.workers.index', compact('workers', 'jobTypes'));
