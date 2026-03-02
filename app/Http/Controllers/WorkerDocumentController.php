@@ -501,9 +501,20 @@ PV Power Plant Abydos 2 Solar (MW1000)',
 
         $this->mergeDocxFiles($docxPaths, $combinedDocxPath);
 
+        $monthStart = now()->startOfMonth();
+        $monthAr = self::MONTH_NAMES[$monthStart->format('F')] ?? $monthStart->format('F');
+
         $libreOfficePath = $this->findLibreOffice();
         if (! $libreOfficePath) {
-            abort(500, "Combined DOCX saved to: storage/app/{$exportFolder}. Install LibreOffice to enable PDF conversion.");
+            foreach ($docxPaths as $docxPath) {
+                @unlink($docxPath);
+            }
+
+            return response()->download(
+                $combinedDocxPath,
+                'سركي مجمع شهر ' . $monthAr . ' ' . $timestamp . '.docx',
+                ['Content-Type' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document']
+            )->deleteFileAfterSend(true);
         }
 
         $combinedPdfGenerated = $this->convertDocxToPdf($libreOfficePath, $combinedDocxPath, $exportPath);
@@ -518,7 +529,15 @@ PV Power Plant Abydos 2 Solar (MW1000)',
             }
 
             if (empty($pdfPaths)) {
-                abort(500, "Combined DOCX generated but PDF conversion failed on Ubuntu VPS. Check LibreOffice and storage permissions. File: storage/app/{$exportFolder}/" . basename($combinedDocxPath));
+                foreach ($docxPaths as $docxPath) {
+                    @unlink($docxPath);
+                }
+
+                return response()->download(
+                    $combinedDocxPath,
+                    'سركي مجمع شهر ' . $monthAr . ' ' . $timestamp . '.docx',
+                    ['Content-Type' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document']
+                )->deleteFileAfterSend(true);
             }
 
             $fpdi = new Fpdi();
@@ -539,13 +558,14 @@ PV Power Plant Abydos 2 Solar (MW1000)',
             @unlink($docxPath);
         }
 
-        $monthStart = now()->startOfMonth();
-
         if (! file_exists($combinedPdfPath) || filesize($combinedPdfPath) <= 100) {
-            abort(500, 'PDF generation failed after conversion/merge fallback.');
+            return response()->download(
+                $combinedDocxPath,
+                'سركي مجمع شهر ' . $monthAr . ' ' . $timestamp . '.docx',
+                ['Content-Type' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document']
+            )->deleteFileAfterSend(true);
         }
 
-        $monthAr = self::MONTH_NAMES[$monthStart->format('F')] ?? $monthStart->format('F');
         return response()->download(
             $combinedPdfPath,
             'سركي مجمع شهر ' . $monthAr . ' ' . $timestamp . '.pdf',
