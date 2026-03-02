@@ -14,17 +14,17 @@
 						</div>
 						<div class="col text-right">
 							{{-- <a href="{{ route('workers.export.pdf.merged') }}" class="btn btn-sm btn-success" title="Export all as merged PDF (HTML-based)" target="_blank">
-								<i class="tim-icons icon-paper"></i> PDF All (HTML)
+								<i class="tim-icons icon-paper"></i> سركي مجمع PDF
+							</a> --}}
+							<a href="{{ route('workers.export.wordpdf.all', ['job_type_id' => request('job_type_id')]) }}" class="btn btn-sm btn-info" title="Export all as merged PDF (DOCX->PDF via LibreOffice)" target="_blank">
+								<i class="tim-icons icon-paper"></i> سركي مجمع PDF
 							</a>
-							<a href="{{ route('workers.export.wordpdf.all') }}" class="btn btn-sm btn-primary" title="Export all as merged PDF (DOCX->PDF via LibreOffice)" target="_blank">
-								<i class="tim-icons icon-paper"></i> PDF All (Word)
-							</a>
-							<a href="{{ route('workers.export.word.all') }}" class="btn btn-sm btn-info" title="Export all as DOCX files in ZIP" target="_blank">
+							{{-- <a href="{{ route('workers.export.word.all') }}" class="btn btn-sm btn-info" title="Export all as DOCX files in ZIP" target="_blank">
 								<i class="tim-icons icon-single-copy-04"></i> Word All (ZIP)
 							</a> --}}
-							<a href="{{ route('workers.export.word.all', ['job_type_id' => request('job_type_id')]) }}" class="btn btn-primary">
-    Export Word (Filtered)
-</a>
+							<a href="{{ route('workers.export.word.all', ['job_type_id' => request('job_type_id')]) }}" class="btn btn-sm btn-danger" title="Export all as DOCX files in ZIP" target="_blank">
+								سراكي وورد مجمعة (ZIP)
+							</a>
 
 							<a href="{{ route('workers.create') }}" class="btn btn-primary btn-sm">
 								<i class="tim-icons icon-simple-add"></i> Add New Worker
