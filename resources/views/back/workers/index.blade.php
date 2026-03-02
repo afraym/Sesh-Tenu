@@ -19,9 +19,9 @@
 							<a href="{{ route('workers.export.wordpdf.all', ['job_type_id' => request('job_type_id')]) }}" class="btn btn-sm btn-info" title="Export all as merged PDF (DOCX->PDF via LibreOffice)" target="_blank">
 								<i class="tim-icons icon-paper"></i> سركي مجمع PDF
 							</a>
-							{{-- <a href="{{ route('workers.export.word.all') }}" class="btn btn-sm btn-info" title="Export all as DOCX files in ZIP" target="_blank">
-								<i class="tim-icons icon-single-copy-04"></i> Word All (ZIP)
-							</a> --}}
+							<a href="{{ route('workers.export.word.merged') }}" class="btn btn-sm btn-info" title="Export all as DOCX files in ZIP" target="_blank">
+								<i class="tim-icons icon-single-copy-04"></i> سركي وورد مجمع
+							</a>
 							<a href="{{ route('workers.export.word.all', ['job_type_id' => request('job_type_id')]) }}" class="btn btn-sm btn-danger" title="Export all as DOCX files in ZIP" target="_blank">
 								سراكي وورد مجمعة (ZIP)
 							</a>

@@ -359,93 +359,157 @@ PV Power Plant Abydos 2 Solar (MW1000)',
         )->deleteFileAfterSend(true);
     }
 
-    public function exportWordPdf(Worker $worker)
+    public function exportWordMerged(Request $request)
     {
-        if (! class_exists(\Dompdf\Dompdf::class)) {
-            abort(500, 'PDF rendering requires dompdf. Install with: composer require dompdf/dompdf');
-        }
-
-        $worker->load(['company', 'jobType']);
-        $project = Project::latest('id')->with('company')->first();
-
         $templatePath = storage_path('app/templates/worker-timesheet.docx');
 
         if (! file_exists($templatePath)) {
             abort(404, 'Word template not found. Add a template at storage/app/templates/worker-timesheet.docx with the expected placeholders.');
         }
 
-        $monthStart = now()->startOfMonth();
-        $daysInMonth = $monthStart->daysInMonth;
+        $ids = collect(explode(',', (string) $request->query('ids')))
+            ->filter(fn ($v) => trim($v) !== '')
+            ->map(fn ($v) => (int) $v)
+            ->values();
 
-        $weekdayRows = [];
+        $jobTypeId = $request->filled('job_type_id') ? (int) $request->query('job_type_id') : null;
 
-        for ($i = 0; $i < $daysInMonth; $i++) {
-            $day = $monthStart->copy()->addDays($i);
-            $base = [
-                'serial' => $i + 1,
-                'date' => $day->format('j/n/Y'),
-                'start' => '',
-                'end' => '',
-                'break' => '',
-                'hours' => '',
-                'location' => '',
-                'note' => '',
-                'supervisor' => '',
-                'engineer' => '',
-            ];
+        $project = Project::latest('id')->with('company')->first();
 
-            $weekdayRows[] = [
-                'row_serial' => $base['serial'],
-                'row_date' => $base['date'],
-                'row_start' => $base['start'],
-                'row_end' => $base['end'],
-                'row_break' => $base['break'],
-                'row_hours' => $base['hours'],
-                'row_location' => $base['location'],
-                'row_note' => $base['note'],
-                'row_supervisor' => $base['supervisor'],
-                'row_engineer' => $base['engineer'],
-            ];
+        $workers = Worker::with(['company', 'jobType'])
+            ->where('is_on_company_payroll', 1)
+            ->when($jobTypeId, function ($query) use ($jobTypeId) {
+                $query->where('job_type_id', $jobTypeId);
+            })
+            ->when($ids->isNotEmpty(), function ($query) use ($ids) {
+                $query->whereIn('id', $ids);
+                $query->orderByRaw('FIELD(id,' . $ids->implode(',') . ')');
+            }, function ($query) {
+                $query->orderBy('id');
+            })
+            ->get();
+
+        if ($workers->isEmpty()) {
+            abort(404, 'No workers to export.');
         }
 
-        $processor = new TemplateProcessor($templatePath);
+        $timestamp = now()->format('Y-m-d_His');
+        $exportFolder = "workers-export/{$timestamp}";
+        Storage::makeDirectory($exportFolder);
+        $exportPath = Storage::path($exportFolder);
 
-        $processor->setValues([
-            'project_name_en' => optional($project)->name ?? '-',
-            'company_name' => optional($worker->company)->name ?: (optional($worker->company)->short_name ?? '-'),
-            'consortium_name' => optional(optional($project)->company)->name
-                ?? (optional($worker->company)->name ?: (optional($worker->company)->short_name ?? '-')),
-            'worker_name' => $worker->name ?? '-',
-            'worker_job' => optional($worker->jobType)->name ?? '-',
-            'worker_id' => $worker->national_id ?? '-',
-            'worker_phone' => $worker->phone_number ?? '-',
-            'access_code' => $worker->entity ?? $worker->id,
-            'report_month' => $monthStart->format('F Y'),
-        ]);
+        $combinedDocxPath = $exportPath . DIRECTORY_SEPARATOR . 'workers-merged-' . $timestamp . '.docx';
 
-        $processor->cloneRowAndSetValues('row_serial', $weekdayRows);
+        $docxPaths = [];
+        foreach ($workers as $worker) {
+            $workerDocxPath = $exportPath . DIRECTORY_SEPARATOR . 'worker-' . $worker->id . '.docx';
+            $this->generateWorkerDocxFromTemplate($worker, $project, $templatePath, $workerDocxPath);
+            $docxPaths[] = $workerDocxPath;
+        }
 
-        Storage::makeDirectory('temp');
-        $docxPath = Storage::path('temp/worker-' . $worker->id . '.docx');
-        $pdfPath = Storage::path('temp/worker-' . $worker->id . '.pdf');
+        $this->mergeDocxFiles($docxPaths, $combinedDocxPath);
 
-        $processor->saveAs($docxPath);
-        $this->addRedShadingToFridayCells($docxPath);
+        foreach ($docxPaths as $docxPath) {
+            @unlink($docxPath);
+        }
 
-        Settings::setPdfRenderer(Settings::PDF_RENDERER_DOMPDF, base_path('vendor/dompdf/dompdf'));
-
-        $phpWord = IOFactory::load($docxPath);
-        $pdfWriter = IOFactory::createWriter($phpWord, 'PDF');
-        $pdfWriter->save($pdfPath);
-
-        @unlink($docxPath);
+        $monthStart = now()->startOfMonth();
+        $monthAr = self::MONTH_NAMES[$monthStart->format('F')] ?? $monthStart->format('F');
 
         return response()->download(
-            $pdfPath,
-            'worker-' . $worker->id . '.pdf',
-            ['Content-Type' => 'application/pdf']
+            $combinedDocxPath,
+            'سركي مجمع شهر ' . $monthAr . ' ' . $timestamp . '.docx',
+            ['Content-Type' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document']
         )->deleteFileAfterSend(true);
     }
+
+    // public function exportWordPdf(Worker $worker)
+    // {
+    //     if (! class_exists(\Dompdf\Dompdf::class)) {
+    //         abort(500, 'PDF rendering requires dompdf. Install with: composer require dompdf/dompdf');
+    //     }
+
+    //     $worker->load(['company', 'jobType']);
+    //     $project = Project::latest('id')->with('company')->first();
+
+    //     $templatePath = storage_path('app/templates/worker-timesheet.docx');
+
+    //     if (! file_exists($templatePath)) {
+    //         abort(404, 'Word template not found. Add a template at storage/app/templates/worker-timesheet.docx with the expected placeholders.');
+    //     }
+
+    //     $monthStart = now()->startOfMonth();
+    //     $daysInMonth = $monthStart->daysInMonth;
+
+    //     $weekdayRows = [];
+
+    //     for ($i = 0; $i < $daysInMonth; $i++) {
+    //         $day = $monthStart->copy()->addDays($i);
+    //         $base = [
+    //             'serial' => $i + 1,
+    //             'date' => $day->format('j/n/Y'),
+    //             'start' => '',
+    //             'end' => '',
+    //             'break' => '',
+    //             'hours' => '',
+    //             'location' => '',
+    //             'note' => '',
+    //             'supervisor' => '',
+    //             'engineer' => '',
+    //         ];
+
+    //         $weekdayRows[] = [
+    //             'row_serial' => $base['serial'],
+    //             'row_date' => $base['date'],
+    //             'row_start' => $base['start'],
+    //             'row_end' => $base['end'],
+    //             'row_break' => $base['break'],
+    //             'row_hours' => $base['hours'],
+    //             'row_location' => $base['location'],
+    //             'row_note' => $base['note'],
+    //             'row_supervisor' => $base['supervisor'],
+    //             'row_engineer' => $base['engineer'],
+    //         ];
+    //     }
+
+    //     $processor = new TemplateProcessor($templatePath);
+
+    //     $processor->setValues([
+    //         'project_name_en' => optional($project)->name ?? '-',
+    //         'company_name' => optional($worker->company)->name ?: (optional($worker->company)->short_name ?? '-'),
+    //         'consortium_name' => optional(optional($project)->company)->name
+    //             ?? (optional($worker->company)->name ?: (optional($worker->company)->short_name ?? '-')),
+    //         'worker_name' => $worker->name ?? '-',
+    //         'worker_job' => optional($worker->jobType)->name ?? '-',
+    //         'worker_id' => $worker->national_id ?? '-',
+    //         'worker_phone' => $worker->phone_number ?? '-',
+    //         'access_code' => $worker->entity ?? $worker->id,
+    //         'report_month' => $monthStart->format('F Y'),
+    //     ]);
+
+    //     $processor->cloneRowAndSetValues('row_serial', $weekdayRows);
+
+    //     Storage::makeDirectory('temp');
+    //     $docxPath = Storage::path('temp/worker-' . $worker->id . '.docx');
+    //     $pdfPath = Storage::path('temp/worker-' . $worker->id . '.pdf');
+
+    //     $processor->saveAs($docxPath);
+    //     $this->addRedShadingToFridayCells($docxPath);
+
+    //     Settings::setPdfRenderer(Settings::PDF_RENDERER_DOMPDF, base_path('vendor/dompdf/dompdf'));
+
+    //     $phpWord = IOFactory::load($docxPath);
+    //     $pdfWriter = IOFactory::createWriter($phpWord, 'PDF');
+    //     $pdfWriter->save($pdfPath);
+
+    //     @unlink($docxPath);
+
+    //     return response()->download(
+    //         $pdfPath,
+    //         'worker-' . $worker->id . '.pdf',
+    //         ['Content-Type' => 'application/pdf']
+    //     )->deleteFileAfterSend(true);
+    // }
 
     public function exportWordPdfAll(Request $request)
     {
