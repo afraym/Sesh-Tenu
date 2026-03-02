@@ -636,12 +636,39 @@ PV Power Plant Abydos 2 Solar (MW1000)',
 
     private function convertDocxToPdf(string $libreOfficePath, string $docxPath, string $outputDir): ?string
     {
-        $command = sprintf(
-            '%s --headless --convert-to pdf --outdir %s %s 2>&1',
-            escapeshellarg($libreOfficePath),
-            escapeshellarg($outputDir),
-            escapeshellarg($docxPath)
-        );
+        $isWindows = strtoupper(substr(PHP_OS, 0, 3)) === 'WIN';
+
+        if ($isWindows) {
+            $command = sprintf(
+                '%s --headless --convert-to pdf --outdir %s %s 2>&1',
+                escapeshellarg($libreOfficePath),
+                escapeshellarg($outputDir),
+                escapeshellarg($docxPath)
+            );
+        } else {
+            $profileDir = $outputDir . DIRECTORY_SEPARATOR . '.lo-profile';
+            $homeDir = $outputDir . DIRECTORY_SEPARATOR . '.home';
+            $cacheDir = $outputDir . DIRECTORY_SEPARATOR . '.cache';
+            $configDir = $outputDir . DIRECTORY_SEPARATOR . '.config';
+
+            @mkdir($profileDir, 0775, true);
+            @mkdir($homeDir, 0775, true);
+            @mkdir($cacheDir, 0775, true);
+            @mkdir($configDir, 0775, true);
+
+            $profileUri = 'file://' . str_replace(DIRECTORY_SEPARATOR, '/', $profileDir);
+
+            $command = sprintf(
+                'HOME=%s XDG_CACHE_HOME=%s XDG_CONFIG_HOME=%s SAL_USE_VCLPLUGIN=gen %s --headless -env:UserInstallation=%s --convert-to pdf --outdir %s %s 2>&1',
+                escapeshellarg($homeDir),
+                escapeshellarg($cacheDir),
+                escapeshellarg($configDir),
+                escapeshellarg($libreOfficePath),
+                escapeshellarg($profileUri),
+                escapeshellarg($outputDir),
+                escapeshellarg($docxPath)
+            );
+        }
 
         exec($command, $output, $returnCode);
 
