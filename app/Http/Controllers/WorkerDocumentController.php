@@ -501,28 +501,48 @@ PV Power Plant Abydos 2 Solar (MW1000)',
 
         $this->mergeDocxFiles($docxPaths, $combinedDocxPath);
 
+        $libreOfficePath = $this->findLibreOffice();
+        if (! $libreOfficePath) {
+            abort(500, "Combined DOCX saved to: storage/app/{$exportFolder}. Install LibreOffice to enable PDF conversion.");
+        }
+
+        $combinedPdfGenerated = $this->convertDocxToPdf($libreOfficePath, $combinedDocxPath, $exportPath);
+
+        if (! $combinedPdfGenerated) {
+            $pdfPaths = [];
+            foreach ($docxPaths as $docxPath) {
+                $pdfPath = $this->convertDocxToPdf($libreOfficePath, $docxPath, $exportPath);
+                if ($pdfPath) {
+                    $pdfPaths[] = $pdfPath;
+                }
+            }
+
+            if (empty($pdfPaths)) {
+                abort(500, "Combined DOCX generated but PDF conversion failed on Ubuntu VPS. Check LibreOffice and storage permissions. File: storage/app/{$exportFolder}/" . basename($combinedDocxPath));
+            }
+
+            $fpdi = new Fpdi();
+            foreach ($pdfPaths as $path) {
+                $pageCount = $fpdi->setSourceFile($path);
+                for ($pageNo = 1; $pageNo <= $pageCount; $pageNo++) {
+                    $tplId = $fpdi->importPage($pageNo);
+                    $size = $fpdi->getTemplateSize($tplId);
+                    $orientation = $size['width'] > $size['height'] ? 'L' : 'P';
+                    $fpdi->AddPage($orientation, [$size['width'], $size['height']]);
+                    $fpdi->useTemplate($tplId);
+                }
+            }
+            $fpdi->Output($combinedPdfPath, 'F');
+        }
+
         foreach ($docxPaths as $docxPath) {
             @unlink($docxPath);
         }
 
         $monthStart = now()->startOfMonth();
 
-        $libreOfficePath = $this->findLibreOffice();
-        if (! $libreOfficePath) {
-            abort(500, "Combined DOCX saved to: storage/app/{$exportFolder}. Install LibreOffice to enable PDF conversion.");
-        }
-
-        $command = sprintf(
-            '%s --headless --convert-to pdf --outdir %s %s 2>&1',
-            escapeshellarg($libreOfficePath),
-            escapeshellarg($exportPath),
-            escapeshellarg($combinedDocxPath)
-        );
-
-        exec($command, $output, $returnCode);
-
         if (! file_exists($combinedPdfPath) || filesize($combinedPdfPath) <= 100) {
-            abort(500, "Combined DOCX generated but PDF conversion failed. Output:\n" . implode("\n", $output));
+            abort(500, 'PDF generation failed after conversion/merge fallback.');
         }
 
         $monthAr = self::MONTH_NAMES[$monthStart->format('F')] ?? $monthStart->format('F');
@@ -592,6 +612,34 @@ PV Power Plant Abydos 2 Solar (MW1000)',
         $processor->cloneRowAndSetValues('row_serial', $weekdayRows);
         $processor->saveAs($outputPath);
         $this->addRedShadingToFridayCells($outputPath);
+    }
+
+    private function convertDocxToPdf(string $libreOfficePath, string $docxPath, string $outputDir): ?string
+    {
+        $command = sprintf(
+            '%s --headless --convert-to pdf --outdir %s %s 2>&1',
+            escapeshellarg($libreOfficePath),
+            escapeshellarg($outputDir),
+            escapeshellarg($docxPath)
+        );
+
+        exec($command, $output, $returnCode);
+
+        $pdfPath = $outputDir . DIRECTORY_SEPARATOR . pathinfo($docxPath, PATHINFO_FILENAME) . '.pdf';
+
+        if ($returnCode === 0 && file_exists($pdfPath) && filesize($pdfPath) > 100) {
+            return $pdfPath;
+        }
+
+        \Log::warning('LibreOffice conversion failed', [
+            'command' => $command,
+            'return_code' => $returnCode,
+            'output' => implode("\n", $output),
+            'docx' => $docxPath,
+            'expected_pdf' => $pdfPath,
+        ]);
+
+        return null;
     }
 
     private function mergeDocxFiles(array $docxPaths, string $outputPath): void
