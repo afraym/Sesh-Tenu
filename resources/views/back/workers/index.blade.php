@@ -144,7 +144,9 @@
 											<td><strong>{{ $worker->name }}</strong></td>
 											{{-- <td>{{ optional($worker->company)->name ?? 'N/A' }}</td> --}}
 											<td>{{ optional($worker->jobType)->name ?? 'N/A' }}</td>
-											<td>{{ $worker->national_id }}</td>
+											<td>
+											<button class="btn btn-icon btn-info btn-simple" data-toggle="tooltip" data-placement="top" title="{{ $worker->national_id }}" data-original-title="{{ $worker->national_id }}"><i class="fas fa-id-card"></i></i></button>
+											</td>
 											<td>
 												@php
 													$rawPhone = trim((string) ($worker->phone_number ?? ''));
