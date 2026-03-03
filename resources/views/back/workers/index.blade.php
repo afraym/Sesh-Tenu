@@ -8,28 +8,13 @@
 		<div class="col-md-12">
 			<div class="card">
 				<div class="card-header">
-					<div class="row align-items-center">
+					<div class="row align-items-center text-center">
+						<div class="col"></div>
 						<div class="col">
-							<h4 class="card-title mb-0">Workers List / قائمة العمال</h4>
+							<h4 class="card-title mb-0">قائمة العمال</h4>
 						</div>
-						<div class="col text-right">
-							{{-- <a href="{{ route('workers.export.pdf.merged') }}" class="btn btn-sm btn-success" title="Export all as merged PDF (HTML-based)" target="_blank">
-								<i class="tim-icons icon-paper"></i> سركي مجمع PDF
-							</a> --}}
-							<a href="{{ route('workers.export.wordpdf.all', ['job_type_id' => request('job_type_id')]) }}" class="btn btn-sm btn-info" title="تحميل ملف واحد لكل العمال pdf" target="_blank">
-								<i class="tim-icons icon-paper"></i> سركي مجمع PDF
-							</a>
-							<a href="{{ route('workers.export.word.merged') }}" class="btn btn-sm btn-info" title="تحميل ملف وورد مجمع" target="_blank">
-								<i class="tim-icons icon-single-copy-04"></i> سركي وورد مجمع
-							</a>
-							<a href="{{ route('workers.export.word.all', ['job_type_id' => request('job_type_id')]) }}" class="btn btn-sm btn-danger" title="تحميل ملف وورد مجمعة (ZIP)" target="_blank">
-								<i class="far fa-file-archive"></i> سراكي وورد مجمعة (ZIP)
-							</a>
+						<div class="col"></div>
 
-							<a href="{{ route('workers.create') }}" class="btn btn-primary btn-sm">
-								<i class="tim-icons icon-simple-add"></i> اضافة عامل جديد
-							</a>
-						</div>
 					</div>
 					<div class="row mt-3">
 						<div class="col-md-8">
@@ -99,6 +84,24 @@
 						</div>
 					</div>
 					@endif
+											<div class="col text-right">
+							{{-- <a href="{{ route('workers.export.pdf.merged') }}" class="btn btn-sm btn-success" title="Export all as merged PDF (HTML-based)" target="_blank">
+								<i class="tim-icons icon-paper"></i> سركي مجمع PDF
+							</a> --}}
+							<a href="{{ route('workers.export.wordpdf.all', ['job_type_id' => request('job_type_id')]) }}" class="btn btn-sm btn-info" title="تحميل ملف واحد لكل العمال pdf" target="_blank">
+								<i class="tim-icons icon-paper"></i> سركي مجمع PDF
+							</a>
+							<a href="{{ route('workers.export.word.merged') }}" class="btn btn-sm btn-info" title="تحميل ملف وورد مجمع" target="_blank">
+								<i class="tim-icons icon-single-copy-04"></i> سركي وورد مجمع
+							</a>
+							<a href="{{ route('workers.export.word.all', ['job_type_id' => request('job_type_id')]) }}" class="btn btn-sm btn-danger" title="تحميل ملف وورد مجمعة (ZIP)" target="_blank">
+								<i class="far fa-file-archive"></i> سراكي وورد مجمعة (ZIP)
+							</a>
+
+							<a href="{{ route('workers.create') }}" class="btn btn-primary btn-sm">
+								<i class="tim-icons icon-simple-add"></i> اضافة عامل جديد
+							</a>
+						</div>
 				</div>
 				<div class="card-body">
 					@if(session('success'))
