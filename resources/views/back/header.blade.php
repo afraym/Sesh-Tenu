@@ -160,6 +160,16 @@
           </button>
           <div class="collapse navbar-collapse" id="navigation">
             <ul class="navbar-nav  mr-auto">
+              @if(auth()->check() && auth()->user()->isSuperAdmin())
+                <li class="nav-item">
+                  <form action="{{ route('system.update-optimize') }}" method="POST" class="d-inline" onsubmit="return confirm('Run git pull and php artisan optimize now?');">
+                    @csrf
+                    <button type="submit" class="btn btn-sm btn-info mb-0">
+                      <i class="tim-icons icon-refresh-01"></i> تحديث النظام
+                    </button>
+                  </form>
+                </li>
+              @endif
               <li class="search-bar input-group">
                 <button class="btn btn-link" id="search-button" data-toggle="modal" data-target="#searchModal"><i class="tim-icons icon-zoom-split" ></i>
                   <span class="d-lg-none d-md-block">Search</span>
@@ -205,6 +215,26 @@
           </div>
         </div>
       </nav>
+      @if(session('success'))
+        <div class="container-fluid mt-2">
+          <div class="alert alert-success alert-dismissible fade show mb-0" role="alert">
+            <i class="tim-icons icon-check-2"></i> {{ session('success') }}
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+        </div>
+      @endif
+      @if(session('error'))
+        <div class="container-fluid mt-2">
+          <div class="alert alert-danger alert-dismissible fade show mb-0" role="alert">
+            <i class="tim-icons icon-alert-circle-exc"></i> {{ session('error') }}
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+        </div>
+      @endif
       <div class="modal modal-search fade" id="searchModal" tabindex="-1" role="dialog" aria-labelledby="searchModal" aria-hidden="true">
         <div class="modal-dialog" role="document">
           <div class="modal-content">

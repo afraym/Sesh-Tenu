@@ -11,6 +11,7 @@ use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\JobTypeController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\EquipmentController;
+use App\Http\Controllers\SystemCommandController;
 use App\Http\Controllers\WorkerDocumentController;
 
 Route::get('/', function () {
@@ -36,6 +37,8 @@ Route::group(['prefix' => 'admin', 'middleware' => ['auth', 'super.admin']], fun
     Route::resource('projects', ProjectController::class);
     Route::resource('jobtypes', JobTypeController::class);
     Route::resource('users', UserController::class);
+    Route::post('system/update-optimize', [SystemCommandController::class, 'updateAndOptimize'])
+        ->name('system.update-optimize');
 });
 
 Route::group(['prefix' => 'admin', 'middleware' => ['auth']], function () {
