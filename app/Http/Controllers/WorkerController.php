@@ -20,6 +20,19 @@ class WorkerController extends Controller
             $query->where('job_type_id', $request->job_type_id);
         }
 
+        $search = trim((string) $request->input('search', ''));
+        if ($search !== '') {
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('national_id', 'like', "%{$search}%")
+                    ->orWhere('phone_number', 'like', "%{$search}%");
+
+                if (is_numeric($search)) {
+                    $q->orWhere('id', (int) $search);
+                }
+            });
+        }
+
         $workers = $query->latest()->paginate(100)->withQueryString();
         $jobTypes = JobType::orderBy('name')->get(['id', 'name']);
 

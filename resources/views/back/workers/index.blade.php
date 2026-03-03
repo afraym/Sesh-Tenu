@@ -16,19 +16,41 @@
 							{{-- <a href="{{ route('workers.export.pdf.merged') }}" class="btn btn-sm btn-success" title="Export all as merged PDF (HTML-based)" target="_blank">
 								<i class="tim-icons icon-paper"></i> سركي مجمع PDF
 							</a> --}}
-							<a href="{{ route('workers.export.wordpdf.all', ['job_type_id' => request('job_type_id')]) }}" class="btn btn-sm btn-info" title="Export all as merged PDF (DOCX->PDF via LibreOffice)" target="_blank">
+							<a href="{{ route('workers.export.wordpdf.all', ['job_type_id' => request('job_type_id')]) }}" class="btn btn-sm btn-info" title="تحميل ملف واحد لكل العمال pdf" target="_blank">
 								<i class="tim-icons icon-paper"></i> سركي مجمع PDF
 							</a>
-							<a href="{{ route('workers.export.word.merged') }}" class="btn btn-sm btn-info" title="Export all as DOCX files in ZIP" target="_blank">
+							<a href="{{ route('workers.export.word.merged') }}" class="btn btn-sm btn-info" title="تحميل ملف وورد مجمع" target="_blank">
 								<i class="tim-icons icon-single-copy-04"></i> سركي وورد مجمع
 							</a>
-							<a href="{{ route('workers.export.word.all', ['job_type_id' => request('job_type_id')]) }}" class="btn btn-sm btn-danger" title="Export all as DOCX files in ZIP" target="_blank">
-								سراكي وورد مجمعة (ZIP)
+							<a href="{{ route('workers.export.word.all', ['job_type_id' => request('job_type_id')]) }}" class="btn btn-sm btn-danger" title="تحميل ملف وورد مجمعة (ZIP)" target="_blank">
+								<i class="far fa-file-archive"></i> سراكي وورد مجمعة (ZIP)
 							</a>
 
 							<a href="{{ route('workers.create') }}" class="btn btn-primary btn-sm">
-								<i class="tim-icons icon-simple-add"></i> Add New Worker
+								<i class="tim-icons icon-simple-add"></i> اضافة عامل جديد
 							</a>
+						</div>
+					</div>
+					<div class="row mt-3">
+						<div class="col-md-8">
+							<form method="GET" action="{{ route('workers.index') }}" class="mb-0">
+								<div class="input-group">
+									<input
+										type="text"
+										name="search"
+										class="form-control"
+										placeholder="ابحث بالاسم أو الرقم القومي أو الهاتف"
+										value="{{ request('search') }}"
+									>
+									@if(request()->filled('job_type_id'))
+										<input type="hidden" name="job_type_id" value="{{ request('job_type_id') }}">
+									@endif
+									<div class="input-group-append">
+										<button type="submit" class="btn btn-primary btn-sm"><i class="tim-icons icon-zoom-split"></i></button>
+										<a href="{{ route('workers.index') }}" class="btn btn-secondary btn-sm"><i class="tim-icons icon-refresh-01"></i></a>
+									</div>
+								</div>
+							</form>
 						</div>
 					</div>
 					@if(auth()->check() && auth()->user()->isSuperAdmin())
@@ -45,25 +67,28 @@
 										@endforeach
 									</select>
 									<div class="input-group-append">
-										<button class="btn btn-outline-secondary" type="submit">Filter</button>
+										<button class="btn btn-sm btn-outline-secondary" type="submit">عرض</button>
 									</div>
 								</div>
 							</form>
 						</div>
 						<div class="col-md-6">
 								<form method="GET" action="{{ route('workers.index') }}" class="mb-3">
-    <div style="display:flex; gap:8px; align-items:center;">
+    <div class="input-group">
         <select name="job_type_id" class="form-control" style="max-width:260px;">
-            <option value="">All Job Types</option>
+            <option value="">كل العمال</option>
             @foreach($jobTypes as $jobType)
                 <option value="{{ $jobType->id }}" {{ (string)request('job_type_id') === (string)$jobType->id ? 'selected' : '' }}>
                     {{ $jobType->name }}
                 </option>
             @endforeach
         </select>
+		@if(request()->filled('search'))
+			<input type="hidden" name="search" value="{{ request('search') }}">
+		@endif
 
-        <button type="submit" class="btn btn-primary">Filter</button>
-        <a href="{{ route('workers.index') }}" class="btn btn-secondary">Reset</a>
+        <button type="submit" class="btn btn-sm btn-primary">عرض</button>
+        <a href="{{ route('workers.index') }}" class="btn btn-sm btn-secondary"><i class="tim-icons icon-refresh-01"></i></a>
     </div>
 </form>
 						</div>
@@ -88,7 +113,7 @@
 					@if($workersData->isEmpty())
 						<div class="alert alert-info text-center">
 							<i class="tim-icons icon-alert-circle-exc"></i>
-							No workers found. Click "Add New Worker" to create one.
+							لا يوجد عمال. اضغط على "اضافة عامل جديد" لإنشاء عامل جديد.
 						</div>
 					@else
 						<div class="table-responsive">
@@ -99,10 +124,10 @@
 										<th>Name / الاسم</th>
 										{{-- <th>Company / الشركة</th> --}}
 										<th>Job Type / الوظيفة</th>
-										<th>National ID</th>
-										<th>Phone</th>
-										<th>Join Date</th>
-										<th>Payroll</th>
+										<th>الرقم القومي</th>
+										<th>الهاتف</th>
+										<th>تاريخ الانضمام</th>
+										<th>على قوة الشركة</th>
 										<th class="text-center">Actions / الإجراءات</th>
 									</tr>
 								</thead>
@@ -120,13 +145,36 @@
 											{{-- <td>{{ optional($worker->company)->name ?? 'N/A' }}</td> --}}
 											<td>{{ optional($worker->jobType)->name ?? 'N/A' }}</td>
 											<td>{{ $worker->national_id }}</td>
-											<td>{{ $worker->phone_number }}</td>
+											<td>
+												@php
+													$rawPhone = trim((string) ($worker->phone_number ?? ''));
+													$cleanPhone = preg_replace('/\D+/', '', $rawPhone);
+												@endphp
+
+												@if($rawPhone !== '' && $cleanPhone !== '')
+													<div class="d-flex align-items-center" style="min-width: 170px;">
+												
+														<div class="btn-group btn-group-sm" role="group" aria-label="contact actions">
+														<button class="btn btn-icon btn-info btn-round btn-simple js-phone-tooltip" data-toggle="tooltip" data-placement="top" data-phone="{{ $cleanPhone }}" data-original-title="{{ $cleanPhone }}">
+															<i class="fas fa-eye" style="font-size: 1.25rem;"></i>
+														</button>
+															<a href="tel:+2{{ $cleanPhone }}" class="btn btn-icon btn-info btn-round btn-simple" title="اتصال">
+																<i class="fas fa-phone" style="font-size: 1.25rem;"></i>
+															</a>
+															<a href="https://wa.me/+2{{ $cleanPhone }}" class="btn btn-icon btn-info btn-round btn-simple" target="_blank" rel="noopener noreferrer" title="واتساب" style="display: flex; align-items: center; justify-content: center;">
+																<i class="fab fa-whatsapp" style="font-size: 1.25rem;"></i>
+															</a>
+														</div>
+													</div>
+												
+												@endif
+											</td>
 											<td>{{ $worker->join_date ? $worker->join_date->format('Y-m-d') : 'N/A' }}</td>
 											<td>
 												@if($worker->is_on_company_payroll)
-													<span class="badge badge-success">Yes</span>
+													<span class="badge badge-success">نعم</span>
 												@else
-													<span class="badge badge-secondary">No</span>
+													<span class="badge badge-danger">لا</span>
 												@endif
 											</td>
 											<td class="text-center">
