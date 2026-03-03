@@ -1,3 +1,15 @@
+body,
+.sidebar,
+.navbar,
+.card,
+.table,
+.form-control,
+.btn,
+.dropdown-menu,
+.tooltip,
+.modal-content {
+    font-family: 'Cairo', 'Segoe UI', Tahoma, Arial, sans-serif !important;
+}
 /* Fix select options white background in dark mode */
 .form-control select,
 select.form-control {
