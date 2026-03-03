@@ -165,7 +165,7 @@
                   <form action="{{ route('system.update-optimize') }}" method="POST" class="d-inline" onsubmit="return confirm('Run git pull and php artisan optimize now?');">
                     @csrf
                     <button type="submit" class="btn btn-sm btn-info mb-0">
-                      <i class="tim-icons icon-refresh-01"></i> تحديث النظام
+                      <i class="tim-icons icon-refresh-01"></i> تحديث 
                     </button>
                   </form>
                 </li>
