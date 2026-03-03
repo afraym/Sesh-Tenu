@@ -29,6 +29,18 @@ select.form-control:focus {
     color: #ffffff;
 }
 
+select.form-control:not([multiple]):not([size]) {
+    min-height: calc(2.35rem + 2px);
+    height: calc(2.35rem + 2px);
+    line-height: 1.65;
+    padding-top: 0.4rem;
+    padding-bottom: 0.4rem;
+}
+
+select.form-control option {
+    line-height: 1.6;
+}
+
 .sidebar .nav li>a, .off-canvas-sidebar .nav li>a {
     font-size: 0.92475rem !important;
     font-weight: 600 !important;
@@ -41,4 +53,28 @@ select.form-control:focus {
     }
     .fa-whatsapp {
       color: #25D366;
+    }
+
+    .datepicker-dropdown {
+            z-index: 3000 !important;
+            pointer-events: auto;
+    }
+
+    .datepicker table tr td,
+    .datepicker table tr th,
+    .datepicker table.table-condensed tr td,
+    .datepicker table.table-condensed tr th {
+        width: 34px !important;
+        height: 34px !important;
+        padding: 0 !important;
+        line-height: 34px !important;
+        text-align: center !important;
+        vertical-align: middle !important;
+        cursor: pointer;
+        user-select: none;
+    }
+
+    .datepicker table tr td *,
+    .datepicker table tr th * {
+        pointer-events: none;
     }

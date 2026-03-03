@@ -135,5 +135,40 @@
           $('body').removeClass('white-content');
         });
       });
+
+          $(function () {
+      $('input[type="date"]').each(function () {
+        var $input = $(this);
+        var currentValue = $input.val();
+
+        if ($input.data('datepicker')) {
+          $input.datepicker('destroy');
+        }
+
+        $input.attr('type', 'text');
+        $input.attr('autocomplete', 'off');
+        $input.attr('dir', 'rtl');
+        $input.attr('lang', 'ar');
+
+        $input.datepicker({
+          format: 'yyyy-mm-dd',
+          language: 'ar',
+          rtl: true,
+          autoclose: true,
+          todayHighlight: true,
+          clearBtn: true,
+          orientation: 'bottom auto',
+          container: 'body',
+          zIndexOffset: 2000,
+          beforeShowDay: function () {
+            return true;
+          }
+        });
+
+        if (currentValue) {
+          $input.datepicker('update', currentValue);
+        }
+      });
+    });
     });
     

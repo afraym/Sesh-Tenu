@@ -137,7 +137,8 @@
                                     <label for="join_date">Join Date / تاريخ الانضمام</label>
                                     <input type="date" class="form-control @error('join_date') is-invalid @enderror" 
                                            id="join_date" name="join_date" 
-                                           value="{{ old('join_date') }}">
+                                         lang="ar" dir="rtl"
+                                         value="{{ old('join_date', now()->toDateString()) }}">
                                     @error('join_date')
                                         <span class="invalid-feedback">{{ $message }}</span>
                                     @enderror
@@ -149,6 +150,7 @@
                                     <label for="end_date">End Date / تاريخ الانهاء</label>
                                     <input type="date" class="form-control @error('end_date') is-invalid @enderror" 
                                            id="end_date" name="end_date" 
+                                         lang="ar" dir="rtl"
                                            value="{{ old('end_date') }}">
                                     @error('end_date')
                                         <span class="invalid-feedback">{{ $message }}</span>
