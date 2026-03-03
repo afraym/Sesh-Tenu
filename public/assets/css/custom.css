@@ -60,21 +60,46 @@ select.form-control option {
             pointer-events: auto;
     }
 
-    .datepicker table tr td,
-    .datepicker table tr th,
-    .datepicker table.table-condensed tr td,
-    .datepicker table.table-condensed tr th {
+    .datepicker .datepicker-days td.day,
+    .datepicker .datepicker-days th.dow {
         width: 34px !important;
         height: 34px !important;
         padding: 0 !important;
         line-height: 34px !important;
         text-align: center !important;
         vertical-align: middle !important;
+    }
+
+    .datepicker .datepicker-days td.day {
         cursor: pointer;
         user-select: none;
     }
 
-    .datepicker table tr td *,
-    .datepicker table tr th * {
-        pointer-events: none;
+    .datepicker .datepicker-months td span,
+    .datepicker .datepicker-years td span,
+    .datepicker .datepicker-decades td span,
+    .datepicker .datepicker-centuries td span {
+        display: block;
+        float: left;
+        width: 23%;
+        height: auto;
+        line-height: 2.2;
+        margin: 1%;
+        padding: 0.2rem 0.1rem;
+    }
+
+    .datepicker-dropdown:before,
+    .datepicker-dropdown:after {
+        pointer-events: none !important;
+    }
+
+    .datepicker table.table-condensed {
+        position: relative;
+        z-index: 2;
+    }
+
+    .datepicker .datepicker-days td.day {
+        position: relative;
+        z-index: 3;
+        pointer-events: auto !important;
     }
