@@ -111,7 +111,9 @@
                                         <th><a href="{{ $sortUrl('id') }}" style="color: inherit;font-weight: 700;">#{!! $sortIcon('id') !!}</a></th>
                                         <th><a href="{{ $sortUrl('name') }}" style="color: inherit;font-weight: 700;">اسم العامل {!! $sortIcon('name') !!}</a></th>
                                         <th><a href="{{ $sortUrl('national_id') }}" style="color: inherit;font-weight: 700;">الرقم القومي {!! $sortIcon('national_id') !!}</a></th>
+                                         @if(auth()->check() && auth()->user()->isSuperAdmin())
                                         <th><a href="{{ $sortUrl('company_id') }}" style="color: inherit;font-weight: 700;">الشركة {!! $sortIcon('company_id') !!}</a></th>
+                                        @endif
                                         <th><a href="{{ $sortUrl('job_type_id') }}" style="color: inherit;font-weight: 700;">الوظيفة {!! $sortIcon('job_type_id') !!}</a></th>
                                         <th><a href="{{ $sortUrl('morning_delivery_date') }}" style="color: inherit;font-weight: 700;">التسليم الصباحية {!! $sortIcon('morning_delivery_date') !!}</a></th>
                                         <th><a href="{{ $sortUrl('evening_delivery_date') }}" style="color: inherit;font-weight: 700;">التسليم المسائية {!! $sortIcon('evening_delivery_date') !!}</a></th>
@@ -139,9 +141,11 @@
                                                     <i class="fas fa-id-card"></i>
                                                 </a>
                                             </td>
+                                             @if(auth()->check() && auth()->user()->isSuperAdmin())
                                             <td>
                                                 <small>{{ $worker->company->name ?? '-' }}</small>
                                             </td>
+                                            @endif
                                             <td>
                                                 <small>{{ $worker->jobType->name ?? '-' }}</small>
                                             </td>
