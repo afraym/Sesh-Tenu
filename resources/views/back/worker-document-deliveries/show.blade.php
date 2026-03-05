@@ -115,7 +115,7 @@
                             <div class="form-group">
                                 <label class="font-weight-bold">تاريخ التسليم الصباحية</label>
                                 @if($delivery->morning_delivery_date)
-                                    <p><span class="badge badge-success">{{ $delivery->morning_delivery_date->format('Y-m-d') }}</span></p>
+                                    <p><span class="badge badge-success">{{ $delivery->morning_delivery_date->format('m-d') }}</span></p>
                                 @else
                                     <p><span class="badge badge-secondary">لم يتم التسليم</span></p>
                                 @endif
@@ -125,7 +125,7 @@
                             <div class="form-group">
                                 <label class="font-weight-bold">تاريخ التسليم المسائية</label>
                                 @if($delivery->evening_delivery_date)
-                                    <p><span class="badge badge-success">{{ $delivery->evening_delivery_date->format('Y-m-d') }}</span></p>
+                                    <p><span class="badge badge-success">{{ $delivery->evening_delivery_date->format('m-d') }}</span></p>
                                 @else
                                     <p><span class="badge badge-secondary">لم يتم التسليم</span></p>
                                 @endif

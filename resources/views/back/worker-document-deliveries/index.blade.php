@@ -157,14 +157,14 @@
                                     <td>{{ $shiftNames[$delivery->shift] ?? '-' }}</td>
                                     <td>
                                         @if($delivery->morning_delivery_date)
-                                            <span class="badge badge-success">{{ $delivery->morning_delivery_date->format('Y-m-d') }}</span>
+                                            <span class="badge badge-success">{{ $delivery->morning_delivery_date->format('m-d') }}</span>
                                         @else
                                             <span class="badge badge-secondary">غير مسلم</span>
                                         @endif
                                     </td>
                                     <td>
                                         @if($delivery->evening_delivery_date)
-                                            <span class="badge badge-success">{{ $delivery->evening_delivery_date->format('Y-m-d') }}</span>
+                                            <span class="badge badge-success">{{ $delivery->evening_delivery_date->format('m-d') }}</span>
                                         @else
                                             <span class="badge badge-secondary">غير مسلم</span>
                                         @endif

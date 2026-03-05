@@ -126,6 +126,8 @@
                                             $eveningDelivery = $deliveries->get("{$worker->id}_evening");
                                             $morningDate = optional($morningDelivery?->morning_delivery_date)->format('Y-m-d');
                                             $eveningDate = optional($eveningDelivery?->evening_delivery_date)->format('Y-m-d');
+                                            $morningShort = optional($morningDelivery?->morning_delivery_date)->format('m-d');
+                                            $eveningShort = optional($eveningDelivery?->evening_delivery_date)->format('m-d');
                                         @endphp
                                         <tr>
                                             <td>{{ $index + 1 }}</td>
@@ -149,24 +151,38 @@
                                             <td>
                                                 <small>{{ $worker->jobType->name ?? '-' }}</small>
                                             </td>
-                                            <td>
+                                                                                        <td class="date-cell">
                                                 <input type="hidden" name="deliveries[{{ $worker->id }}][worker_id]" value="{{ $worker->id }}">
-                                                <input type="date" 
-                                                       name="deliveries[{{ $worker->id }}][morning_date]" 
-                                                       class="form-control form-control-sm delivery-date"
-                                                       data-worker-id="{{ $worker->id }}"
-                                                       data-shift="morning"
-                                                       value="{{ $morningDate }}"
-                                                       lang="ar" dir="rtl">
+                                                  <input type="hidden"
+                                                      name="deliveries[{{ $worker->id }}][morning_date]"
+                                                      class="delivery-date-value"
+                                                      value="{{ $morningDate }}">
+                                                  <input type="text"
+                                                      class="form-control form-control-sm delivery-date"
+                                                      data-worker-id="{{ $worker->id }}"
+                                                      data-shift="morning"
+                                                      data-hidden-name="deliveries[{{ $worker->id }}][morning_date]"
+                                                      value="{{ $morningShort }}"
+                                                      placeholder="MM-DD"
+                                                      maxlength="5"
+                                                      autocomplete="off"
+                                                      lang="ar" dir="rtl">
                                             </td>
-                                            <td>
-                                                <input type="date" 
-                                                       name="deliveries[{{ $worker->id }}][evening_date]" 
-                                                       class="form-control form-control-sm delivery-date"
-                                                       data-worker-id="{{ $worker->id }}"
-                                                       data-shift="evening"
-                                                       value="{{ $eveningDate }}"
-                                                       lang="ar" dir="rtl">
+                                            <td class="date-cell">
+                                                  <input type="hidden"
+                                                      name="deliveries[{{ $worker->id }}][evening_date]"
+                                                      class="delivery-date-value"
+                                                      value="{{ $eveningDate }}">
+                                                  <input type="text"
+                                                      class="form-control form-control-sm delivery-date"
+                                                      data-worker-id="{{ $worker->id }}"
+                                                      data-shift="evening"
+                                                      data-hidden-name="deliveries[{{ $worker->id }}][evening_date]"
+                                                      value="{{ $eveningShort }}"
+                                                      placeholder="MM-DD"
+                                                      maxlength="5"
+                                                      autocomplete="off"
+                                                      lang="ar" dir="rtl">
                                             </td>
                                         </tr>
                                     @empty
@@ -197,7 +213,7 @@
 
 <script>
 function validateForm() {
-    const dates = document.querySelectorAll('.delivery-date');
+    const dates = document.querySelectorAll('.delivery-date-value');
     let hasData = false;
     
     dates.forEach(input => {
@@ -217,11 +233,45 @@ function validateForm() {
 // Save single cell automatically when date changes
 document.addEventListener('DOMContentLoaded', function () {
     const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+    const selectedYear = Number({{ $year }});
+
+    const mmDdToYmd = (mmDd) => {
+        const value = (mmDd || '').trim();
+        if (!value) return null;
+
+        const parts = value.split('-');
+        if (parts.length !== 2) return null;
+
+        const month = String(parts[0]).padStart(2, '0');
+        const day = String(parts[1]).padStart(2, '0');
+        const m = Number(month);
+        const d = Number(day);
+
+        if (Number.isNaN(m) || Number.isNaN(d) || m < 1 || m > 12 || d < 1 || d > 31) {
+            return null;
+        }
+
+        return `${selectedYear}-${month}-${day}`;
+    };
 
     const saveDelivery = async (inputEl) => {
         const workerId = inputEl.dataset.workerId;
         const shift = inputEl.dataset.shift;
-        const dateValue = inputEl.value || null;
+        const hiddenName = inputEl.dataset.hiddenName;
+        const hiddenInput = hiddenName ? document.querySelector(`input[name="${hiddenName}"]`) : null;
+
+        if (!hiddenInput) {
+            return;
+        }
+
+        const dateValue = mmDdToYmd(inputEl.value);
+
+        if (inputEl.value && !dateValue) {
+            inputEl.style.borderColor = '#dc3545';
+            return;
+        }
+
+        hiddenInput.value = dateValue || '';
 
         if (!workerId || !shift || !csrfToken) {
             return;
@@ -272,12 +322,31 @@ document.addEventListener('DOMContentLoaded', function () {
     };
 
     document.querySelectorAll('.delivery-date').forEach((input) => {
+        // Initialize bootstrap datepicker on m-d text inputs.
+        if (window.jQuery && window.jQuery.fn && window.jQuery.fn.datepicker) {
+            const $input = window.jQuery(input);
+            $input.datepicker({
+                format: 'mm-dd',
+                autoclose: true,
+                todayHighlight: true,
+                language: 'ar',
+                orientation: 'auto'
+            });
+        }
+
+        input.addEventListener('input', function () {
+            const onlyAllowed = this.value.replace(/[^0-9-]/g, '');
+            if (onlyAllowed !== this.value) {
+                this.value = onlyAllowed;
+            }
+        });
+
         input.addEventListener('input', function () { saveDelivery(this); });
         input.addEventListener('change', function () { saveDelivery(this); });
         input.addEventListener('blur', function () { saveDelivery(this); });
 
         // Support Bootstrap datepicker event if present in this layout.
-        if (window.jQuery) {
+        if (window.jQuery && window.jQuery.fn && window.jQuery.fn.datepicker) {
             window.jQuery(input).on('changeDate', function () {
                 saveDelivery(input);
             });
@@ -308,6 +377,18 @@ document.addEventListener('keypress', function(e) {
     background-color: #fff3cd;
     border-color: #ffc107;
     box-shadow: 0 0 0 0.2rem rgba(255, 193, 7, 0.25);
+}
+
+@media (max-width: 767.98px) {
+    .table td.date-cell,
+    .table th.date-cell {
+        min-width: 50px;
+        width: 150px;
+    }
+
+    .delivery-date {
+        min-width: 50px;
+    }
 }
 </style>
 @endsection
