@@ -14,7 +14,32 @@ class WorkerController extends Controller
      */
     public function index(Request $request)
     {
+        $user = $request->user();
         $query = Worker::query()->with(['company', 'jobType']);
+        $companies = collect();
+        $selectedCompanyId = null;
+
+        $allowedSorts = [
+            'id',
+            'name',
+            'job_type_id',
+            'national_id',
+            'phone_number',
+            'join_date',
+            'is_on_company_payroll',
+            'created_at',
+        ];
+
+        if ($user && !$user->isSuperAdmin()) {
+            $selectedCompanyId = $user->company_id;
+            $query->where('company_id', $user->company_id);
+        } else {
+            $companies = Company::orderBy('name')->get(['id', 'name']);
+            if ($request->filled('company_id')) {
+                $selectedCompanyId = (int) $request->company_id;
+                $query->where('company_id', $request->company_id);
+            }
+        }
 
         if ($request->filled('job_type_id')) {
             $query->where('job_type_id', $request->job_type_id);
@@ -33,10 +58,17 @@ class WorkerController extends Controller
             });
         }
 
-        $workers = $query->latest()->paginate(100)->withQueryString();
+        $sort = $request->input('sort', 'created_at');
+        if (!in_array($sort, $allowedSorts, true)) {
+            $sort = 'created_at';
+        }
+
+        $direction = strtolower((string) $request->input('direction', 'desc')) === 'asc' ? 'asc' : 'desc';
+
+        $workers = $query->orderBy($sort, $direction)->paginate(100)->withQueryString();
         $jobTypes = JobType::orderBy('name')->get(['id', 'name']);
 
-        return view('back.workers.index', compact('workers', 'jobTypes'));
+        return view('back.workers.index', compact('workers', 'jobTypes', 'sort', 'direction', 'companies', 'selectedCompanyId'));
     }
 
     /**
@@ -44,8 +76,12 @@ class WorkerController extends Controller
      */
     public function create()
     {
+        $user = auth()->user();
+
         return view('back.workers.create', [
-            'companies' => Company::orderBy('name')->get(),
+            'companies' => $user && !$user->isSuperAdmin()
+                ? Company::where('id', $user->company_id)->orderBy('name')->get()
+                : Company::orderBy('name')->get(),
             'jobtypes' => JobType::where('is_active', true)->orderBy('name')->get(),
         ]);
     }
@@ -55,6 +91,10 @@ class WorkerController extends Controller
      */
     public function store(Request $request)
     {
+        if ($request->user() && !$request->user()->isSuperAdmin()) {
+            $request->merge(['company_id' => $request->user()->company_id]);
+        }
+
         $request->validate([
             'name' => 'required|string|max:255',
             'entity' => 'nullable|string|max:255',
@@ -87,7 +127,7 @@ class WorkerController extends Controller
         $worker->is_on_company_payroll = $request->boolean('is_on_company_payroll', true);
         $worker->save();
 
-        return redirect()->route('workers.index')->with('success', 'Worker created successfully.');
+        return redirect()->route('workers.index')->with('success', 'تم إضافة العامل بنجاح.');
     }
 
     /**
@@ -95,6 +135,8 @@ class WorkerController extends Controller
      */
     public function show(Worker $worker)
     {
+        $this->ensureWorkerVisibleForUser($worker);
+
         return view('back.workers.show', compact('worker'));
     }
 
@@ -103,9 +145,15 @@ class WorkerController extends Controller
      */
     public function edit(Worker $worker)
     {
+        $this->ensureWorkerVisibleForUser($worker);
+
+        $user = auth()->user();
+
         return view('back.workers.edit', [
             'worker' => $worker,
-            'companies' => Company::orderBy('name')->get(),
+            'companies' => $user && !$user->isSuperAdmin()
+                ? Company::where('id', $user->company_id)->orderBy('name')->get()
+                : Company::orderBy('name')->get(),
             'jobtypes' => JobType::where('is_active', true)->orderBy('name')->get(),
         ]);
     }
@@ -115,6 +163,12 @@ class WorkerController extends Controller
      */
     public function update(Request $request, Worker $worker)
     {
+        $this->ensureWorkerVisibleForUser($worker);
+
+        if ($request->user() && !$request->user()->isSuperAdmin()) {
+            $request->merge(['company_id' => $request->user()->company_id]);
+        }
+
         $request->validate([
             'name' => 'required|string|max:255',
             'company_id' => 'required|exists:companies,id',
@@ -141,7 +195,7 @@ class WorkerController extends Controller
         $worker->is_local_community = $request->boolean('is_local_community');
         $worker->is_on_company_payroll = $request->boolean('is_on_company_payroll');
         $worker->save();
-        return redirect()->route('workers.index')->with('success', 'Worker updated successfully.');
+        return redirect()->route('workers.index')->with('success', 'تم تحديث بيانات العامل بنجاح.');
     }
 
     /**
@@ -149,7 +203,18 @@ class WorkerController extends Controller
      */
     public function destroy(Worker $worker)
     {
+        $this->ensureWorkerVisibleForUser($worker);
+
         $worker->delete();
-        return redirect()->route('workers.index')->with('success', 'Worker deleted successfully.'); 
+        return redirect()->route('workers.index')->with('success', 'تم حذف العامل بنجاح.'); 
+    }
+
+    private function ensureWorkerVisibleForUser(Worker $worker): void
+    {
+        $user = auth()->user();
+
+        if ($user && !$user->isSuperAdmin() && (int) $worker->company_id !== (int) $user->company_id) {
+            abort(403, 'ليس لديك صلاحية الوصول إلى هذا العامل.');
+        }
     }
 }

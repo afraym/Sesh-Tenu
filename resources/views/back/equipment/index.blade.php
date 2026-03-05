@@ -1,5 +1,28 @@
 @extends('layouts.back')
 @section('content')
+@php
+    $sort = $sort ?? request('sort', 'created_at');
+    $direction = $direction ?? request('direction', 'desc');
+
+    $sortUrl = function (string $column) use ($sort, $direction) {
+        $nextDirection = ($sort === $column && $direction === 'asc') ? 'desc' : 'asc';
+
+        return route('equipment.index', array_merge(request()->query(), [
+            'sort' => $column,
+            'direction' => $nextDirection,
+        ]));
+    };
+
+    $sortIcon = function (string $column) use ($sort, $direction) {
+        if ($sort !== $column) {
+            return ' <i class="fas fa-sort text-muted"></i>';
+        }
+
+        return $direction === 'asc'
+            ? ' <i class="fas fa-sort-up"></i>'
+            : ' <i class="fas fa-sort-down"></i>';
+    };
+@endphp
 <div class="content">
     <div class="row">
         <div class="col-md-12">
@@ -16,14 +39,14 @@
                         <table class="table table-striped table-hover">
                             <thead>
                                 <tr>
-                                    <th>#</th>
-                                    <th>اسم المشروع</th>
-                                    <th>اسم الشركة</th>
-                                    <th>نوع المعدة</th>
-                                    <th>كود المعدة</th>
-                                    <th>اسم السائق الحالي</th>
-                                    <th>المصنع</th>
-                                    <th>تصريح الدخول</th>
+                                    <th><a href="{{ $sortUrl('id') }}" style="color: inherit;"># {!! $sortIcon('id') !!}</a></th>
+                                    <th><a href="{{ $sortUrl('project_name') }}" style="color: inherit;">اسم المشروع {!! $sortIcon('project_name') !!}</a></th>
+                                    <th><a href="{{ $sortUrl('company_id') }}" style="color: inherit;">اسم الشركة {!! $sortIcon('company_id') !!}</a></th>
+                                    <th><a href="{{ $sortUrl('equipment_type') }}" style="color: inherit;">نوع المعدة {!! $sortIcon('equipment_type') !!}</a></th>
+                                    <th><a href="{{ $sortUrl('equipment_code') }}" style="color: inherit;">كود المعدة {!! $sortIcon('equipment_code') !!}</a></th>
+                                    <th><a href="{{ $sortUrl('current_driver') }}" style="color: inherit;">اسم السائق الحالي {!! $sortIcon('current_driver') !!}</a></th>
+                                    <th><a href="{{ $sortUrl('manufacture') }}" style="color: inherit;">المصنع {!! $sortIcon('manufacture') !!}</a></th>
+                                    <th><a href="{{ $sortUrl('entry_per_ser') }}" style="color: inherit;">تصريح الدخول {!! $sortIcon('entry_per_ser') !!}</a></th>
                                     <th>الإجراءات</th>
                                 </tr>
                             </thead>

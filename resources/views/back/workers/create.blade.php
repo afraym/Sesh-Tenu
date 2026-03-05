@@ -12,32 +12,33 @@
                         @csrf
                         
                         <div class="row">
-                            <div class="col-md-6">
+                            @if( auth()->user()->isSuperAdmin())
+                            <div class="col-md 4"></div>
+                            <div class="col-md-4">
                                 <div class="form-group">
                                     <label for="company_id">Company / الشركة <span class="text-danger">*</span></label>
                                     <select class="form-control @error('company_id') is-invalid @enderror" 
                                             id="company_id" name="company_id" required>
-                                        <option value="">اختر شركة</option>
-                                        
-                                            
-                                        @if( !auth()->user()->isSuperAdmin())
-                                            <option value="{{ auth()->user()->company_id }}" selected>
+                                        <option value="">اختر شركة</option>                                   
+                                            {{-- <option value="{{ auth()->user()->company_id }}" selected>
                                                 {{ auth()->user()->company->name }}
-                                            </option>
-                                            @else
+                                            </option> --}}
+                                            {{-- @else --}}
                                             @foreach($companies ?? [] as $company)
                                                 <option value="{{ $company->id }}" {{ old('company_id') == $company->id ? 'selected' : '' }}>
                                                     {{ $company->name }}
                                                 </option>
                                             @endforeach
-                                        @endif
                                     </select>
                                     @error('company_id')
                                         <span class="invalid-feedback">{{ $message }}</span>
                                     @enderror
                                 </div>
                             </div>
-
+                            <div class="col-md 4"></div>
+                            @endif
+                        </div>
+                        <div class="row">
                             <div class="col-md-6">
                                 <div class="form-group">
                                     <label for="name">Name / الاسم <span class="text-danger">*</span></label>
@@ -50,46 +51,7 @@
                                     @enderror
                                 </div>
                             </div>
-                        </div>
-
-                        <div class="row">
-                            <div class="col-md-6">
-                                {{-- <div class="form-group">
-                                    <label for="entity">Entity / الهيئة</label>
-                                    <input type="text" class="form-control @error('entity') is-invalid @enderror" 
-                                           id="entity" name="entity" 
-                                           value="{{ old('entity') }}" 
-                                           placeholder="Enter entity">
-                                    @error('entity')
-                                        <span class="invalid-feedback">{{ $message }}</span>
-                                    @enderror
-                                </div> --}}
-                            </div>
-
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label for="job_type_id">Job Type / الوظيفة</label>
-                                    <select class="form-control @error('job_type_id') is-invalid @enderror" 
-                                            id="job_type_id" name="job_type_id">
-                                        <option value="">Select Job Type</option>
-                                        @foreach($jobtypes ?? [] as $jobType)
-                                            <option value="{{ $jobType->id }}" {{ old('job_type_id') == $jobType->id ? 'selected' : '' }}>
-                                                {{ $jobType->name }}
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                    @error('job_type_id')
-                                        <span class="invalid-feedback">{{ $message }}</span>
-                                    @enderror
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="row">
-                        </div>
-
-                        <div class="row">
-                            <div class="col-md-6">
+                                    <div class="col-md-6">
                                 <div class="form-group">
                                     <label for="national_id">National ID / الرقم القومي <span class="text-danger">*</span></label>
                                     <input type="text" class="form-control @error('national_id') is-invalid @enderror" 
@@ -162,10 +124,27 @@
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="form-group">
+                                    <label for="job_type_id">Job Type / الوظيفة</label>
+                                    <select class="form-control @error('job_type_id') is-invalid @enderror" 
+                                            id="job_type_id" name="job_type_id">
+                                        <option value="">Select Job Type</option>
+                                        @foreach($jobtypes ?? [] as $jobType)
+                                            <option value="{{ $jobType->id }}" {{ old('job_type_id') == $jobType->id ? 'selected' : '' }}>
+                                                {{ $jobType->name }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    @error('job_type_id')
+                                        <span class="invalid-feedback">{{ $message }}</span>
+                                    @enderror
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
                                     <label for="salary">Salary / الراتب</label>
-                                    <input type="number" step="0.01" class="form-control @error('salary') is-invalid @enderror" 
+                                    <input type="number" step="50" class="form-control @error('salary') is-invalid @enderror" 
                                            id="salary" name="salary" 
-                                           value="{{ old('salary') }}" 
+                                           value="{{ old('salary', 300) }}" 
                                            placeholder="Enter salary">
                                     @error('salary')
                                         <span class="invalid-feedback">{{ $message }}</span>
@@ -206,14 +185,15 @@
                                     </div>
                                 </div>
                             </div>
+                            <div class="col-md-2"></div>
                         </div>
 
                         <div class="form-group">
                             <button type="submit" class="btn btn-primary">
-                                <i class="tim-icons icon-check-2"></i> Save Worker
+                                <i class="tim-icons icon-check-2"></i> {{ __('حفظ العامل') }}
                             </button>
                             <a href="{{ route('workers.index') }}" class="btn btn-secondary">
-                                <i class="tim-icons icon-simple-remove"></i> Cancel
+                                <i class="tim-icons icon-simple-remove"></i> {{ __('الغاء') }}
                             </a>
                         </div>
                     </form>

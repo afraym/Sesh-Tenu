@@ -12,7 +12,7 @@ class JobTypeController extends Controller
      */
     public function index()
     {
-        return view('back.jobtypes.index')->with('jobtypes', Jobtype::orderBy('created_at', 'desc')->paginate(10));
+        return view('back.jobtypes.index')->with('jobtypes', Jobtype::orderBy('created_at', 'desc')->paginate(100));
     }
 
     /**

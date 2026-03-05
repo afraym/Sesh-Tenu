@@ -9,7 +9,7 @@
 <link rel="icon" type="image/png" sizes="16x16" href="/assets/img//favicon-16x16.png">
 <link rel="manifest" href="/site.webmanifest">
   <title>
-    Sesh Tnw•  System by Afraym
+    Sesh Tnw•  Social System
   </title>
   <!--     Fonts and icons     -->
   <link href="https://fonts.googleapis.com/css?family=Poppins:200,300,400,600,700,800" rel="stylesheet" />

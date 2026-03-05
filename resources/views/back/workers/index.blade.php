@@ -2,6 +2,24 @@
 @section('content')
 @php
 	$workersData = $workers ?? collect();
+	$sort = $sort ?? request('sort', 'created_at');
+	$direction = $direction ?? request('direction', 'desc');
+	$sortUrl = function (string $column) use ($sort, $direction) {
+		$nextDirection = ($sort === $column && $direction === 'asc') ? 'desc' : 'asc';
+		return route('workers.index', array_merge(request()->query(), [
+			'sort' => $column,
+			'direction' => $nextDirection,
+		]));
+	};
+	$sortIcon = function (string $column) use ($sort, $direction) {
+		if ($sort !== $column) {
+			return ' <i class="fas fa-sort text-muted"></i>';
+		}
+
+		return $direction === 'asc'
+			? ' <i class="fas fa-sort-up"></i>'
+			: ' <i class="fas fa-sort-down"></i>';
+	};
 @endphp
 <div class="content">
 	<div class="row">
@@ -30,6 +48,8 @@
 									@if(request()->filled('job_type_id'))
 										<input type="hidden" name="job_type_id" value="{{ request('job_type_id') }}">
 									@endif
+									<input type="hidden" name="sort" value="{{ $sort }}">
+									<input type="hidden" name="direction" value="{{ $direction }}">
 									<div class="input-group-append">
 										<button type="submit" class="btn btn-primary btn-sm"><i class="tim-icons icon-zoom-split"></i></button>
 										<a href="{{ route('workers.index') }}" class="btn btn-secondary btn-sm"><i class="tim-icons icon-refresh-01"></i></a>
@@ -51,6 +71,8 @@
 											</option>
 										@endforeach
 									</select>
+									<input type="hidden" name="sort" value="{{ $sort }}">
+									<input type="hidden" name="direction" value="{{ $direction }}">
 									<div class="input-group-append">
 										<button class="btn btn-sm btn-outline-secondary" type="submit">عرض</button>
 									</div>
@@ -71,6 +93,8 @@
 		@if(request()->filled('search'))
 			<input type="hidden" name="search" value="{{ request('search') }}">
 		@endif
+		<input type="hidden" name="sort" value="{{ $sort }}">
+		<input type="hidden" name="direction" value="{{ $direction }}">
 
         <button type="submit" class="btn btn-sm btn-primary">عرض</button>
         <a href="{{ route('workers.index') }}" class="btn btn-sm btn-secondary"><i class="tim-icons icon-refresh-01"></i></a>
@@ -89,10 +113,10 @@
 								<i class="tim-icons icon-paper"></i> سركي مجمع PDF
 							</a> --}}
 							<a href="{{ route('workers.export.wordpdf.all', ['job_type_id' => request('job_type_id')]) }}" class="btn btn-sm btn-info" title="تحميل ملف واحد لكل العمال pdf" target="_blank">
-								<i class="tim-icons icon-paper"></i> سركي مجمع PDF
+								<i class="far fa-file-pdf"></i> سركي مجمع PDF
 							</a>
 							<a href="{{ route('workers.export.word.merged') }}" class="btn btn-sm btn-info" title="تحميل ملف وورد مجمع" target="_blank">
-								<i class="tim-icons icon-single-copy-04"></i> سركي وورد مجمع
+								<i class="far fa-file-word"></i></i> سركي وورد مجمع
 							</a>
 							<a href="{{ route('workers.export.word.all', ['job_type_id' => request('job_type_id')]) }}" class="btn btn-sm btn-danger" title="تحميل ملف وورد مجمعة (ZIP)" target="_blank">
 								<i class="far fa-file-archive"></i> سراكي وورد مجمعة (ZIP)
@@ -123,14 +147,14 @@
 							<table class="table table-striped table-hover">
 								<thead>
 									<tr>
-										<th>#</th>
-										<th>Name / الاسم</th>
+										<th><a href="{{ $sortUrl('id') }}" style="color: inherit;font-weight: 700;"># {!! $sortIcon('id') !!}</a></th>
+										<th><a href="{{ $sortUrl('name') }}" style="color: inherit;font-weight: 700;">Name / الاسم {!! $sortIcon('name') !!}</a></th>
 										{{-- <th>Company / الشركة</th> --}}
-										<th>Job Type / الوظيفة</th>
-										<th>الرقم القومي</th>
-										<th>الهاتف</th>
-										<th>تاريخ الانضمام</th>
-										<th>على قوة الشركة</th>
+										<th><a href="{{ $sortUrl('job_type_id') }}" style="color: inherit;font-weight: 700;">Job Type / الوظيفة {!! $sortIcon('job_type_id') !!}</a></th>
+										<th><a href="{{ $sortUrl('national_id') }}" style="color: inherit;font-weight: 700;">الرقم القومي {!! $sortIcon('national_id') !!}</a></th>
+										<th><a href="{{ $sortUrl('phone_number') }}" style="color: inherit;font-weight: 700;">الهاتف {!! $sortIcon('phone_number') !!}</a></th>
+										<th><a href="{{ $sortUrl('join_date') }}" style="color: inherit;font-weight: 700;">تاريخ الانضمام {!! $sortIcon('join_date') !!}</a></th>
+										<th><a href="{{ $sortUrl('is_on_company_payroll') }}" style="color: inherit;font-weight: 700;">على قوة الشركة {!! $sortIcon('is_on_company_payroll') !!}</a></th>
 										<th class="text-center">Actions / الإجراءات</th>
 									</tr>
 								</thead>

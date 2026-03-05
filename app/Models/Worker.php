@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Worker extends Model
 {
@@ -46,5 +47,10 @@ class Worker extends Model
     public function jobType(): BelongsTo
     {
         return $this->belongsTo(JobType::class);
+    }
+
+    public function documentDeliveries(): HasMany
+    {
+        return $this->hasMany(WorkerDocumentDelivery::class);
     }
 }

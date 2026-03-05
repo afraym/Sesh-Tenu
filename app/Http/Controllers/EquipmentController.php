@@ -13,10 +13,45 @@ class EquipmentController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $equipments = Equipment::with('company')->orderBy('created_at', 'desc')->paginate(30);
-        return view('back.equipment.index', compact('equipments'));
+        $user = $request->user();
+        $query = Equipment::query()->with(['company', 'project']);
+        $equipments = collect();
+        $allowedSorts = [
+            'id',
+            'project_name',
+            'company_id',
+            'equipment_type',
+            'equipment_code',
+            'current_driver',
+            'manufacture',
+            'entry_per_ser',
+            'created_at',
+        ];
+        if ($user && !$user->isSuperAdmin()) {
+            $selectedCompanyId = $user->company_id;
+            $query->where('company_id', $user->company_id);
+        } else {
+            $companies = Company::orderBy('name')->get(['id', 'name']);
+            if ($request->filled('company_id')) {
+                $selectedCompanyId = (int) $request->company_id;
+                $query->where('company_id', $request->company_id);
+            }
+        }
+        $sort = $request->input('sort', 'created_at');
+        if (!in_array($sort, $allowedSorts, true)) {
+            $sort = 'created_at';
+        }
+
+        $direction = strtolower((string) $request->input('direction', 'desc')) === 'asc' ? 'asc' : 'desc';
+
+        $equipments = Equipment::with('company')
+            ->orderBy($sort, $direction)
+            ->paginate(30)
+            ->withQueryString();
+
+        return view('back.equipment.index', compact('equipments', 'sort', 'direction'));
     }
 
     /**
