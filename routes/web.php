@@ -13,6 +13,7 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\EquipmentController;
 use App\Http\Controllers\SystemCommandController;
 use App\Http\Controllers\WorkerDocumentController;
+use App\Http\Controllers\WorkerDocumentDeliveryController;
 
 Route::get('/', function () {
     if (auth()->check()) {
@@ -53,6 +54,9 @@ Route::group(['prefix' => 'admin', 'middleware' => ['auth']], function () {
 
     Route::resource('workers', WorkerController::class);
     Route::resource('equipment', EquipmentController::class);
+    Route::resource('worker-document-deliveries', WorkerDocumentDeliveryController::class);
+    Route::get('worker-document-deliveries-quick', [WorkerDocumentDeliveryController::class, 'quickEntry'])->name('worker-document-deliveries.quick-entry');
+    Route::post('worker-document-deliveries-bulk', [WorkerDocumentDeliveryController::class, 'storeBulk'])->name('worker-document-deliveries.bulk-store');
     
     Route::get('/equipment/{equipment}/export-word', [EquipmentController::class, 'exportWord'])
         ->name('equipment.exportWord');
