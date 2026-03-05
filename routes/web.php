@@ -57,6 +57,7 @@ Route::group(['prefix' => 'admin', 'middleware' => ['auth']], function () {
     Route::resource('worker-document-deliveries', WorkerDocumentDeliveryController::class);
     Route::get('worker-document-deliveries-quick', [WorkerDocumentDeliveryController::class, 'quickEntry'])->name('worker-document-deliveries.quick-entry');
     Route::post('worker-document-deliveries-bulk', [WorkerDocumentDeliveryController::class, 'storeBulk'])->name('worker-document-deliveries.bulk-store');
+    Route::post('worker-document-deliveries-ajax-update', [WorkerDocumentDeliveryController::class, 'updateDeliveryAjax'])->name('worker-document-deliveries.ajax-update');
     
     Route::get('/equipment/{equipment}/export-word', [EquipmentController::class, 'exportWord'])
         ->name('equipment.exportWord');

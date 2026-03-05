@@ -94,6 +94,47 @@ class WorkerDocumentDeliveryController extends Controller
     }
 
     /**
+     * Update single delivery date via AJAX from quick entry table.
+     */
+    public function updateDeliveryAjax(Request $request)
+    {
+        $validated = $request->validate([
+            'worker_id' => 'required|integer|exists:workers,id',
+            'year' => 'required|integer|min:2000|max:2100',
+            'month' => 'required|integer|min:1|max:12',
+            'shift' => 'required|in:morning,evening',
+            'date' => 'nullable|date',
+        ]);
+
+        $worker = Worker::findOrFail($validated['worker_id']);
+        if (!$this->canAccessWorker($worker)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'غير مصرح بالوصول لهذا العامل',
+            ], 403);
+        }
+
+        $delivery = WorkerDocumentDelivery::firstOrNew([
+            'worker_id' => $validated['worker_id'],
+            'year' => $validated['year'],
+            'month' => $validated['month'],
+            'shift' => $validated['shift'],
+        ]);
+
+        $dateColumn = $validated['shift'] === 'morning' ? 'morning_delivery_date' : 'evening_delivery_date';
+        $delivery->{$dateColumn} = $validated['date'];
+        if (!$delivery->exists) {
+            $delivery->created_by = Auth::id();
+        }
+        $delivery->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'تم حفظ التسليم بنجاح',
+        ]);
+    }
+
+    /**
      * Store bulk deliveries
      */
     public function storeBulk(Request $request)

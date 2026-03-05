@@ -154,6 +154,8 @@
                                                 <input type="date" 
                                                        name="deliveries[{{ $worker->id }}][morning_date]" 
                                                        class="form-control form-control-sm delivery-date"
+                                                       data-worker-id="{{ $worker->id }}"
+                                                       data-shift="morning"
                                                        value="{{ $morningDate }}"
                                                        lang="ar" dir="rtl">
                                             </td>
@@ -161,6 +163,8 @@
                                                 <input type="date" 
                                                        name="deliveries[{{ $worker->id }}][evening_date]" 
                                                        class="form-control form-control-sm delivery-date"
+                                                       data-worker-id="{{ $worker->id }}"
+                                                       data-shift="evening"
                                                        value="{{ $eveningDate }}"
                                                        lang="ar" dir="rtl">
                                             </td>
@@ -209,6 +213,77 @@ function validateForm() {
     
     return true;
 }
+
+// Save single cell automatically when date changes
+document.addEventListener('DOMContentLoaded', function () {
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+
+    const saveDelivery = async (inputEl) => {
+        const workerId = inputEl.dataset.workerId;
+        const shift = inputEl.dataset.shift;
+        const dateValue = inputEl.value || null;
+
+        if (!workerId || !shift || !csrfToken) {
+            return;
+        }
+
+        // Avoid duplicate requests when datepicker triggers multiple events.
+        if (inputEl.dataset.lastSentValue === String(dateValue)) {
+            return;
+        }
+
+        const originalBorder = inputEl.style.borderColor;
+        inputEl.style.borderColor = '#17a2b8';
+
+        try {
+            const response = await fetch('{{ route('worker-document-deliveries.ajax-update') }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken,
+                },
+                body: JSON.stringify({
+                    worker_id: Number(workerId),
+                    year: Number({{ $year }}),
+                    month: Number({{ $month }}),
+                    shift: shift,
+                    date: dateValue,
+                }),
+            });
+
+            const data = await response.json();
+
+            if (!response.ok || !data.success) {
+                inputEl.style.borderColor = '#dc3545';
+                alert(data.message || 'تعذر حفظ التسليم');
+                return;
+            }
+
+            inputEl.dataset.lastSentValue = String(dateValue);
+            inputEl.style.borderColor = '#28a745';
+            setTimeout(() => {
+                inputEl.style.borderColor = originalBorder;
+            }, 1200);
+        } catch (error) {
+            inputEl.style.borderColor = '#dc3545';
+            alert('حدث خطأ أثناء الحفظ، حاول مرة أخرى');
+        }
+    };
+
+    document.querySelectorAll('.delivery-date').forEach((input) => {
+        input.addEventListener('input', function () { saveDelivery(this); });
+        input.addEventListener('change', function () { saveDelivery(this); });
+        input.addEventListener('blur', function () { saveDelivery(this); });
+
+        // Support Bootstrap datepicker event if present in this layout.
+        if (window.jQuery) {
+            window.jQuery(input).on('changeDate', function () {
+                saveDelivery(input);
+            });
+        }
+    });
+});
 
 // Enable Tab key to move between date fields
 document.addEventListener('keypress', function(e) {
