@@ -73,7 +73,7 @@
                                     <div class="col-md-2">
                                         <select name="year" class="form-control">
                                             <option value="">-- كل السنوات --</option>
-                                            @for($y = 2026; $y <= now()->year + 1; $y++)
+                                            @for($y = 2026; $y <= now()->year; $y++)
                                                 <option value="{{ $y }}" {{ (request('year') ?: now()->year) == $y ? 'selected' : '' }}>{{ $y }}</option>
                                             @endfor
                                         </select>

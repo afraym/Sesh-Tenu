@@ -69,7 +69,7 @@
                                 <div class="form-group">
                                     <label for="year">السنة</label>
                                     <select name="year" id="year" class="form-control" onchange="this.form.submit()">
-                                        @for($y = 2026; $y <= now()->year + 1; $y++)
+                                        @for($y = 2026; $y <= now()->year; $y++)
                                             <option value="{{ $y }}" {{ ($year ?? now()->year) == $y ? 'selected' : '' }}>{{ $y }}</option>
                                         @endfor
                                     </select>
