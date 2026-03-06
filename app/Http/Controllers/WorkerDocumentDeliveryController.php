@@ -9,6 +9,18 @@ use Illuminate\Support\Facades\Auth;
 
 class WorkerDocumentDeliveryController extends Controller
 {
+    /**
+     * Normalize UI shift value to persisted DB value.
+     */
+    private function normalizeShift(?string $shift): ?string
+    {
+        return match ($shift) {
+            'night' => 'evening',
+            'both' => 'mixed',
+            default => $shift,
+        };
+    }
+
     public function __construct()
     {
         $this->middleware('auth');
@@ -102,9 +114,11 @@ class WorkerDocumentDeliveryController extends Controller
             'worker_id' => 'required|integer|exists:workers,id',
             'year' => 'required|integer|min:2000|max:2100',
             'month' => 'required|integer|min:1|max:12',
-            'shift' => 'required|in:morning,evening',
+            'shift' => 'required|in:morning,evening,night',
             'date' => 'nullable|date',
         ]);
+
+        $validated['shift'] = $this->normalizeShift($validated['shift']);
 
         $worker = Worker::findOrFail($validated['worker_id']);
         if (!$this->canAccessWorker($worker)) {
@@ -242,7 +256,7 @@ class WorkerDocumentDeliveryController extends Controller
 
         // Filter by shift
         if ($request->filled('shift')) {
-            $query->where('shift', $request->input('shift'));
+            $query->where('shift', $this->normalizeShift($request->input('shift')));
         }
 
         // Sorting
@@ -306,11 +320,13 @@ class WorkerDocumentDeliveryController extends Controller
             'worker_id' => 'required|exists:workers,id',
             'year' => 'required|integer|min:2000|max:2100',
             'month' => 'required|integer|min:1|max:12',
-            'shift' => 'required|in:morning,evening,mixed',
+            'shift' => 'required|in:morning,evening,mixed,night,both',
             'morning_delivery_date' => 'nullable|date',
             'evening_delivery_date' => 'nullable|date',
             'notes' => 'nullable|string',
         ]);
+
+        $validated['shift'] = $this->normalizeShift($validated['shift']);
 
         $validated['created_by'] = Auth::id();
 
@@ -384,11 +400,13 @@ class WorkerDocumentDeliveryController extends Controller
             'worker_id' => 'required|exists:workers,id',
             'year' => 'required|integer|min:2000|max:2100',
             'month' => 'required|integer|min:1|max:12',
-            'shift' => 'required|in:morning,evening,mixed',
+            'shift' => 'required|in:morning,evening,mixed,night,both',
             'morning_delivery_date' => 'nullable|date',
             'evening_delivery_date' => 'nullable|date',
             'notes' => 'nullable|string',
         ]);
+
+        $validated['shift'] = $this->normalizeShift($validated['shift']);
 
         $workerDocumentDelivery->update($validated);
 

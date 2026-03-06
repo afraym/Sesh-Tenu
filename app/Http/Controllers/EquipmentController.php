@@ -7,6 +7,8 @@ use Carbon\Carbon;
 use PhpOffice\PhpWord\TemplateProcessor;
 use Illuminate\Http\Request;
 use App\Models\Project;
+use App\Models\Company;
+use App\Models\EquipmentType;
 
 class EquipmentController extends Controller
 {
@@ -23,7 +25,9 @@ class EquipmentController extends Controller
             'project_name',
             'company_id',
             'equipment_type',
+            'model_year',
             'equipment_code',
+            'equipment_number',
             'current_driver',
             'manufacture',
             'entry_per_ser',
@@ -48,7 +52,7 @@ class EquipmentController extends Controller
 
         $equipments = Equipment::with('company')
             ->orderBy($sort, $direction)
-            ->paginate(30)
+            ->paginate(100)
             ->withQueryString();
 
         return view('back.equipment.index', compact('equipments', 'sort', 'direction'));
@@ -61,7 +65,9 @@ class EquipmentController extends Controller
     {
         $companies = \App\Models\Company::orderBy('name')->get();
         $projects = Project::orderBy('name')->get(['id', 'name']);
-        return view('back.equipment.create', compact('companies', 'projects'));
+        $equipmentTypes = EquipmentType::where('is_active', true)->orderBy('name')->get(['id', 'name']);
+
+        return view('back.equipment.create', compact('companies', 'projects', 'equipmentTypes'));
     }
 
     /**
@@ -74,7 +80,7 @@ class EquipmentController extends Controller
             'company_id' => 'required|exists:companies,id',
             'previous_driver' => 'nullable|string|max:255',
             'current_driver' => 'nullable|string|max:255',
-            'equipment_type' => 'required|string|max:255',
+            'equipment_type' => 'required|string|max:255|exists:equipment_types,name',
             'model_year' => 'nullable|string|max:255',
             'equipment_code' => 'required|string|max:255|unique:equipment,equipment_code',
             'equipment_number' => 'nullable|string|max:255',

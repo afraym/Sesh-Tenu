@@ -17,7 +17,7 @@
                             <tr><th>نوع المعدة</th><td>{{ $equipment->equipment_type }}</td></tr>
                             <tr><th>موديل المعدة</th><td>{{ $equipment->model_year ?? 'غير متوفر' }}</td></tr>
                             <tr><th>كود المعدة</th><td>{{ $equipment->equipment_code }}</td></tr>
-                            <tr><th>رقم شاسية المعدة</th><td>{{ $equipment->equipment_number ?? 'غير متوفر' }}</td></tr>
+                            <tr><th>رقم شاسيه المعدة</th><td>{{ $equipment->equipment_number ?? 'غير متوفر' }}</td></tr>
                             <tr><th>المصنع</th><td>{{ $equipment->manufacture ?? 'غير متوفر' }}</td></tr>
                             <tr><th>تصريح الدخول</th><td>{{ $equipment->entry_per_ser ?? 'غير متوفر' }}</td></tr>
                             <tr><th>رقم التسجيل</th><td>{{ $equipment->reg_no ?? 'غير متوفر' }}</td></tr>

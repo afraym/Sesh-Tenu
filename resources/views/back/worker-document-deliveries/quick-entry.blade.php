@@ -19,7 +19,7 @@
     $direction = request('direction', 'asc');
     $sortUrl = function (string $column) use ($sort, $direction) {
         $nextDirection = ($sort === $column && $direction === 'asc') ? 'desc' : 'asc';
-        return route('worker-document-deliveries.quick-entry', [
+        return route('worker-document-deliveries.receive', [
             'year' => request('year'),
             'month' => request('month'),
             'sort' => $column,
@@ -63,7 +63,7 @@
                     @endif
 
                     <!-- Filter Form -->
-                    <form method="GET" action="{{ route('worker-document-deliveries.quick-entry') }}" class="mb-4">
+                    <form method="GET" action="{{ route('worker-document-deliveries.receive') }}" class="mb-4">
                         <div class="row">
                             <div class="col-md-3">
                                 <div class="form-group">
@@ -116,7 +116,7 @@
                                         @endif
                                         <th><a href="{{ $sortUrl('job_type_id') }}" style="color: inherit;font-weight: 700;">الوظيفة {!! $sortIcon('job_type_id') !!}</a></th>
                                         <th><a href="{{ $sortUrl('morning_delivery_date') }}" style="color: inherit;font-weight: 700;">التسليم الصباحية {!! $sortIcon('morning_delivery_date') !!}</a></th>
-                                        <th><a href="{{ $sortUrl('evening_delivery_date') }}" style="color: inherit;font-weight: 700;">التسليم المسائية {!! $sortIcon('evening_delivery_date') !!}</a></th>
+                                        <th><a href="{{ $sortUrl('evening_delivery_date') }}" style="color: inherit;font-weight: 700;">التسليم الليلية {!! $sortIcon('evening_delivery_date') !!}</a></th>
                                     </tr>
                                 </thead>
                                 <tbody>

@@ -35,8 +35,13 @@
     ];
     $shiftNames = [
         'morning' => 'صباحية',
-        'evening' => 'مسائية',
-        'mixed' => 'مختلط',
+        'evening' => 'ليلية',
+        'mixed' => 'كلاهما',
+    ];
+    $shiftOptions = [
+        'morning' => 'صباحية',
+        'night' => 'ليلية',
+        'both' => 'كلاهما',
     ];
 @endphp
 <div class="content">
@@ -50,7 +55,7 @@
                             <h4 class="card-title mb-0">متابعة استلام السيركي</h4>
                         </div>
                         <div class="col text-right">
-                            <a href="{{ route('worker-document-deliveries.quick-entry') }}" class="btn btn-sm btn-success">
+                            <a href="{{ route('worker-document-deliveries.receive') }}" class="btn btn-sm btn-success">
                                 <i class="tim-icons icon-vector"></i> تسجيل سريع جماعي
                             </a>
                             <a href="{{ route('worker-document-deliveries.create') }}" class="btn btn-sm btn-primary">
@@ -89,7 +94,7 @@
                                     <div class="col-md-2">
                                         <select name="shift" class="form-control">
                                             <option value="">-- كل الفترات --</option>
-                                            @foreach($shiftNames as $key => $name)
+                                            @foreach($shiftOptions as $key => $name)
                                                 <option value="{{ $key }}" {{ request('shift') == $key ? 'selected' : '' }}>{{ $name }}</option>
                                             @endforeach
                                         </select>

@@ -18,7 +18,7 @@
   <link href="https://fonts.googleapis.com/css?family=Poppins:200,300,400,600,700,800" rel="stylesheet" />
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link href="https://use.fontawesome.com/releases/v5.0.6/css/all.css" rel="stylesheet">
-  {{-- <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css"> --}}
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css">
 
   <!-- Nucleo Icons -->
   <link href="{{ asset('assets/css/nucleo-icons.css') }}" rel="stylesheet" />
@@ -79,30 +79,36 @@
               <p>المعدات</p>
             </a>
           </li>
-          <li class="{{ request()->routeIs('equipment.create') ? 'active' : '' }}">
+          <li class="{{ request()->routeIs('equipment-types.index') ? 'active' : '' }}">
+            <a href="{{ route('equipment-types.index') }}">
+            <i class="fa-solid fa-tractor"></i>
+            <p>أنواع المعدات</p>
+            </a>
+          </li>
+          {{-- <li class="{{ request()->routeIs('equipment.create') ? 'active' : '' }}">
             <a href="{{ route('equipment.create') }}">
               <i class="tim-icons icon-simple-add"></i>
               <p>إضافة معدة</p>
             </a>
-          </li>
+          </li> --}}
           <li class="{{ request()->routeIs('worker-document-deliveries.index') ? 'active' : '' }}">
             <a href="{{ route('worker-document-deliveries.index') }}">
               <i class="far fa-calendar-check"></i>
               <p>متابعة السيركي</p>
             </a>
           </li>
-          <li class="{{ request()->routeIs('worker-document-deliveries.quick-entry') ? 'active' : '' }}">
-            <a href="{{ route('worker-document-deliveries.quick-entry') }}">
-              <i class="tim-icons icon-vector"></i>
-              <p>تسجيل سريع</p>
+          <li class="{{ request()->routeIs('worker-document-deliveries.receive') ? 'active' : '' }}">
+            <a href="{{ route('worker-document-deliveries.receive') }}">
+              <i class="fas fa-user-check"></i>
+              <p>استلام سيركي</p>
             </a>
           </li>
-          <li class="{{ request()->routeIs('worker-document-deliveries.create') ? 'active' : '' }}">
+          {{-- <li class="{{ request()->routeIs('worker-document-deliveries.create') ? 'active' : '' }}">
             <a href="{{ route('worker-document-deliveries.create') }}">
               <i class="tim-icons icon-simple-add"></i>
               <p>إضافة تسليم</p>
             </a>
-          </li>
+          </li> --}}
           @if(auth()->check() && auth()->user()->isSuperAdmin())
             <li class="{{ request()->routeIs('companies.index') ? 'active' : '' }}">
                 <a href="{{ route('companies.index') }}">
@@ -110,36 +116,43 @@
                 <p>الشركات</p>
                 </a>
           </li>
-            <li class="{{ request()->routeIs('companies.create') ? 'active' : '' }}">
+            {{-- <li class="{{ request()->routeIs('companies.create') ? 'active' : '' }}">
                 <a href="{{ route('companies.create') }}">
                 <i class="tim-icons icon-simple-add"></i>
                 <p>إضافة شركة</p>
                 </a>
-          </li>
+          </li> --}}
           <li class="{{ request()->routeIs('projects.index') ? 'active' : '' }}">
             <a href="{{ route('projects.index') }}">
               <i class="tim-icons icon-chart-pie-36"></i>
               <p>المشاريع</p>
             </a>
           </li>
-          <li class="{{ request()->routeIs('projects.create') ? 'active' : '' }}">
+          {{-- <li class="{{ request()->routeIs('projects.create') ? 'active' : '' }}">
             <a href="{{ route('projects.create') }}">
               <i class="tim-icons icon-simple-add"></i>
               <p>إضافة مشروع</p>
             </a>
-          </li>
+          </li> --}}
             <li class="{{ request()->routeIs('jobtypes.index') ? 'active' : '' }}">
                 <a href="{{ route('jobtypes.index') }}">
                 <i class="tim-icons icon-bullet-list-67"></i>
                 <p>أنواع الوظائف</p>
                 </a>
             </li>
-            <li class="{{ request()->routeIs('jobtypes.create') ? 'active' : '' }}">
+            {{-- <li class="{{ request()->routeIs('jobtypes.create') ? 'active' : '' }}">
                 <a href="{{ route('jobtypes.create') }}">
                 <i class="tim-icons icon-simple-add"></i>
                 <p>إضافة نوع وظيفة</p>
                 </a>
-            </li>
+            </li> --}}
+
+            {{-- <li class="{{ request()->routeIs('equipment-types.create') ? 'active' : '' }}">
+              <a href="{{ route('equipment-types.create') }}">
+              <i class="tim-icons icon-simple-add"></i>
+              <p>إضافة نوع معدة</p>
+              </a>
+            </li> --}}
             <li class="{{ request()->routeIs('users.index') ? 'active' : '' }}">
                 <a href="{{ route('users.index') }}">
                 <i class="tim-icons icon-single-02"></i>

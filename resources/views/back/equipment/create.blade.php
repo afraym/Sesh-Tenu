@@ -68,7 +68,23 @@
                             <div class="col-md-6">
                                 <div class="form-group">
                                     <label for="equipment_type">نوع المعدة / Equipment Type <span class="text-danger">*</span></label>
-                                    <input type="text" class="form-control" id="equipment_type" name="equipment_type" required>
+                                    <select class="form-control @error('equipment_type') is-invalid @enderror" id="equipment_type" name="equipment_type" required>
+                                        <option value="">اختر نوع المعدة</option>
+                                        @foreach($equipmentTypes ?? [] as $equipmentType)
+                                            <option value="{{ $equipmentType->name }}" {{ old('equipment_type') === $equipmentType->name ? 'selected' : '' }}>
+                                                {{ $equipmentType->name }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    @error('equipment_type')
+                                        <span class="invalid-feedback">{{ $message }}</span>
+                                    @enderror
+                                    @if(auth()->user()->isSuperAdmin())
+                                        <small class="form-text text-muted">
+                                            لا يوجد نوع مناسب؟
+                                            <a href="{{ route('equipment-types.create') }}" target="_blank">أضف نوع معدة جديد</a>
+                                        </small>
+                                    @endif
                                 </div>
                             </div>
                             <div class="col-md-6">
@@ -87,7 +103,7 @@
                             </div>
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label for="equipment_number">رقم شاسية المعدة / Equipment Number</label>
+                                    <label for="equipment_number">رقم شاسيه المعدة / Equipment Number</label>
                                     <input type="text" class="form-control" id="equipment_number" name="equipment_number">
                                 </div>
                             </div>

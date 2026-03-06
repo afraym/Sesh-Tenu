@@ -18,6 +18,7 @@
                                 <tr>
                                     <th>#</th>
                                     <th>Project Name</th>
+                                    <th>Short Name</th>
                                     <th>Company</th>
                                     <th>Actions</th>
                                 </tr>
@@ -27,6 +28,7 @@
                                     <tr>
                                         <td>{{ $loop->iteration }}</td>
                                         <td>{{ $project->name }}</td>
+                                        <td>{{ $project->short_name ?? '-' }}</td>
                                         <td>{{ optional($project->company)->name ?? '-' }}</td>
                                         <td>
                                             <a href="{{ route('projects.edit', $project->id) }}" class="btn btn-sm btn-warning">Edit</a>
@@ -39,7 +41,7 @@
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="4" class="text-center">No projects found.</td>
+                                        <td colspan="5" class="text-center">No projects found.</td>
                                     </tr>
                                 @endforelse
                             </tbody>

@@ -1,0 +1,73 @@
+@extends('layouts.back')
+@section('content')
+<div class="content">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="card-title">Edit Project / تعديل المشروع</h4>
+                </div>
+                <div class="card-body">
+                    <form action="{{ route('projects.update', $project->id) }}" method="POST">
+                        @csrf
+                        @method('PUT')
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="name">Project Name / إسم المشروع <span class="text-danger">*</span></label>
+                                    <textarea class="form-control @error('name') is-invalid @enderror"
+                                              id="name" name="name"
+                                              placeholder="Enter Project name" required>{{ old('name', $project->name) }}</textarea>
+                                    @error('name')
+                                        <span class="invalid-feedback">{{ $message }}</span>
+                                    @enderror
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="short_name">Project Short Name / الاسم المختصر</label>
+                                    <input type="text" class="form-control @error('short_name') is-invalid @enderror"
+                                           id="short_name" name="short_name"
+                                           placeholder="Enter short name" value="{{ old('short_name', $project->short_name) }}">
+                                    @error('short_name')
+                                        <span class="invalid-feedback">{{ $message }}</span>
+                                    @enderror
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="company_id">Company / الشركة <span class="text-danger">*</span></label>
+                                    <select class="form-control @error('company_id') is-invalid @enderror"
+                                            id="company_id" name="company_id" required>
+                                        <option value="">Select Company</option>
+                                        @foreach($companies ?? [] as $company)
+                                            <option value="{{ $company->id }}" {{ (string) old('company_id', $project->company_id) === (string) $company->id ? 'selected' : '' }}>
+                                                {{ $company->name }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    @error('company_id')
+                                        <span class="invalid-feedback">{{ $message }}</span>
+                                    @enderror
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group mt-3">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="tim-icons icon-refresh-02"></i> Update Project
+                            </button>
+                            <a href="{{ route('projects.index') }}" class="btn btn-secondary">
+                                <i class="tim-icons icon-simple-remove"></i> Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+@endsection

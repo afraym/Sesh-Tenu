@@ -71,8 +71,8 @@
                                     <select class="form-control @error('shift') is-invalid @enderror" id="shift" name="shift" required>
                                         <option value="">-- اختر --</option>
                                         <option value="morning" {{ old('shift', $delivery->shift) == 'morning' ? 'selected' : '' }}>صباحية</option>
-                                        <option value="evening" {{ old('shift', $delivery->shift) == 'evening' ? 'selected' : '' }}>مسائية</option>
-                                        <option value="mixed" {{ old('shift', $delivery->shift) == 'mixed' ? 'selected' : '' }}>مختلط</option>
+                                        <option value="night" {{ in_array(old('shift', $delivery->shift), ['night', 'evening'], true) ? 'selected' : '' }}>ليلية</option>
+                                        <option value="both" {{ in_array(old('shift', $delivery->shift), ['both', 'mixed'], true) ? 'selected' : '' }}>كلاهما</option>
                                     </select>
                                     @error('shift')
                                         <span class="invalid-feedback">{{ $message }}</span>

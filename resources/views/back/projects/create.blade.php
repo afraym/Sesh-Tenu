@@ -24,6 +24,18 @@
                                 </div>
                             </div>
 
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="short_name">Project Short Name / الاسم المختصر</label>
+                                    <input type="text" class="form-control @error('short_name') is-invalid @enderror"
+                                           id="short_name" name="short_name"
+                                           placeholder="Enter short name" value="{{ old('short_name') }}">
+                                    @error('short_name')
+                                        <span class="invalid-feedback">{{ $message }}</span>
+                                    @enderror
+                                </div>
+                            </div>
+
                                                    <div class="col-md-6">
                                 <div class="form-group">
                                     <label for="company_id">Company / الشركة <span class="text-danger">*</span></label>

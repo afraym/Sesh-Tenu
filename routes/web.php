@@ -9,6 +9,7 @@ use App\Http\Controllers\WorkerController;
 use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\JobTypeController;
+use App\Http\Controllers\EquipmentTypeController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\EquipmentController;
 use App\Http\Controllers\SystemCommandController;
@@ -37,6 +38,8 @@ Route::group(['prefix' => 'admin', 'middleware' => ['auth', 'super.admin']], fun
     Route::resource('companies', CompanyController::class);
     Route::resource('projects', ProjectController::class);
     Route::resource('jobtypes', JobTypeController::class);
+    Route::resource('equipment-types', EquipmentTypeController::class)
+        ->parameters(['equipment-types' => 'equipmentType']);
     Route::resource('users', UserController::class);
     Route::post('system/update-optimize', [SystemCommandController::class, 'updateAndOptimize'])
         ->name('system.update-optimize');
@@ -55,7 +58,7 @@ Route::group(['prefix' => 'admin', 'middleware' => ['auth']], function () {
     Route::resource('workers', WorkerController::class);
     Route::resource('equipment', EquipmentController::class);
     Route::resource('worker-document-deliveries', WorkerDocumentDeliveryController::class);
-    Route::get('worker-document-deliveries-quick', [WorkerDocumentDeliveryController::class, 'quickEntry'])->name('worker-document-deliveries.quick-entry');
+    Route::get('worker-document-receive', [WorkerDocumentDeliveryController::class, 'quickEntry'])->name('worker-document-deliveries.receive');
     Route::post('worker-document-deliveries-bulk', [WorkerDocumentDeliveryController::class, 'storeBulk'])->name('worker-document-deliveries.bulk-store');
     Route::post('worker-document-deliveries-ajax-update', [WorkerDocumentDeliveryController::class, 'updateDeliveryAjax'])->name('worker-document-deliveries.ajax-update');
     

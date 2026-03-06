@@ -17,8 +17,8 @@
     ];
     $shiftNames = [
         'morning' => 'صباحية',
-        'evening' => 'مسائية',
-        'mixed' => 'مختلط',
+        'evening' => 'ليلية',
+        'mixed' => 'كلاهما',
     ];
 @endphp
 <div class="content">

@@ -30,10 +30,12 @@ class ProjectController extends Controller
     {
         $request->validate([
             'name' => 'required',
+            'short_name' => 'nullable|string|max:255',
             'company_id' => 'required|exists:companies,id',
         ]);
         $project = new Project();
         $project->name = $request->name;
+        $project->short_name = $request->short_name;
         $project->company_id = $request->company_id;        
         $project->save();
         return redirect()->route('projects.index')->with('success', 'تم إضافة المشروع بنجاح');
@@ -62,8 +64,16 @@ class ProjectController extends Controller
     {
         $request->validate([
             'name' => 'required',
+            'short_name' => 'nullable|string|max:255',
             'company_id' => 'required|exists:companies,id',
         ]);
+
+        $project->name = $request->name;
+        $project->short_name = $request->short_name;
+        $project->company_id = $request->company_id;
+        $project->save();
+
+        return redirect()->route('projects.index')->with('success', 'تم تحديث المشروع بنجاح');
     }
 
     /**
