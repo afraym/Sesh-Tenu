@@ -167,7 +167,7 @@
                     <div class="card-body text-center">
                         <h3 class="mb-3">Ready to run your solar panel project efficiently?</h3>
                         <a href="/login" class="btn btn-primary btn-round mr-2">Sign In</a>
-                        <a href="/admin/workers" class="btn btn-info btn-round">Open Dashboard</a>
+                        <a href="/admin/dashboard" class="btn btn-info btn-round">Open Dashboard</a>
                     </div>
                 </div>
             </div>
