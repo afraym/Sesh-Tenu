@@ -61,9 +61,15 @@
           </a>
         </div>
         <ul class="nav">
+           <li class="{{ request()->routeIs('dashboard') ? 'active' : '' }}">
+            <a href="{{ route('dashboard') }}">
+              <i class="fa-solid fa-tv"></i>
+              <p>الرئيسة</p>
+            </a>
+          </li>
           <li class="{{ request()->routeIs('workers.index') ? 'active' : '' }}">
             <a href="{{ route('workers.index') }}">
-              <i class="tim-icons icon-single-02"></i>
+              <i class="fa-solid fa-person-digging"></i>
               <p>العمال</p>
             </a>
           </li>

@@ -21,8 +21,8 @@
             ©
             <script>
               document.write(new Date().getFullYear())
-            </script> made with <i class="tim-icons icon-heart-2"></i> by
-            <a href="https://afraym.com" target="_blank">Afraym</a> for a better web.
+            </script> تم التطوير بواسطة
+            <a href="https://afraym.com" target="_blank">Afraym</a> للحلول الرقمية والانظمة
           </div>
         </div>
       </footer>

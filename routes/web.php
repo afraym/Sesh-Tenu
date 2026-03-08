@@ -46,6 +46,9 @@ Route::group(['prefix' => 'admin', 'middleware' => ['auth', 'super.admin']], fun
 });
 
 Route::group(['prefix' => 'admin', 'middleware' => ['auth']], function () {
+    Route::get('dashboard', function () {
+        return view('back.dashboard');
+    })->name('dashboard');
     Route::get('workers/{worker}/export-pdf', [WorkerDocumentController::class, 'exportPdf'])->name('workers.export.pdf');
     Route::get('workers/export-pdf-merged', [WorkerDocumentController::class, 'exportPdfMerged'])->name('workers.export.pdf.merged');
     Route::get('workers/{worker}/export-word', [WorkerDocumentController::class, 'exportWord'])->name('workers.export.word');
