@@ -1,6 +1,31 @@
 @extends('layouts.front')
 
 @section('content')
+<style>
+  body.register-page .page-header {
+    background:
+      radial-gradient(circle at 12% 20%, rgba(255, 239, 163, 0.85) 0 9%, rgba(255, 239, 163, 0) 24%),
+      linear-gradient(180deg, #082a60 0%, #0c4f8f 50%, #f3b24b 100%);
+  }
+
+  body.register-page .page-header .page-header-image {
+    background:
+      radial-gradient(circle at 78% 12%, rgba(255, 212, 114, 0.4) 0 16%, rgba(255, 212, 114, 0) 36%),
+      linear-gradient(150deg, rgba(10, 56, 108, 0.52), rgba(6, 27, 62, 0.18));
+    opacity: 0.95;
+  }
+
+  body.register-page .register-bg {
+    background: linear-gradient(180deg, rgba(7, 37, 78, 0.32) 0%, rgba(8, 53, 102, 0.16) 45%, rgba(244, 177, 67, 0.24) 100%);
+    border-radius: 24px;
+  }
+
+  body.register-page .square {
+    background: linear-gradient(145deg, rgba(80, 183, 255, 0.26), rgba(255, 197, 96, 0.26));
+    border: 1px solid rgba(255, 231, 186, 0.22);
+    box-shadow: 0 10px 22px rgba(7, 24, 55, 0.22);
+  }
+</style>
 
 <body class="register-page">
     @include('front.navbar')
