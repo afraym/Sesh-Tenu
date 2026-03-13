@@ -28,8 +28,8 @@
 
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label for="email">Email Address / البريد الإلكتروني <span class="text-danger">*</span></label>
-                                    <input type="email" class="form-control @error('email') is-invalid @enderror"
+                                    <label for="email">البريد الإلكتروني او الهاتف<span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control @error('email') is-invalid @enderror"
                                            id="email" name="email"
                                            value="{{ old('email', $user->email) }}"
                                            placeholder="Enter email address" required>
