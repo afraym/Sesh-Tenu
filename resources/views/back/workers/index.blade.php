@@ -162,6 +162,7 @@
 										<th><a href="{{ $sortUrl('job_type_id') }}" style="color: inherit;font-weight: 700;">Job Type / الوظيفة {!! $sortIcon('job_type_id') !!}</a></th>
 										<th><a href="{{ $sortUrl('national_id') }}" style="color: inherit;font-weight: 700;">الرقم القومي {!! $sortIcon('national_id') !!}</a></th>
 										<th><a href="{{ $sortUrl('phone_number') }}" style="color: inherit;font-weight: 700;">الهاتف {!! $sortIcon('phone_number') !!}</a></th>
+										<th><a href="{{ $sortUrl('equipmentAsDriver') }}" style="color: inherit;font-weight: 700;">المعدات {!! $sortIcon('equipmentAsDriver') !!}</a></th>
 										<th><a href="{{ $sortUrl('join_date') }}" style="color: inherit;font-weight: 700;">تاريخ الانضمام {!! $sortIcon('join_date') !!}</a></th>
 										<th><a href="{{ $sortUrl('is_on_company_payroll') }}" style="color: inherit;font-weight: 700;">على قوة الشركة {!! $sortIcon('is_on_company_payroll') !!}</a></th>
 										<th class="text-center">Actions / الإجراءات</th>
@@ -183,6 +184,7 @@
 											<td>
 											<a class="text-center" data-toggle="tooltip" data-placement="top" title="{{ $worker->national_id }}" data-original-title="{{ $worker->national_id }}">
 												<i class="fas fa-id-card workerid" ></i></a>
+										
 											</td>
 											<td>
 												@php
@@ -207,6 +209,19 @@
 													</div>
 												
 												@endif
+											</td>
+											<td>
+													@if($worker->equipmentAsDriver->isNotEmpty())
+												<a class="text-center ml-1"
+												   data-toggle="tooltip"
+												   data-placement="top"
+												   data-html="true"
+												   title="{{ $worker->equipmentAsDriver->map(fn($e) => 'كود : ' . ($e->equipment_code ?? '-') . '<br>نوع : ' . ($e->equipment_type ?? '-') . '<br>موديل: ' . ($e->model_year ?? '-') . '<br>شاسية: ' . ($e->equipment_number ?? '-'))->implode('<br><br>') }}"
+												   href="{{ route('equipment.index') }}"
+												   style="color:#00bcd4">
+													<img src="{{ asset('assets/img/bulldozer.png')}}" alt="" class="img-fluid">
+												</a>
+											@endif
 											</td>
 											<td>{{ $worker->join_date ? $worker->join_date->format('Y-m-d') : 'N/A' }}</td>
 											<td>

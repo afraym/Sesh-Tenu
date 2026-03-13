@@ -53,4 +53,11 @@ class Worker extends Model
     {
         return $this->hasMany(WorkerDocumentDelivery::class);
     }
+
+    public function equipmentAsDriver(): HasMany
+    {
+        return $this->hasMany(\App\Models\Equipment::class, 'driver_worker_id');
+    }
 }
+
+

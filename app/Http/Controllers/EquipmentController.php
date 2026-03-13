@@ -18,8 +18,7 @@ class EquipmentController extends Controller
     public function index(Request $request)
     {
         $user = $request->user();
-        $query = Equipment::query()->with(['company', 'project']);
-        $equipments = collect();
+        $query = Equipment::query()->with('company');
         $allowedSorts = [
             'id',
             'project_name',
@@ -34,15 +33,13 @@ class EquipmentController extends Controller
             'created_at',
         ];
         if ($user && !$user->isSuperAdmin()) {
-            $selectedCompanyId = $user->company_id;
             $query->where('company_id', $user->company_id);
         } else {
-            $companies = Company::orderBy('name')->get(['id', 'name']);
             if ($request->filled('company_id')) {
-                $selectedCompanyId = (int) $request->company_id;
                 $query->where('company_id', $request->company_id);
             }
         }
+
         $sort = $request->input('sort', 'created_at');
         if (!in_array($sort, $allowedSorts, true)) {
             $sort = 'created_at';
@@ -50,7 +47,7 @@ class EquipmentController extends Controller
 
         $direction = strtolower((string) $request->input('direction', 'desc')) === 'asc' ? 'asc' : 'desc';
 
-        $equipments = Equipment::with('company')
+        $equipments = $query
             ->orderBy($sort, $direction)
             ->paginate(100)
             ->withQueryString();
@@ -66,8 +63,9 @@ class EquipmentController extends Controller
         $companies = \App\Models\Company::orderBy('name')->get();
         $projects = Project::orderBy('name')->get(['id', 'name']);
         $equipmentTypes = EquipmentType::where('is_active', true)->orderBy('name')->get(['id', 'name']);
+        $drivers = \App\Models\User::orderBy('name')->get(['id', 'name', 'company_id']);
 
-        return view('back.equipment.create', compact('companies', 'projects', 'equipmentTypes'));
+        return view('back.equipment.create', compact('companies', 'projects', 'equipmentTypes', 'drivers'));
     }
 
     /**
@@ -89,15 +87,26 @@ class EquipmentController extends Controller
             'reg_no' => 'nullable|string|max:255',
             'equip_reg_issue' => 'nullable|string|max:255',
             'custom_clearance' => 'nullable|string|max:255',
+            'driver_user_id' => 'nullable|exists:users,id',
         ]);
 
         $project = Project::findOrFail($request->project_id);
+
+        // If a linked user driver is selected, use their name as current_driver
+        $currentDriver = $request->current_driver;
+        if ($request->filled('driver_user_id')) {
+            $driverUser = \App\Models\User::find($request->driver_user_id);
+            if ($driverUser) {
+                $currentDriver = $driverUser->name;
+            }
+        }
 
         Equipment::create([
             'project_name' => $project->name,
             'company_id' => $request->company_id,
             'previous_driver' => $request->previous_driver,
-            'current_driver' => $request->current_driver,
+            'current_driver' => $currentDriver,
+            'driver_user_id' => $request->driver_user_id,
             'equipment_type' => $request->equipment_type,
             'model_year' => $request->model_year,
             'equipment_code' => $request->equipment_code,

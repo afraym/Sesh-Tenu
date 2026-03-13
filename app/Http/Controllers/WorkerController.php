@@ -15,7 +15,7 @@ class WorkerController extends Controller
     public function index(Request $request)
     {
         $user = $request->user();
-        $query = Worker::query()->with(['company', 'jobType']);
+        $query = Worker::query()->with(['company', 'jobType', 'equipmentAsDriver']);
         $companies = collect();
         $selectedCompanyId = null;
 

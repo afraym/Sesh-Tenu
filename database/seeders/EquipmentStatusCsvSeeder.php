@@ -6,6 +6,7 @@ use App\Models\Equipment;
 use App\Models\EquipmentType;
 use App\Models\Project;
 use App\Models\Company;
+use App\Models\Worker;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Schema;
 
@@ -46,6 +47,11 @@ class EquipmentStatusCsvSeeder extends Seeder
         $imported = 0;
         $skipped = 0;
 
+        // Build a lookup map: normalised name => worker id
+        $workerMap = Worker::all(['id', 'name'])
+            ->mapWithKeys(fn ($w) => [$this->normalizeName($w->name) => $w->id])
+            ->all();
+
         while (($row = fgetcsv($handle)) !== false) {
             if (count($row) < 5) {
                 $skipped++;
@@ -59,6 +65,9 @@ class EquipmentStatusCsvSeeder extends Seeder
             }
 
             $driverName = $this->normalizeText($row[1] ?? '');
+
+            // Try to find a matching worker by name
+            $workerDriverId = $workerMap[$this->normalizeName($driverName)] ?? null;
             $equipmentTypeName = $this->normalizeType($row[2] ?? '');
             $rawCode = $this->normalizeText($row[3] ?? '');
             $equipmentNumber = $this->normalizeText($row[4] ?? '');
@@ -82,6 +91,7 @@ class EquipmentStatusCsvSeeder extends Seeder
                     'company_id' => $firstCompany->id,
                     'previous_driver' => null,
                     'current_driver' => $driverName,
+                    'driver_worker_id' => $workerDriverId,
                     'equipment_type' => $equipmentTypeName,
                     'model_year' => null,
                     'equipment_number' => $equipmentNumber !== '' ? $equipmentNumber : null,
@@ -100,6 +110,12 @@ class EquipmentStatusCsvSeeder extends Seeder
 
         $this->command?->info("Imported rows assigned to project: {$firstProject->name}, company ID: {$firstCompany->id}");
         $this->command?->info("Equipment CSV import done. Imported/updated: {$imported}, Skipped: {$skipped}");
+    }
+
+    private function normalizeName(?string $value): string
+    {
+        // Collapse whitespace and lowercase for fuzzy matching
+        return mb_strtolower(preg_replace('/\s+/u', ' ', trim((string) $value)));
     }
 
     private function normalizeText(?string $value): string

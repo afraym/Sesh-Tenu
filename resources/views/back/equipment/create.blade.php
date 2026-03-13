@@ -59,8 +59,22 @@
                             </div>
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label for="current_driver">اسم السائق الحالي / Current Driver</label>
-                                    <input type="text" class="form-control" id="current_driver" name="current_driver">
+                                    <label for="driver_user_id">السائق الحالي (مستخدم مرتبط) / Linked Driver</label>
+                                    <select class="form-control" id="driver_user_id" name="driver_user_id">
+                                        <option value="">-- بدون ربط / No Link --</option>
+                                        @foreach($drivers ?? [] as $driver)
+                                            <option value="{{ $driver->id }}" {{ old('driver_user_id') == $driver->id ? 'selected' : '' }}>
+                                                {{ $driver->name }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    <small class="form-text text-muted">اختر مستخدماً لربط المعدة بحسابه، أو اتركه فارغاً وأدخل الاسم يدوياً أدناه.</small>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="current_driver">اسم السائق الحالي / Current Driver <small class="text-muted">(يدوي)</small></label>
+                                    <input type="text" class="form-control" id="current_driver" name="current_driver" value="{{ old('current_driver') }}" placeholder="يُملأ تلقائياً عند اختيار مستخدم">
                                 </div>
                             </div>
                         </div>
@@ -154,5 +168,14 @@
         </div>
     </div>
 </div>
+<script>
+    document.getElementById('driver_user_id').addEventListener('change', function () {
+        var selected = this.options[this.selectedIndex];
+        var nameField = document.getElementById('current_driver');
+        if (selected.value) {
+            nameField.value = selected.text.trim();
+        }
+    });
+</script>
 @endsection
 

@@ -12,6 +12,8 @@ class Equipment extends Model
         'company_id',
         'previous_driver',
         'current_driver',
+        'driver_user_id',
+        'driver_worker_id',
         'equipment_type',
         'model_year',
         'equipment_code',
@@ -29,5 +31,15 @@ class Equipment extends Model
     public function company(): BelongsTo
     {
         return $this->belongsTo(Company::class);
+    }
+
+    public function driver(): BelongsTo
+    {
+        return $this->belongsTo(\App\Models\User::class, 'driver_user_id');
+    }
+
+    public function workerDriver(): BelongsTo
+    {
+        return $this->belongsTo(\App\Models\Worker::class, 'driver_worker_id');
     }
 }
