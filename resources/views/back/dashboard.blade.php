@@ -95,16 +95,16 @@
 			'action' => 'عرض المعدات',
 			'count' => $counts['equipment'],
 		],
-		[
-			'title' => 'أنواع المعدات',
-			'subtitle' => 'تصنيف المعدات حسب النوع',
-			'icon' => 'fa-solid fa-tractor',
-			'icon_color' => '#8b6df0',
-			'icon_bg' => 'rgba(139, 109, 240, 0.18)',
-			'route' => 'equipment-types.index',
-			'action' => 'عرض الأنواع',
-			'count' => $counts['equipment_types'],
-		],
+		// [
+		// 	'title' => 'أنواع المعدات',
+		// 	'subtitle' => 'تصنيف المعدات حسب النوع',
+		// 	'icon' => 'fa-solid fa-tractor',
+		// 	'icon_color' => '#8b6df0',
+		// 	'icon_bg' => 'rgba(139, 109, 240, 0.18)',
+		// 	'route' => 'equipment-types.index',
+		// 	'action' => 'عرض الأنواع',
+		// 	'count' => $counts['equipment_types'],
+		// ],
 	];
 
 	if (auth()->check() && auth()->user()->isSuperAdmin()) {
@@ -151,6 +151,34 @@
 			],
 		]);
 	}
+
+	// Reorder buttons by frequent workflow usage (manual priority map).
+	$usagePriority = [
+		'ادخال جديد' => 70,
+		'استلام سركي' => 95,
+		'متابعة السركي' => 90,
+		'فحص يومي' => 85,
+		'العمال' => 99,
+		'افراد امن' => 98,
+		'المعدات' => 100,
+		'اخلاء طرف' => 65,
+		'أنواع المعدات' => 60,
+		'الشركات' => 50,
+		'المشاريع' => 45,
+		'أنواع الوظائف' => 40,
+		'المستخدمين' => 35,
+	];
+
+	usort($modules, function (array $a, array $b) use ($usagePriority) {
+		$priorityA = (int) ($usagePriority[$a['title'] ?? ''] ?? 0);
+		$priorityB = (int) ($usagePriority[$b['title'] ?? ''] ?? 0);
+
+		if ($priorityA === $priorityB) {
+			return strcmp((string) ($a['title'] ?? ''), (string) ($b['title'] ?? ''));
+		}
+
+		return $priorityB <=> $priorityA;
+	});
 @endphp
 
 <div class="content">
@@ -187,8 +215,8 @@
 
 	.dashboard-button-grid {
 		display: grid;
-		grid-template-columns: repeat(4, minmax(170px, 1fr));
-		gap: 28px 22px;
+		grid-template-columns: repeat(4, minmax(130px, 1fr));
+		gap: 16px 14px;
 		padding: 8px 0 2px;
 	}
 
@@ -197,9 +225,12 @@
 		display: inline-flex;
 		align-items: center;
 		justify-content: center;
-		min-height: 88px;
-		border-radius: 16px;
-		padding: 14px 18px;
+		width: 100%;
+		max-width: 170px;
+		margin: 0 auto;
+		min-height: 50px;
+		border-radius: 12px;
+		padding: 10px 14px;
 		text-align: center;
 		text-decoration: none;
 		color: #e8f0ff;
@@ -237,7 +268,7 @@
 	.dashboard-glass-btn__label {
 		position: relative;
 		z-index: 1;
-		font-size: clamp(24px, 2.2vw, 38px);
+		font-size: clamp(16px, 1.35vw, 24px);
 		font-weight: 700;
 		line-height: 1.15;
 		letter-spacing: 0;
@@ -250,22 +281,22 @@
 
 	@media (max-width: 1199px) {
 		.dashboard-button-grid {
-			grid-template-columns: repeat(3, minmax(160px, 1fr));
+			grid-template-columns: repeat(3, minmax(120px, 1fr));
 		}
 	}
 
 	@media (max-width: 991px) {
 		.dashboard-button-grid {
-			grid-template-columns: repeat(2, minmax(150px, 1fr));
-			gap: 18px;
+			grid-template-columns: repeat(2, minmax(120px, 1fr));
+			gap: 12px;
 		}
 
 		.dashboard-glass-btn {
-			min-height: 80px;
+			min-height: 46px;
 		}
 
 		.dashboard-glass-btn__label {
-			font-size: clamp(22px, 4.3vw, 30px);
+			font-size: clamp(15px, 3.2vw, 20px);
 		}
 	}
 
@@ -275,7 +306,7 @@
 		}
 
 		.dashboard-glass-btn__label {
-			font-size: clamp(20px, 8vw, 26px);
+			font-size: clamp(14px, 6vw, 18px);
 		}
 	}
 </style>
