@@ -39,7 +39,7 @@
               <div id="square8" class="square square-8"></div>
               <div class="card card-register">
                 <div class="card-header">
-                  <img class="card-img" src="../assets/img/site/001.jpg" alt="Card image">
+                  <img class="card-img" src="{{ asset('assets/img/square1.png') }}" alt="Card image">
                   <h4 class="card-title">دخول</h4>
                 </div>
                 <div class="card-body">
