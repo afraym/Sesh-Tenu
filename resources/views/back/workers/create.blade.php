@@ -4,8 +4,8 @@
     <div class="row">
         <div class="col-md-12">
             <div class="card">
-                <div class="card-header">
-                    <h4 class="card-title">Add New Worker</h4>
+                <div class="card-header  align-items-center text-center">
+                    <h4 class="card-title">اضافة عامل جديد</h4>
                 </div>
                 <div class="card-body">
                     <form action="{{ route('workers.store') }}" method="POST">

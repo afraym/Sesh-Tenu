@@ -53,12 +53,7 @@
     -->
       <div class="sidebar-wrapper" >
         <div class="logo">
-          <a href="javascript:void(0)" class="simple-text logo-mini">
-           س ت
-          </a>
-          <a href="javascript:void(0)" class="simple-text logo-normal">
-       سش تنو
-          </a>
+          <img src="{{asset('assets/img/shtnwlogo.png')}}" alt="  Sesh Tenu Logo" class="logo-image img-fluid" style="max-width: 80%; margin: 0 auto; display: block;">
         </div>
         <ul class="nav">
            <li class="{{ request()->routeIs('dashboard') ? 'active' : '' }}">
@@ -187,11 +182,7 @@
                 <span class="navbar-toggler-bar bar3"></span>
               </button>
             </div>
-          <a class="navbar-brand">
-            @if(auth()->check() && auth()->user()->company)
-              <img src="{{ asset(auth()->user()->company->logo)  }}" alt="{{ auth()->user()->company->name }}" class="company-logo" style="width: 90px;height: 90px;">
-            @endif
-          </a>
+         
           </div>
           <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navigation" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-bar navbar-kebab"></span>

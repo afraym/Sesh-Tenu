@@ -27,7 +27,13 @@
 			<div class="card">
 				<div class="card-header">
 					<div class="row align-items-center text-center">
-						<div class="col"></div>
+						<div class="col">
+								 <a class="navbar-brand">
+            @if(auth()->check() && auth()->user()->company)
+              <img src="{{ asset(auth()->user()->company->logo)  }}" alt="{{ auth()->user()->company->name }}" class="company-logo" style="width: 90px;height: 90px;">
+            @endif
+          </a>
+						</div>
 						<div class="col">
 							<h4 class="card-title mb-0">قائمة العمال</h4>
 						</div>
@@ -79,6 +85,9 @@
 								</div>
 							</form>
 						</div>
+					</div>
+						@endif
+						<div class="row">
 						<div class="col-md-6">
 								<form method="GET" action="{{ route('workers.index') }}" class="mb-3">
     <div class="input-group">
@@ -107,7 +116,7 @@
 							
 						</div>
 					</div>
-					@endif
+					
 											<div class="col text-right">
 							{{-- <a href="{{ route('workers.export.pdf.merged') }}" class="btn btn-sm btn-success" title="Export all as merged PDF (HTML-based)" target="_blank">
 								<i class="tim-icons icon-paper"></i> سركي مجمع PDF

@@ -16,6 +16,46 @@
 
 	$modules = [
 		[
+			'title' => 'افراد امن',
+			'subtitle' => 'عرض عمال أفراد الأمن',
+			'icon' => 'fa-solid fa-shield-halved',
+			'icon_color' => '#3987f6',
+			'icon_bg' => 'rgba(57, 135, 246, 0.18)',
+			'url' => url('admin/workers') . '?job_type_id=4&sort=created_at&direction=desc',
+			'action' => 'عرض افراد الامن',
+			'count' => 0,
+		],
+		[
+			'title' => 'فحص يومي',
+			'subtitle' => 'الفحص اليومي للعمال',
+			'icon' => 'fa-solid fa-clipboard-check',
+			'icon_color' => '#22c55e',
+			'icon_bg' => 'rgba(34, 197, 94, 0.18)',
+			'url' => url('admin/workers') . '?sort=created_at&direction=desc',
+			'action' => 'فحص يومي',
+			'count' => 0,
+		],
+		[
+			'title' => 'اخلاء طرف',
+			'subtitle' => 'إجراءات إخلاء طرف العمال',
+			'icon' => 'fa-solid fa-file-circle-check',
+			'icon_color' => '#f59e0b',
+			'icon_bg' => 'rgba(245, 158, 11, 0.18)',
+			'url' => url('admin/workers') . '?sort=created_at&direction=desc',
+			'action' => 'اخلاء طرف',
+			'count' => 0,
+		],
+		[
+			'title' => 'ادخال جديد',
+			'subtitle' => 'إضافة عامل جديد للنظام',
+			'icon' => 'fa-solid fa-user-plus',
+			'icon_color' => '#00b8d9',
+			'icon_bg' => 'rgba(0, 184, 217, 0.18)',
+			'route' => 'workers.create',
+			'action' => 'إضافة عامل',
+			'count' => 0,
+		],
+		[
 			'title' => 'العمال',
 			'subtitle' => 'إدارة بيانات العمال والتعديل والبحث',
 			'icon' => 'fa-solid fa-person-digging',
@@ -26,7 +66,7 @@
 			'count' => $counts['workers'],
 		],
 		[
-			'title' => 'متابعة السيركي',
+			'title' => 'متابعة السركي',
 			'subtitle' => 'إجمالي التسليمات',
 			'icon' => 'far fa-calendar-check',
 			'icon_color' => '#18b67f',
@@ -36,7 +76,7 @@
 			'count' => $counts['deliveries'],
 		],
 		[
-			'title' => 'استلام سيركي',
+			'title' => 'استلام سركي',
 			'subtitle' => 'استلامات اليوم',
 			'icon' => 'fas fa-user-check',
 			'icon_color' => '#f2994a',
@@ -117,32 +157,21 @@
 	<div class="row">
 		<div class="col-12">
 			<div class="card dashboard-modules-card">
-				<div class="card-header">
+				<div class="card-header  align-items-center text-center">
+					 <a class="navbar-brand">
+            @if(auth()->check() && auth()->user()->company)
+              <img src="{{ asset(auth()->user()->company->logo)  }}" alt="{{ auth()->user()->company->name }}" class="company-logo" style="width: 90px;height: 90px;">
+            @endif
+          </a>
 					<h4 class="card-title mb-1">المنصات الرئيسية</h4>
 					<p class="card-category mb-0">قائمة وحدات النظام الرئيسية للوصول السريع</p>
 				</div>
-				<div class="card-body pt-2">
-					<div class="row dashboard-module-grid">
+				<div class="card-body pt-3">
+					<div class="dashboard-button-grid">
 						@foreach($modules as $module)
-							<div class="col-12 col-md-6 col-xl-4 d-flex">
-								<div class="module-box w-100 d-flex flex-column justify-content-between">
-									<div class="d-flex align-items-center justify-content-between mb-3">
-										<span class="module-count-badge">{{ number_format($module['count'] ?? 0) }}</span>
-									</div>
-									<div class="text-center mb-3">
-										<div class="module-icon-wrap mx-auto" style="--module-icon-color: {{ $module['icon_color'] ?? '#1d8cf8' }}; --module-icon-bg: {{ $module['icon_bg'] ?? 'rgba(29, 140, 248, 0.18)' }};">
-											<i class="{{ $module['icon'] }}"></i>
-										</div>
-									</div>
-									<h5 class="module-title mb-2 text-center">{{ $module['title'] }}</h5>
-									<p class="module-subtitle mb-3 text-center">{{ $module['subtitle'] }}</p>
-									<div class="text-center">
-										<a href="{{ route($module['route']) }}" class="btn btn-info btn-sm mb-0">
-											{{ $module['action'] }}
-										</a>
-									</div>
-								</div>
-							</div>
+							<a href="{{ isset($module['url']) ? $module['url'] : route($module['route']) }}" class="dashboard-glass-btn" title="{{ $module['subtitle'] }}">
+								<span class="dashboard-glass-btn__label">{{ $module['title'] }}</span>
+							</a>
 						@endforeach
 					</div>
 				</div>
@@ -153,100 +182,100 @@
 
 <style>
 	.dashboard-modules-card {
-		border-radius: 14px;
+		border-radius: 18px;
 	}
 
-	.dashboard-module-grid {
-		margin-top: 0;
+	.dashboard-button-grid {
+		display: grid;
+		grid-template-columns: repeat(4, minmax(170px, 1fr));
+		gap: 28px 22px;
+		padding: 8px 0 2px;
 	}
 
-	.module-box {
-		background: rgba(255, 255, 255, 0.02);
-		border: 1px solid rgba(255, 255, 255, 0.08);
-		border-radius: 10px;
-		padding: 16px;
-		margin-bottom: 16px;
-		min-height: 180px;
-	}
-
-	.module-box:hover {
-		border-color: rgba(29, 140, 248, 0.45);
-		background: rgba(29, 140, 248, 0.08);
-	}
-
-	.module-title {
-		color: #ffffff;
-	}
-
-	.module-subtitle {
-		color: rgba(255, 255, 255, 0.7);
-	}
-
-	.module-count-badge {
+	.dashboard-glass-btn {
+		position: relative;
 		display: inline-flex;
 		align-items: center;
 		justify-content: center;
-		min-width: 44px;
-		height: 28px;
-		padding: 0 10px;
-		border-radius: 999px;
-		background: rgba(29, 140, 248, 0.2);
-		border: 1px solid rgba(29, 140, 248, 0.45);
-		color: #7fc0ff;
-		font-weight: 700;
-		font-size: 12px;
-	}
-
-	.module-icon-wrap {
-		width: 72px;
-		height: 72px;
+		min-height: 88px;
 		border-radius: 16px;
-		display: inline-flex;
-		align-items: center;
-		justify-content: center;
-		background: var(--module-icon-bg, rgba(29, 140, 248, 0.18));
-		color: var(--module-icon-color, #1d8cf8);
-		font-size: 30px;
+		padding: 14px 18px;
+		text-align: center;
+		text-decoration: none;
+		color: #e8f0ff;
+		background: linear-gradient(180deg, #6aaaff 0%, #3987f6 50%, #1f6de0 100%);
+		border: 3px solid #1a69d6;
+		box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.55), inset 0 -3px 0 rgba(15, 55, 130, 0.45), 0 5px 12px rgba(25, 90, 200, 0.24);
+		transition: transform 0.18s ease, filter 0.18s ease, box-shadow 0.18s ease;
 	}
 
-	.module-icon-wrap i {
-		line-height: 1;
+	.dashboard-glass-btn::before {
+		content: '';
+		position: absolute;
+		top: 8px;
+		left: 14px;
+		right: 14px;
+		height: 28%;
+		border-radius: 10px;
+		background: linear-gradient(180deg, rgba(255, 255, 255, 0.32), rgba(255, 255, 255, 0.03));
+		pointer-events: none;
 	}
 
-	body.white-content .module-box {
+	.dashboard-glass-btn:hover,
+	.dashboard-glass-btn:focus {
+		text-decoration: none;
+		color: #ffffff;
+		filter: brightness(1.04);
+		transform: translateY(-2px);
+		box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.65), inset 0 -3px 0 rgba(15, 55, 130, 0.42), 0 10px 16px rgba(25, 90, 200, 0.28);
+	}
+
+	.dashboard-glass-btn:active {
+		transform: translateY(1px);
+	}
+
+	.dashboard-glass-btn__label {
+		position: relative;
+		z-index: 1;
+		font-size: clamp(24px, 2.2vw, 38px);
+		font-weight: 700;
+		line-height: 1.15;
+		letter-spacing: 0;
+		text-shadow: 0 2px 0 rgba(15, 50, 130, 0.55);
+	}
+
+	body.white-content .dashboard-modules-card {
 		background: #ffffff;
-		border-color: #dbe4f0;
 	}
 
-	body.white-content .module-box:hover {
-		background: #f3f8ff;
-		border-color: #9fc7f4;
+	@media (max-width: 1199px) {
+		.dashboard-button-grid {
+			grid-template-columns: repeat(3, minmax(160px, 1fr));
+		}
 	}
 
-	body.white-content .module-title {
-		color: #2b3553;
-	}
-
-	body.white-content .module-subtitle {
-		color: #5f6b8a;
-	}
-
-	body.white-content .module-count-badge {
-		background: #e8f2ff;
-		border-color: #b5d4fa;
-		color: #1d5ea8;
-	}
-
-	@media (max-width: 767px) {
-		.module-box {
-			min-height: auto;
-			margin-bottom: 12px;
+	@media (max-width: 991px) {
+		.dashboard-button-grid {
+			grid-template-columns: repeat(2, minmax(150px, 1fr));
+			gap: 18px;
 		}
 
-		.module-icon-wrap {
-			width: 62px;
-			height: 62px;
-			font-size: 26px;
+		.dashboard-glass-btn {
+			min-height: 80px;
+		}
+
+		.dashboard-glass-btn__label {
+			font-size: clamp(22px, 4.3vw, 30px);
+		}
+	}
+
+	@media (max-width: 575px) {
+		.dashboard-button-grid {
+			grid-template-columns: 1fr;
+		}
+
+		.dashboard-glass-btn__label {
+			font-size: clamp(20px, 8vw, 26px);
 		}
 	}
 </style>

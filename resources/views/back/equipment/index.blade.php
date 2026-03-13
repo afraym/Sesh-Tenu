@@ -40,7 +40,7 @@
                             <thead>
                                 <tr>
                                     <th><a href="{{ $sortUrl('id') }}" style="color: inherit;"># {!! $sortIcon('id') !!}</a></th>
-                                    <th><a href="{{ $sortUrl('project_name') }}" style="color: inherit;">اسم المشروع {!! $sortIcon('project_name') !!}</a></th>
+                                    {{-- <th><a href="{{ $sortUrl('project_name') }}" style="color: inherit;">اسم المشروع {!! $sortIcon('project_name') !!}</a></th> --}}
                                     <th><a href="{{ $sortUrl('company_id') }}" style="color: inherit;">اسم الشركة {!! $sortIcon('company_id') !!}</a></th>
                                     <th><a href="{{ $sortUrl('equipment_type') }}" style="color: inherit;">نوع المعدة {!! $sortIcon('equipment_type') !!}</a></th>
                                     <th><a href="{{ $sortUrl('model_year') }}" style="color: inherit;">موديل المعدة {!! $sortIcon('model_year') !!}</a></th>
@@ -56,7 +56,7 @@
                                 @foreach($equipments as $equipment)
                                     <tr>
                                         <td>{{ $loop->iteration + ($equipments->currentPage() - 1) * $equipments->perPage() }}</td>
-                                        <td>{{ $equipment->project_name }}</td>
+                                        {{-- <td>{{ $equipment->project_name }}</td> --}}
                                         <td>{{ optional($equipment->company)->name ?? 'غير متوفر' }}</td>
                                         <td>{{ $equipment->equipment_type }}</td>
                                         <td>{{ $equipment->model_year ?? 'غير متوفر' }}</td>
@@ -70,7 +70,7 @@
                                             <a href="{{ route('equipment.exportWord', $equipment->id) }}"
                                                class="btn btn-sm btn-primary"
                                                target="_blank">
-                                                Print Word
+                                                طباعة الفحص
                                             </a>
                                         </td>
                                     </tr>
