@@ -31,7 +31,7 @@
 			'icon' => 'fa-solid fa-clipboard-check',
 			'icon_color' => '#22c55e',
 			'icon_bg' => 'rgba(34, 197, 94, 0.18)',
-			'url' => url('admin/workers') . '?sort=created_at&direction=desc',
+			'url' => url('admin/equipment'),
 			'action' => 'فحص يومي',
 			'count' => 0,
 		],
