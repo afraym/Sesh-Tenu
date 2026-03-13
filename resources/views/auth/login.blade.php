@@ -4,20 +4,32 @@
 <style>
   body.register-page .page-header {
     background:
-      radial-gradient(circle at 12% 20%, rgba(255, 239, 163, 0.85) 0 9%, rgba(255, 239, 163, 0) 24%),
-      linear-gradient(180deg, #082a60 0%, #0c4f8f 50%, #f3b24b 100%);
+      linear-gradient(150deg, rgba(10, 56, 108, 0.55), rgba(6, 27, 62, 0.28)),
+      url('{{ asset('assets/img/site/007.jpeg') }}') center center / cover no-repeat,
+      radial-gradient(circle at 78% 12%, rgba(255, 212, 114, 0.4) 0 16%, rgba(255, 212, 114, 0) 36%),
+      linear-gradient(150deg, rgba(10, 56, 108, 0.52), rgba(6, 27, 62, 0.18));
   }
 
   body.register-page .page-header .page-header-image {
-    background:
-      radial-gradient(circle at 78% 12%, rgba(255, 212, 114, 0.4) 0 16%, rgba(255, 212, 114, 0) 36%),
-      linear-gradient(150deg, rgba(10, 56, 108, 0.52), rgba(6, 27, 62, 0.18));
-    opacity: 0.95;
+    display: none;
   }
 
   body.register-page .register-bg {
     background: linear-gradient(180deg, rgba(7, 37, 78, 0.32) 0%, rgba(8, 53, 102, 0.16) 45%, rgba(244, 177, 67, 0.24) 100%);
     border-radius: 24px;
+  }
+
+  body.register-page .card.card-register {
+    background: rgba(10, 24, 50, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(6px);
+    box-shadow: 0 18px 40px rgba(4, 13, 31, 0.35);
+  }
+
+  body.register-page .card.card-register .card-header,
+  body.register-page .card.card-register .card-body,
+  body.register-page .card.card-register .card-footer {
+    background: transparent;
   }
 
   body.register-page .square {
@@ -40,7 +52,7 @@
               <div class="card card-register">
                 <div class="card-header">
                   <img class="card-img" src="{{ asset('assets/img/square1.png') }}" alt="Card image">
-                  <h4 class="card-title">دخول</h4>
+                  <h4 class="card-title text-white text-center" style="margin-left: -30%;">دخول</h4>
                 </div>
                 <div class="card-body">
                   <form class="form" method="POST" action="{{ route('login') }}">
@@ -74,7 +86,7 @@
                   <button type="submit" class="btn btn-info btn-round btn-lg">دخول </button>
                   </form>
                   @if (Route::has('password.request'))
-                                    <a class="btn btn-link" href="{{ route('password.request') }}">
+                                    <a class="btn btn-link text-white" href="{{ route('password.request') }}">
                                         {{ __('هل نسيت كلمة المرور؟') }}
                                     </a>
                                 @endif
