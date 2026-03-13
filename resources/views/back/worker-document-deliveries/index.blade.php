@@ -48,21 +48,19 @@
     <div class="row">
         <div class="col-md-12">
             <div class="card">
-                <div class="card-header">
-                    <div class="row align-items-center text-center">
-                        <div class="col"></div>
-                        <div class="col">
-                            <h4 class="card-title mb-0">متابعة استلام السيركي</h4>
-                        </div>
-                        <div class="col text-right">
-                            <a href="{{ route('worker-document-deliveries.receive') }}" class="btn btn-sm btn-success">
-                                <i class="tim-icons icon-vector"></i> تسجيل سريع جماعي
-                            </a>
-                            <a href="{{ route('worker-document-deliveries.create') }}" class="btn btn-sm btn-primary">
-                                <i class="tim-icons icon-simple-add"></i> تسليم جديد
-                            </a>
-                        </div>
-                    </div>
+                <div class="card-header  align-items-center text-center">
+                <a class="navbar-brand">
+                @if(auth()->check() && auth()->user()->company)
+                <img src="{{ asset(auth()->user()->company->logo)  }}" alt="{{ auth()->user()->company->name }}" class="company-logo" style="width: 90px;height: 90px;">
+                @endif
+                </a>
+                    <h4 class="card-title mb-0">متابعة استلام السيركي</h4>
+                    <a href="{{ route('worker-document-deliveries.receive') }}" class="btn btn-sm btn-success">
+                        <i class="tim-icons icon-vector"></i> تسجيل سريع جماعي
+                    </a>
+                    <a href="{{ route('worker-document-deliveries.create') }}" class="btn btn-sm btn-primary">
+                        <i class="tim-icons icon-simple-add"></i> تسليم جديد
+                    </a>
                     @if(session('success'))
                         <div class="alert alert-success alert-with-icon mx-3 my-3" role="alert">
                             <span class="data"><b>نجاح:</b> {{ session('success') }}</span>

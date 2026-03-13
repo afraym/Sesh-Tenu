@@ -39,18 +39,16 @@
     <div class="row">
         <div class="col-md-12">
             <div class="card">
-                <div class="card-header">
-                    <div class="row align-items-center text-center">
-                        <div class="col"></div>
-                        <div class="col">
+                <div class="card-header  align-items-center text-center">
+                <a class="navbar-brand">
+                @if(auth()->check() && auth()->user()->company)
+                <img src="{{ asset(auth()->user()->company->logo)  }}" alt="{{ auth()->user()->company->name }}" class="company-logo" style="width: 90px;height: 90px;">
+                @endif
+                </a>
                             <h4 class="card-title mb-0">تسجيل التسليمات الجماعي السريع</h4>
-                        </div>
-                        <div class="col text-right">
                             <a href="{{ route('worker-document-deliveries.index') }}" class="btn btn-sm btn-secondary">
                                 <i class="tim-icons icon-zoom-split"></i> القائمة الكاملة
                             </a>
-                        </div>
-                    </div>
                 </div>
                 <div class="card-body">
                     @if(session('success'))

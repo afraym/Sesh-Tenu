@@ -206,20 +206,57 @@
                   <span class="d-lg-none d-md-block">Search</span>
                 </button>
               </li>
+              @php
+                $notif_workers_today   = \App\Models\Worker::whereDate('created_at', now()->toDateString())->count();
+                $notif_deliveries_today = \App\Models\WorkerDocumentDelivery::whereDate('created_at', now()->toDateString())->count();
+                $notif_workers_week    = \App\Models\Worker::whereBetween('created_at', [now()->startOfWeek(), now()->endOfWeek()])->count();
+                $notif_workers_total   = \App\Models\Worker::count();
+                $notif_equip_total     = \App\Models\Equipment::count();
+                $notif_badge           = ($notif_workers_today > 0 || $notif_deliveries_today > 0) ? true : false;
+              @endphp
               <li class="dropdown nav-item">
                 <a href="javascript:void(0)" class="dropdown-toggle nav-link" data-toggle="dropdown">
-                  <div class="notification d-none d-lg-block d-xl-block"></div>
+                  @if($notif_badge)
+                    <div class="notification d-none d-lg-block d-xl-block"></div>
+                  @endif
                   <i class="tim-icons icon-sound-wave"></i>
-                  <p class="d-lg-none">
-                    Notifications
-                  </p>
+                  <p class="d-lg-none">الإشعارات</p>
                 </a>
-                <ul class="dropdown-menu dropdown-menu-right dropdown-navbar">
-                  <li class="nav-link"><a href="#" class="nav-item dropdown-item">Mike John responded to your email</a></li>
-                  <li class="nav-link"><a href="javascript:void(0)" class="nav-item dropdown-item">You have 5 more tasks</a></li>
-                  <li class="nav-link"><a href="javascript:void(0)" class="nav-item dropdown-item">Your friend Michael is in town</a></li>
-                  <li class="nav-link"><a href="javascript:void(0)" class="nav-item dropdown-item">Another notification</a></li>
-                  <li class="nav-link"><a href="javascript:void(0)" class="nav-item dropdown-item">Another one</a></li>
+                <ul class="dropdown-menu dropdown-menu-right dropdown-navbar" style="min-width:270px">
+                  <li class="dropdown-header text-muted px-3 py-2" style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;">
+                    اليوم — {{ now()->translatedFormat('l j M') }}
+                  </li>
+                  <li class="nav-link">
+                    <a href="{{ route('workers.index') }}" class="nav-item dropdown-item d-flex justify-content-between align-items-center">
+                      <span><i class="fa-solid fa-user-plus ml-1" style="color:#3987f6"></i> عمال مضافون اليوم</span>
+                      <span class="badge badge-pill" style="background:rgba(57,135,246,.18);color:#3987f6;font-size:12px">{{ $notif_workers_today }}</span>
+                    </a>
+                  </li>
+                  <li class="nav-link">
+                    <a href="{{ route('worker-document-deliveries.index') }}" class="nav-item dropdown-item d-flex justify-content-between align-items-center">
+                      <span><i class="fas fa-user-check ml-1" style="color:#22c55e"></i> استلامات سيركي اليوم</span>
+                      <span class="badge badge-pill" style="background:rgba(34,197,94,.18);color:#22c55e;font-size:12px">{{ $notif_deliveries_today }}</span>
+                    </a>
+                  </li>
+                  <li class="dropdown-divider"></li>
+                  <li class="nav-link">
+                    <a href="{{ route('workers.index') }}" class="nav-item dropdown-item d-flex justify-content-between align-items-center">
+                      <span><i class="fa-solid fa-users ml-1" style="color:#8b6df0"></i> عمال هذا الأسبوع</span>
+                      <span class="badge badge-pill" style="background:rgba(139,109,240,.18);color:#8b6df0;font-size:12px">{{ $notif_workers_week }}</span>
+                    </a>
+                  </li>
+                  <li class="nav-link">
+                    <a href="{{ route('workers.index') }}" class="nav-item dropdown-item d-flex justify-content-between align-items-center">
+                      <span><i class="fa-solid fa-person-digging ml-1" style="color:#f2994a"></i> إجمالي العمال</span>
+                      <span class="badge badge-pill" style="background:rgba(242,153,74,.18);color:#f2994a;font-size:12px">{{ $notif_workers_total }}</span>
+                    </a>
+                  </li>
+                  <li class="nav-link">
+                    <a href="{{ route('equipment.index') }}" class="nav-item dropdown-item d-flex justify-content-between align-items-center">
+                      <span><i class="tim-icons icon-delivery-fast ml-1" style="color:#00bcd4"></i> إجمالي المعدات</span>
+                      <span class="badge badge-pill" style="background:rgba(0,188,212,.18);color:#00bcd4;font-size:12px">{{ $notif_equip_total }}</span>
+                    </a>
+                  </li>
                 </ul>
               </li>
               <li class="dropdown nav-item">

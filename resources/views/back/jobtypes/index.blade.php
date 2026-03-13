@@ -7,7 +7,12 @@
 	<div class="row">
 		<div class="col-md-12">
 			<div class="card">
-				<div class="card-header">
+				<div class="card-header  align-items-center text-center">
+                <a class="navbar-brand">
+                @if(auth()->check() && auth()->user()->company)
+                <img src="{{ asset(auth()->user()->company->logo)  }}" alt="{{ auth()->user()->company->name }}" class="company-logo" style="width: 90px;height: 90px;">
+                @endif
+                </a>
 					<div class="row align-items-center">
 						<div class="col">
 							<h4 class="card-title mb-0">Job Types List / قائمة أنواع الوظائف</h4>

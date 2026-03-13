@@ -27,9 +27,14 @@
     <div class="row">
         <div class="col-md-12">
             <div class="card">
-                <div class="card-header">
+                <div class="card-header  align-items-center text-center">
+                    <a class="navbar-brand">
+            @if(auth()->check() && auth()->user()->company)
+              <img src="{{ asset(auth()->user()->company->logo)  }}" alt="{{ auth()->user()->company->name }}" class="company-logo" style="width: 90px;height: 90px;">
+            @endif
+          </a>
                     <h4 class="card-title">Equipment List / قائمة المعدات</h4>
-                    <a href="{{ route('equipment.create') }}" class="btn btn-primary btn-sm float-right">Add Equipment / إضافة معدة</a>
+                    <a href="{{ route('equipment.create') }}" class="btn btn-primary btn-sm">Add Equipment / إضافة معدة</a>
                 </div>
                 <div class="card-body">
                     @if(session('success'))

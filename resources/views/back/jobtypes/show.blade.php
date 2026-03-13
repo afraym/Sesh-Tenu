@@ -5,6 +5,11 @@
 		<div class="col-md-12">
 			<div class="card">
 				<div class="card-header d-flex justify-content-between align-items-center">
+                <a class="navbar-brand">
+                @if(auth()->check() && auth()->user()->company)
+                <img src="{{ asset(auth()->user()->company->logo)  }}" alt="{{ auth()->user()->company->name }}" class="company-logo" style="width: 90px;height: 90px;">
+                @endif
+                </a>
 					<h4 class="card-title mb-0">Job Type Details / تفاصيل نوع الوظيفة</h4>
 					<a href="{{ route('jobtypes.index') }}" class="btn btn-secondary btn-sm">
 						<i class="tim-icons icon-minimal-left"></i> Back
