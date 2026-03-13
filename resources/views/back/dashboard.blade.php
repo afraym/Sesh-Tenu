@@ -95,6 +95,26 @@
 			'action' => 'عرض المعدات',
 			'count' => $counts['equipment'],
 		],
+		[
+			'title' => 'شهادة معايرة',
+			'subtitle' => 'متابعة شهادات معايرة المعدات',
+			'icon' => 'fa-solid fa-certificate',
+			'icon_color' => '#f59e0b',
+			'icon_bg' => 'rgba(245, 158, 11, 0.18)',
+			'url' => url('admin/equipment') . '?sort=created_at&direction=desc',
+			'action' => 'شهادة معايرة',
+			'count' => 0,
+		],
+		[
+			'title' => 'تصريح دخول وخروج',
+			'subtitle' => 'إدارة تصاريح دخول وخروج المعدات',
+			'icon' => 'fa-solid fa-right-left',
+			'icon_color' => '#22c55e',
+			'icon_bg' => 'rgba(34, 197, 94, 0.18)',
+			'url' => url('admin/equipment') . '?sort=created_at&direction=desc',
+			'action' => 'تصريح دخول وخروج',
+			'count' => 0,
+		],
 		// [
 		// 	'title' => 'أنواع المعدات',
 		// 	'subtitle' => 'تصنيف المعدات حسب النوع',
@@ -154,10 +174,12 @@
 
 	// Reorder buttons by frequent workflow usage (manual priority map).
 	$usagePriority = [
-		'ادخال جديد' => 70,
+		'ادخال جديد' => 97,
 		'استلام سركي' => 95,
-		'متابعة السركي' => 90,
+		'متابعة السركي' => 94,
 		'فحص يومي' => 85,
+		'شهادة معايرة' => 84,
+		'تصريح دخول وخروج' => 83,
 		'العمال' => 99,
 		'افراد امن' => 98,
 		'المعدات' => 100,
