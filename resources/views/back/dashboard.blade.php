@@ -71,7 +71,7 @@
 			'icon' => 'fa-solid fa-person-digging',
 			'icon_color' => '#3f8cff',
 			'icon_bg' => 'rgba(63, 140, 255, 0.18)',
-			'route' => 'workers.index',
+			'url' => url('admin/workers') . '?job_type_id=1&sort=created_at&direction=desc',
 			'action' => 'عرض العمال',
 			'count' => $counts['workers'],
 		],

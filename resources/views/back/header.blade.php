@@ -77,13 +77,13 @@
           <li class="{{ request()->routeIs('equipment.index') ? 'active' : '' }}">
             <a href="{{ route('equipment.index') }}">
               <i class="tim-icons icon-delivery-fast"></i>
-              <p>المعدات</p>
+              <p>المُعدات</p>
             </a>
           </li>
           <li class="{{ request()->routeIs('equipment-types.index') ? 'active' : '' }}">
             <a href="{{ route('equipment-types.index') }}">
             <i class="fa-solid fa-tractor"></i>
-            <p>أنواع المعدات</p>
+            <p>أنواع المٌعدات</p>
             </a>
           </li>
           {{-- <li class="{{ request()->routeIs('equipment.create') ? 'active' : '' }}">
