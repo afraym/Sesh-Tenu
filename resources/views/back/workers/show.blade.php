@@ -44,6 +44,10 @@
 								<td>{{ $worker->has_housing ? 'نعم' : 'لا' }}</td>
 							</tr>
 							<tr>
+								<th>دورة تدريبية</th>
+								<td>{{ $worker->has_training_course ? 'نعم' : 'لا' }}</td>
+							</tr>
+							<tr>
 								<th>من المجتمع المحلي</th>
 								<td>{{ $worker->is_local_community ? 'نعم' : 'لا' }}</td>
 							</tr>

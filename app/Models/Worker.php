@@ -16,6 +16,7 @@ class Worker extends Model
         'national_id',
         'phone_number',
         'has_housing',
+        'has_training_course',
         'is_local_community',
         'address',
         'join_date',
@@ -26,6 +27,7 @@ class Worker extends Model
 
     protected $casts = [
         'has_housing' => 'boolean',
+        'has_training_course' => 'boolean',
         'is_local_community' => 'boolean',
         'is_on_company_payroll' => 'boolean',
         'join_date' => 'date',

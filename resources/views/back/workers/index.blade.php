@@ -93,6 +93,9 @@
     <div class="input-group">
         <select name="job_type_id" class="form-control" style="max-width:260px;">
             <option value="">كل العمال</option>
+			<option value="equipment_operator" {{ request('job_type_id') === 'equipment_operator' ? 'selected' : '' }}>
+				مشغل معدة فقط
+			</option>
             @foreach($jobTypes as $jobType)
                 <option value="{{ $jobType->id }}" {{ (string)request('job_type_id') === (string)$jobType->id ? 'selected' : '' }}>
                     {{ $jobType->name }}

@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use App\Models\Project;
 use App\Models\Company;
 use App\Models\EquipmentType;
+use App\Models\Worker;
 
 class EquipmentController extends Controller
 {
@@ -64,8 +65,15 @@ class EquipmentController extends Controller
         $projects = Project::orderBy('name')->get(['id', 'name']);
         $equipmentTypes = EquipmentType::where('is_active', true)->orderBy('name')->get(['id', 'name']);
         $drivers = \App\Models\User::orderBy('name')->get(['id', 'name', 'company_id']);
+        $workerDrivers = Worker::query()
+            ->whereHas('jobType', function ($query) {
+                $query->where('name', 'like', '%سائق%');
+            })
+            ->with(['jobType:id,name'])
+            ->orderBy('name')
+            ->get(['id', 'name', 'job_type_id']);
 
-        return view('back.equipment.create', compact('companies', 'projects', 'equipmentTypes', 'drivers'));
+        return view('back.equipment.create', compact('companies', 'projects', 'equipmentTypes', 'drivers', 'workerDrivers'));
     }
 
     /**
@@ -88,12 +96,20 @@ class EquipmentController extends Controller
             'equip_reg_issue' => 'nullable|string|max:255',
             'custom_clearance' => 'nullable|string|max:255',
             'driver_user_id' => 'nullable|exists:users,id',
+            'driver_worker_id' => 'nullable|exists:workers,id',
         ]);
 
         $project = Project::findOrFail($request->project_id);
 
         // If a linked user driver is selected, use their name as current_driver
         $currentDriver = $request->current_driver;
+        if ($request->filled('driver_worker_id')) {
+            $workerDriver = Worker::find($request->driver_worker_id);
+            if ($workerDriver) {
+                $currentDriver = $workerDriver->name;
+            }
+        }
+
         if ($request->filled('driver_user_id')) {
             $driverUser = \App\Models\User::find($request->driver_user_id);
             if ($driverUser) {
@@ -107,6 +123,7 @@ class EquipmentController extends Controller
             'previous_driver' => $request->previous_driver,
             'current_driver' => $currentDriver,
             'driver_user_id' => $request->driver_user_id,
+            'driver_worker_id' => $request->driver_worker_id,
             'equipment_type' => $request->equipment_type,
             'model_year' => $request->model_year,
             'equipment_code' => $request->equipment_code,

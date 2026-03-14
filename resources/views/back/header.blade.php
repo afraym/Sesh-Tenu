@@ -64,14 +64,14 @@
           </li>
           <li class="{{ request()->routeIs('workers.index') ? 'active' : '' }}">
             <a href="{{ route('workers.index') }}">
-              <i class="fa-solid fa-person-digging"></i>
-              <p>العمال</p>
+              <i class="fa-solid fa-helmet-safety"></i>
+              <p>القوى العاملة</p>
             </a>
           </li>
           <li class="{{ request()->routeIs('workers.create') ? 'active' : '' }}">
             <a href="{{ route('workers.create') }}">
-              <i class="tim-icons icon-simple-add"></i>
-              <p>إضافة عامل</p>
+              <i class="fa-solid fa-user-plus"></i>
+              <p>ادخال جديد</p>
             </a>
           </li>
           <li class="{{ request()->routeIs('equipment.index') ? 'active' : '' }}">
@@ -95,13 +95,13 @@
           <li class="{{ request()->routeIs('worker-document-deliveries.index') ? 'active' : '' }}">
             <a href="{{ route('worker-document-deliveries.index') }}">
               <i class="far fa-calendar-check"></i>
-              <p>متابعة السيركي</p>
+              <p>متابعة السركي</p>
             </a>
           </li>
           <li class="{{ request()->routeIs('worker-document-deliveries.receive') ? 'active' : '' }}">
             <a href="{{ route('worker-document-deliveries.receive') }}">
               <i class="fas fa-user-check"></i>
-              <p>استلام سيركي</p>
+              <p>استلام سركي</p>
             </a>
           </li>
           {{-- <li class="{{ request()->routeIs('worker-document-deliveries.create') ? 'active' : '' }}">
@@ -234,7 +234,7 @@
                   </li>
                   <li class="nav-link">
                     <a href="{{ route('worker-document-deliveries.index') }}" class="nav-item dropdown-item d-flex justify-content-between align-items-center">
-                      <span><i class="fas fa-user-check ml-1" style="color:#22c55e"></i> استلامات سيركي اليوم</span>
+                      <span><i class="fas fa-user-check ml-1" style="color:#22c55e"></i> استلامات سركي اليوم</span>
                       <span class="badge badge-pill" style="background:rgba(34,197,94,.18);color:#22c55e;font-size:12px">{{ $notif_deliveries_today }}</span>
                     </a>
                   </li>

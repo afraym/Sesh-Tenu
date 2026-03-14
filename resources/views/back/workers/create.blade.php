@@ -171,6 +171,14 @@
                                         </label>
                                     </div>
                                     <div class="form-check form-check-inline">
+                                        <label class="form-check-label" for="has_training_course">
+                                            Training Course / دورة تدريبية
+                                            <input class="form-check-input" type="checkbox" id="has_training_course"
+                                               name="has_training_course" value="1" {{ old('has_training_course') ? 'checked' : '' }}>
+                                            <span class="form-check-sign"></span>
+                                        </label>
+                                    </div>
+                                    <div class="form-check form-check-inline">
                                         
                                         <label class="form-check-label" for="is_local_community">
                                             Local Community / من المجتمع المحلي

@@ -41,7 +41,12 @@ class WorkerController extends Controller
             }
         }
 
-        if ($request->filled('job_type_id')) {
+        $jobTypeFilter = (string) $request->input('job_type_id', '');
+        if ($jobTypeFilter === 'equipment_operator') {
+            $query->whereHas('jobType', function ($q) {
+                $q->where('name', 'like', '%سائق%');
+            });
+        } elseif ($request->filled('job_type_id')) {
             $query->where('job_type_id', $request->job_type_id);
         }
 
@@ -107,6 +112,7 @@ class WorkerController extends Controller
             'end_date' => 'nullable|date|after_or_equal:join_date',
             'salary' => 'nullable|numeric|min:0',
             'has_housing' => 'nullable|boolean',
+            'has_training_course' => 'nullable|boolean',
             'is_local_community' => 'nullable|boolean',
             'is_on_company_payroll' => 'nullable|boolean',
         ]); 
@@ -123,6 +129,7 @@ class WorkerController extends Controller
         $worker->end_date = $request->end_date;
         $worker->salary = $request->salary;
         $worker->has_housing = $request->boolean('has_housing');
+        $worker->has_training_course = $request->boolean('has_training_course');
         $worker->is_local_community = $request->boolean('is_local_community');
         $worker->is_on_company_payroll = $request->boolean('is_on_company_payroll', true);
         $worker->save();
@@ -178,6 +185,7 @@ class WorkerController extends Controller
             'end_date' => 'nullable|date|after_or_equal:join_date',
             'salary' => 'nullable|numeric|min:0',
             'has_housing' => 'nullable|boolean',
+            'has_training_course' => 'nullable|boolean',
             'is_local_community' => 'nullable|boolean',
             'is_on_company_payroll' => 'nullable|boolean',
         ]); 
@@ -192,6 +200,7 @@ class WorkerController extends Controller
         $worker->end_date = $request->end_date;
         $worker->salary = $request->salary;
         $worker->has_housing = $request->boolean('has_housing');
+        $worker->has_training_course = $request->boolean('has_training_course');
         $worker->is_local_community = $request->boolean('is_local_community');
         $worker->is_on_company_payroll = $request->boolean('is_on_company_payroll');
         $worker->save();

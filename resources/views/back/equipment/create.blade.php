@@ -73,6 +73,23 @@
                             </div>
                             <div class="col-md-6">
                                 <div class="form-group">
+                                    <label for="driver_worker_id">مشغل المعدة / Equipment Operator</label>
+                                    <select class="form-control @error('driver_worker_id') is-invalid @enderror" id="driver_worker_id" name="driver_worker_id">
+                                        <option value="">-- اختر مشغل معدة --</option>
+                                        @foreach($workerDrivers ?? [] as $workerDriver)
+                                            <option value="{{ $workerDriver->id }}" {{ old('driver_worker_id') == $workerDriver->id ? 'selected' : '' }}>
+                                                {{ $workerDriver->name }}{{ $workerDriver->jobType ? ' - ' . $workerDriver->jobType->name : '' }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    @error('driver_worker_id')
+                                        <span class="invalid-feedback">{{ $message }}</span>
+                                    @enderror
+                                    <small class="form-text text-muted">تعرض هذه القائمة العمال الذين تحتوي وظيفتهم على كلمة "سائق".</small>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
                                     <label for="current_driver">اسم السائق الحالي / Current Driver <small class="text-muted">(يدوي)</small></label>
                                     <input type="text" class="form-control" id="current_driver" name="current_driver" value="{{ old('current_driver') }}" placeholder="يُملأ تلقائياً عند اختيار مستخدم">
                                 </div>
@@ -174,6 +191,15 @@
         var nameField = document.getElementById('current_driver');
         if (selected.value) {
             nameField.value = selected.text.trim();
+        }
+    });
+
+    document.getElementById('driver_worker_id').addEventListener('change', function () {
+        var selected = this.options[this.selectedIndex];
+        var nameField = document.getElementById('current_driver');
+        if (selected.value) {
+            var workerName = selected.text.split('-')[0].trim();
+            nameField.value = workerName;
         }
     });
 </script>
