@@ -53,7 +53,7 @@
     }
 
     .navbar-center-logo img {
-      height: 34px;
+      height: 35px;
       width: auto;
       object-fit: contain;
       filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.25));
