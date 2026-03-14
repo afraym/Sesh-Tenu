@@ -26,7 +26,7 @@
 			'count' => 0,
 		],
 		[
-			'title' => 'مشغل معدة',
+			'title' => 'مشغل مُعدة',
 			'subtitle' => 'عرض عمال مشغلي المعدات',
 			'icon' => 'fa-solid fa-tractor',
 			'icon_color' => '#14b8a6',
@@ -96,7 +96,7 @@
 			'count' => $counts['today_receipts'],
 		],
 		[
-			'title' => 'المعدات',
+			'title' => 'المُعدات',
 			'subtitle' => 'إدارة المعدات وحالتها التشغيلية',
 			'icon' => 'tim-icons icon-delivery-fast',
 			'icon_color' => '#00bcd4',
@@ -139,36 +139,36 @@
 
 	if (auth()->check() && auth()->user()->isSuperAdmin()) {
 		$modules = array_merge($modules, [
-			[
-				'title' => 'المشاريع',
-				'subtitle' => 'إدارة المشاريع وربطها بالشركات',
-				'icon' => 'tim-icons icon-chart-pie-36',
-				'icon_color' => '#ff5b7f',
-				'icon_bg' => 'rgba(255, 91, 127, 0.18)',
-				'route' => 'projects.index',
-				'action' => 'عرض المشاريع',
-				'count' => $counts['projects'],
-			],
-			[
-				'title' => 'الشركات',
-				'subtitle' => 'إدارة الشركات والبيانات الأساسية',
-				'icon' => 'tim-icons icon-bank',
-				'icon_color' => '#14b8a6',
-				'icon_bg' => 'rgba(20, 184, 166, 0.18)',
-				'route' => 'companies.index',
-				'action' => 'عرض الشركات',
-				'count' => $counts['companies'],
-			],
-			[
-				'title' => 'أنواع الوظائف',
-				'subtitle' => 'ضبط قائمة الوظائف المتاحة',
-				'icon' => 'tim-icons icon-bullet-list-67',
-				'icon_color' => '#6366f1',
-				'icon_bg' => 'rgba(99, 102, 241, 0.18)',
-				'route' => 'jobtypes.index',
-				'action' => 'عرض الوظائف',
-				'count' => $counts['jobtypes'],
-			],
+			// [
+			// 	'title' => 'المشاريع',
+			// 	'subtitle' => 'إدارة المشاريع وربطها بالشركات',
+			// 	'icon' => 'tim-icons icon-chart-pie-36',
+			// 	'icon_color' => '#ff5b7f',
+			// 	'icon_bg' => 'rgba(255, 91, 127, 0.18)',
+			// 	'route' => 'projects.index',
+			// 	'action' => 'عرض المشاريع',
+			// 	'count' => $counts['projects'],
+			// ],
+			// [
+			// 	'title' => 'الشركات',
+			// 	'subtitle' => 'إدارة الشركات والبيانات الأساسية',
+			// 	'icon' => 'tim-icons icon-bank',
+			// 	'icon_color' => '#14b8a6',
+			// 	'icon_bg' => 'rgba(20, 184, 166, 0.18)',
+			// 	'route' => 'companies.index',
+			// 	'action' => 'عرض الشركات',
+			// 	'count' => $counts['companies'],
+			// ],
+			// [
+			// 	'title' => 'أنواع الوظائف',
+			// 	'subtitle' => 'ضبط قائمة الوظائف المتاحة',
+			// 	'icon' => 'tim-icons icon-bullet-list-67',
+			// 	'icon_color' => '#6366f1',
+			// 	'icon_bg' => 'rgba(99, 102, 241, 0.18)',
+			// 	'route' => 'jobtypes.index',
+			// 	'action' => 'عرض الوظائف',
+			// 	'count' => $counts['jobtypes'],
+			// ],
 			[
 				'title' => 'المستخدمين',
 				'subtitle' => 'إدارة حسابات وصلاحيات المستخدمين',
@@ -231,6 +231,7 @@
 					<div class="dashboard-button-grid">
 						@foreach($modules as $module)
 							<a href="{{ isset($module['url']) ? $module['url'] : route($module['route']) }}" class="dashboard-glass-btn" title="{{ $module['subtitle'] }}">
+								<i class="{{ $module['icon'] }} dashboard-glass-btn__icon"></i>
 								<span class="dashboard-glass-btn__label">{{ $module['title'] }}</span>
 							</a>
 						@endforeach
@@ -256,14 +257,16 @@
 	.dashboard-glass-btn {
 		position: relative;
 		display: inline-flex;
+		flex-direction: column;
 		align-items: center;
 		justify-content: center;
+		gap: 6px;
 		width: 100%;
 		max-width: 170px;
 		margin: 0 auto;
-		min-height: 50px;
+		min-height: 72px;
 		border-radius: 12px;
-		padding: 10px 14px;
+		padding: 12px 14px 10px;
 		text-align: center;
 		text-decoration: none;
 		color: #e8f0ff;
@@ -271,6 +274,15 @@
 		border: 3px solid #1a69d6;
 		box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.55), inset 0 -3px 0 rgba(15, 55, 130, 0.45), 0 5px 12px rgba(25, 90, 200, 0.24);
 		transition: transform 0.18s ease, filter 0.18s ease, box-shadow 0.18s ease;
+	}
+
+	.dashboard-glass-btn__icon {
+		position: relative;
+		z-index: 1;
+		font-size: 1.5rem;
+		line-height: 1;
+		color: rgba(255, 255, 255, 0.92);
+		text-shadow: 0 2px 4px rgba(15, 50, 130, 0.45);
 	}
 
 	.dashboard-glass-btn::before {
@@ -325,7 +337,11 @@
 		}
 
 		.dashboard-glass-btn {
-			min-height: 46px;
+			min-height: 64px;
+		}
+
+		.dashboard-glass-btn__icon {
+			font-size: 1.3rem;
 		}
 
 		.dashboard-glass-btn__label {

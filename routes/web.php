@@ -19,6 +19,8 @@ use App\Http\Controllers\WorkerDocumentDeliveryController;
 Route::get('/', function () {
     if (auth()->check()) {
         return redirect('/admin/workers');
+    } else {
+        return redirect('/login');
     }
 
     $project = ProjectModel::latest('id')->with('company')->first();
