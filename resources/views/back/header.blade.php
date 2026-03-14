@@ -41,6 +41,41 @@
     .datepicker table tr th {
       font-family: 'Cairo', 'Segoe UI', Tahoma, Arial, sans-serif;
     }
+
+    .navbar-center-logo {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      top: 50%;
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+      z-index: 2;
+    }
+
+    .navbar-center-logo img {
+      height: 34px;
+      width: auto;
+      object-fit: contain;
+      filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.25));
+    }
+
+    .navbar-center-logo .logo-bright {
+      display: none;
+    }
+
+    body.white-content .navbar-center-logo .logo-dark {
+      display: none;
+    }
+
+    body.white-content .navbar-center-logo .logo-bright {
+      display: block;
+    }
+
+    @media (max-width: 991.98px) {
+      .navbar-center-logo img {
+        height: 26px;
+      }
+    }
   </style>
 
 </head>
@@ -183,6 +218,10 @@
               </button>
             </div>
          
+          </div>
+          <div class="navbar-center-logo d-flex align-items-center justify-content-center">
+            <img src="{{ asset('logos/energychina-b.png') }}" alt="Energy China" class="logo-dark">
+            <img src="{{ asset('logos/energychina-w.png') }}" alt="Energy China" class="logo-bright">
           </div>
           <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navigation" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-bar navbar-kebab"></span>
