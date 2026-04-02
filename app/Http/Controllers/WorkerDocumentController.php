@@ -7,6 +7,7 @@ use App\Models\Worker;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Storage;
 use PhpOffice\PhpWord\IOFactory;
 use PhpOffice\PhpWord\Settings;
@@ -15,6 +16,10 @@ use setasign\Fpdi\Fpdi;
 
 class WorkerDocumentController extends Controller
 {
+    private const DEFAULT_WORKER_TEMPLATE = 'worker-timesheet.docx';
+
+    private const DRIVER_WORKER_TEMPLATE = 'driver-worker-timesheet.docx';
+
     // Convert month name to Arabic
     private const MONTH_NAMES = [
         'January' => 'يناير',
@@ -147,14 +152,16 @@ class WorkerDocumentController extends Controller
 
     public function exportWord(Worker $worker)
     {
-        $worker->load(['company', 'jobType']);
+        $worker->load([
+            'company',
+            'jobType',
+            'equipmentAsDriver' => function ($query) {
+                $query->latest('id');
+            },
+        ]);
         $project = Project::latest('id')->with('company')->first();
 
-        $templatePath = storage_path('app/templates/worker-timesheet.docx');
-
-        if (! file_exists($templatePath)) {
-            abort(404, 'Word template not found. Add a template at storage/app/templates/worker-timesheet.docx with the expected placeholders.');
-        }
+        $templatePath = $this->resolveWorkerTemplatePath($worker);
 
         $monthStart = now()->startOfMonth();
         $daysInMonth = $monthStart->daysInMonth;
@@ -203,16 +210,21 @@ class WorkerDocumentController extends Controller
 PV Power Plant Abydos 2 Solar (MW1000)',
             'company_name' => $consortiumFixed,
             'consortium_name' => optional(optional($project)->company)->name
-                ?? (optional($worker->company)->name ?: (optional($worker->company)->short_name ?? '-')),
-            'worker_name' => $worker->name ?? '-',
-            'worker_job' => optional($worker->jobType)->name ?? '-',
-            'worker_id' => $worker->national_id ?? '-',
-            'worker_phone' => $worker->phone_number ?? '-',
+                ?? (optional($worker->company)->name ?: (optional($worker->company)->short_name ?? '')),
+            'worker_name' => $worker->name ?? '',
+            'worker_job' => optional($worker->jobType)->name ?? '',
+            'worker_id' => $worker->national_id ?? '',
+            'worker_phone' => $worker->phone_number ?? '',
             'access_code' => $worker->entity ?? " ",
             'report_month' => $monthStart->format('F Y'),
+            'equipment' => $this->workerEquipmentValue($worker, 'equipment'),
+            'equipment_type' => $this->workerEquipmentValue($worker, 'equipment_type'),
+            'equipment_code' => $this->workerEquipmentValue($worker, 'equipment_code'),
+            'equipment_number' => $this->workerEquipmentValue($worker, 'equipment_number'),
+            'equipment_model' => $this->workerEquipmentValue($worker, 'equipment_model'),
         ]);
 
-        $processor->cloneRowAndSetValues('row_serial', $weekdayRows);
+        $this->fillAllTimesheetTables($processor, $weekdayRows);
 
         // $fileName = $worker->name . ' - سركي.docx';
 
@@ -235,12 +247,6 @@ PV Power Plant Abydos 2 Solar (MW1000)',
 
     public function exportWordAll(Request $request)
     {
-        $templatePath = storage_path('app/templates/worker-timesheet.docx');
-
-        if (! file_exists($templatePath)) {
-            abort(404, 'Word template not found. Add a template at storage/app/templates/worker-timesheet.docx with the expected placeholders.');
-        }
-
         $ids = collect(explode(',', (string) $request->query('ids')))
             ->filter(fn ($v) => trim($v) !== '')
             ->map(fn ($v) => (int) $v)
@@ -250,7 +256,13 @@ PV Power Plant Abydos 2 Solar (MW1000)',
 
         $project = Project::latest('id')->with('company')->first();
 
-        $workers = Worker::with(['company', 'jobType'])
+        $workers = Worker::with([
+            'company',
+            'jobType',
+            'equipmentAsDriver' => function ($query) {
+                $query->latest('id');
+            },
+        ])
             ->where('is_on_company_payroll', 1)
             ->when($jobTypeId, function ($query) use ($jobTypeId) {
                 $query->where('job_type_id', $jobTypeId);
@@ -305,7 +317,8 @@ PV Power Plant Abydos 2 Solar (MW1000)',
                 ];
             }
 
-            $processor = new TemplateProcessor($templatePath);
+              $templatePath = $this->resolveWorkerTemplatePath($worker);
+              $processor = new TemplateProcessor($templatePath);
             $consortiumFixed =
                  $this->rtl(' للمقاولات ')
                 . $this->ltr(' FM+ ')
@@ -315,16 +328,21 @@ PV Power Plant Abydos 2 Solar (MW1000)',
 PV Power Plant Abydos 2 Solar (MW1000)',
                 'company_name' => $consortiumFixed,
                 'consortium_name' => optional(optional($project)->company)->name
-                    ?? (optional($worker->company)->name ?: (optional($worker->company)->short_name ?? '-')),
-                'worker_name' => $worker->name ?? '-',
-                'worker_job' => optional($worker->jobType)->name ?? '-',
-                'worker_id' => $worker->national_id ?? '-',
-                'worker_phone' => $worker->phone_number ?? '-',
+                    ?? (optional($worker->company)->name ?: (optional($worker->company)->short_name ?? '')),
+                'worker_name' => $worker->name ?? '',
+                'worker_job' => optional($worker->jobType)->name ?? '',
+                'worker_id' => $worker->national_id ?? '',
+                'worker_phone' => $worker->phone_number ?? '',
                 'access_code' => $worker->entity ?? "",
                 'report_month' => $monthStart->format('F Y'),
+                'equipment' => $this->workerEquipmentValue($worker, 'equipment'),
+                'equipment_type' => $this->workerEquipmentValue($worker, 'equipment_type'),
+                'equipment_code' => $this->workerEquipmentValue($worker, 'equipment_code'),
+                'equipment_number' => $this->workerEquipmentValue($worker, 'equipment_number'),
+                'equipment_model' => $this->workerEquipmentValue($worker, 'equipment_model'),
             ]);
 
-            $processor->cloneRowAndSetValues('row_serial', $weekdayRows);
+            $this->fillAllTimesheetTables($processor, $weekdayRows);
 
             $fileName = 'worker-' . $worker->id . '-' . preg_replace('/[^a-zA-Z0-9]/', '', $worker->name) . '.docx';
             $docxPath = $tempDir . DIRECTORY_SEPARATOR . $fileName;
@@ -361,12 +379,6 @@ PV Power Plant Abydos 2 Solar (MW1000)',
 
     public function exportWordMerged(Request $request)
     {
-        $templatePath = storage_path('app/templates/worker-timesheet.docx');
-
-        if (! file_exists($templatePath)) {
-            abort(404, 'Word template not found. Add a template at storage/app/templates/worker-timesheet.docx with the expected placeholders.');
-        }
-
         $ids = collect(explode(',', (string) $request->query('ids')))
             ->filter(fn ($v) => trim($v) !== '')
             ->map(fn ($v) => (int) $v)
@@ -376,7 +388,13 @@ PV Power Plant Abydos 2 Solar (MW1000)',
 
         $project = Project::latest('id')->with('company')->first();
 
-        $workers = Worker::with(['company', 'jobType'])
+        $workers = Worker::with([
+            'company',
+            'jobType',
+            'equipmentAsDriver' => function ($query) {
+                $query->latest('id');
+            },
+        ])
             ->where('is_on_company_payroll', 1)
             ->when($jobTypeId, function ($query) use ($jobTypeId) {
                 $query->where('job_type_id', $jobTypeId);
@@ -403,7 +421,7 @@ PV Power Plant Abydos 2 Solar (MW1000)',
         $docxPaths = [];
         foreach ($workers as $worker) {
             $workerDocxPath = $exportPath . DIRECTORY_SEPARATOR . 'worker-' . $worker->id . '.docx';
-            $this->generateWorkerDocxFromTemplate($worker, $project, $templatePath, $workerDocxPath);
+            $this->generateWorkerDocxFromTemplate($worker, $project, $workerDocxPath);
             $docxPaths[] = $workerDocxPath;
         }
 
@@ -513,12 +531,6 @@ PV Power Plant Abydos 2 Solar (MW1000)',
 
     public function exportWordPdfAll(Request $request)
     {
-        $templatePath = storage_path('app/templates/worker-timesheet.docx');
-
-        if (! file_exists($templatePath)) {
-            abort(404, 'Word template not found. Add a template at storage/app/templates/worker-timesheet.docx with the expected placeholders.');
-        }
-
         $ids = collect(explode(',', (string) $request->query('ids')))
             ->filter(fn ($v) => trim($v) !== '')
             ->map(fn ($v) => (int) $v)
@@ -529,7 +541,13 @@ PV Power Plant Abydos 2 Solar (MW1000)',
 
         $project = Project::latest('id')->with('company')->first();
 
-        $workers = Worker::with(['company', 'jobType'])
+        $workers = Worker::with([
+            'company',
+            'jobType',
+            'equipmentAsDriver' => function ($query) {
+                $query->latest('id');
+            },
+        ])
             ->when($payrollOnly, function ($query) {
                 $query->where('is_on_company_payroll', 1);
             })
@@ -559,7 +577,7 @@ PV Power Plant Abydos 2 Solar (MW1000)',
         $docxPaths = [];
         foreach ($workers as $worker) {
             $workerDocxPath = $exportPath . DIRECTORY_SEPARATOR . 'worker-' . $worker->id . '.docx';
-            $this->generateWorkerDocxFromTemplate($worker, $project, $templatePath, $workerDocxPath);
+            $this->generateWorkerDocxFromTemplate($worker, $project, $workerDocxPath);
             $docxPaths[] = $workerDocxPath;
         }
 
@@ -637,8 +655,9 @@ PV Power Plant Abydos 2 Solar (MW1000)',
         )->deleteFileAfterSend(true);
     }
 
-    private function generateWorkerDocxFromTemplate(Worker $worker, $project, string $templatePath, string $outputPath): void
+    private function generateWorkerDocxFromTemplate(Worker $worker, $project, string $outputPath): void
     {
+        $templatePath = $this->resolveWorkerTemplatePath($worker);
         $monthStart = now()->startOfMonth();
         $daysInMonth = $monthStart->daysInMonth;
 
@@ -684,18 +703,108 @@ PV Power Plant Abydos 2 Solar (MW1000)',
 PV Power Plant Abydos 2 Solar (MW1000)',
             'company_name' => $consortiumFixed,
             'consortium_name' => optional(optional($project)->company)->name
-                ?? (optional($worker->company)->name ?: (optional($worker->company)->short_name ?? '-')),
-            'worker_name' => $worker->name ?? '-',
-            'worker_job' => optional($worker->jobType)->name ?? '-',
-            'worker_id' => $worker->national_id ?? '-',
-            'worker_phone' => $worker->phone_number ?? '-',
+                ?? (optional($worker->company)->name ?: (optional($worker->company)->short_name ?? '')),
+            'worker_name' => $worker->name ?? '',
+            'worker_job' => optional($worker->jobType)->name ?? '',
+            'worker_id' => $worker->national_id ?? '',
+            'worker_phone' => $worker->phone_number ?? '',
             'access_code' => $worker->entity ?? "",
             'report_month' => $monthStart->format('F Y'),
+            'equipment' => $this->workerEquipmentValue($worker, 'equipment'),
+            'equipment_type' => $this->workerEquipmentValue($worker, 'equipment_type'),
+            'equipment_code' => $this->workerEquipmentValue($worker, 'equipment_code'),
+            'equipment_number' => $this->workerEquipmentValue($worker, 'equipment_number'),
+            'equipment_model' => $this->workerEquipmentValue($worker, 'equipment_model'),
         ]);
 
-        $processor->cloneRowAndSetValues('row_serial', $weekdayRows);
+        $this->fillAllTimesheetTables($processor, $weekdayRows);
         $processor->saveAs($outputPath);
         $this->addRedShadingToFridayCells($outputPath);
+    }
+
+    private function fillAllTimesheetTables(TemplateProcessor $processor, array $weekdayRows): void
+    {
+        // Some templates contain the same row placeholder in multiple tables/pages.
+        for ($i = 0; $i < 10; $i++) {
+            try {
+                $processor->cloneRowAndSetValues('row_serial', $weekdayRows);
+            } catch (\Throwable $e) {
+                break;
+            }
+        }
+    }
+
+    private function resolveWorkerTemplatePath(?Worker $worker = null): string
+    {
+        $defaultTemplatePath = storage_path('app/templates/' . self::DEFAULT_WORKER_TEMPLATE);
+        $driverTemplatePath = storage_path('app/templates/' . self::DRIVER_WORKER_TEMPLATE);
+
+        if ($worker && $this->isDriverJob($worker) && file_exists($driverTemplatePath)) {
+            return $driverTemplatePath;
+        }
+
+        if (file_exists($defaultTemplatePath)) {
+            return $defaultTemplatePath;
+        }
+
+        abort(404, 'Word template not found. Add templates at storage/app/templates/' . self::DEFAULT_WORKER_TEMPLATE . ' and (for driver jobs) storage/app/templates/' . self::DRIVER_WORKER_TEMPLATE . '.');
+    }
+
+    private function isDriverJob(Worker $worker): bool
+    {
+        $jobName = (string) optional($worker->jobType)->name;
+
+        return Str::contains($jobName, 'سائق');
+    }
+
+    private function workerEquipmentValue(Worker $worker, string $field): string
+    {
+        $equipment = $this->primaryWorkerEquipment($worker);
+
+        if (! $equipment) {
+            return '';
+        }
+
+        if ($field === 'equipment_type') {
+            return (string) ($equipment->equipment_type ?? '');
+        }
+
+        if ($field === 'equipment_code') {
+            return (string) ($equipment->equipment_code ?? '');
+        }
+
+        if ($field === 'equipment_number') {
+            return (string) ($equipment->equipment_number ?? '');
+        }
+
+        if ($field === 'equipment_model') {
+            $model = trim(implode(' ', array_filter([
+                $equipment->manufacture ?? null,
+                $equipment->model_year ?? null,
+            ])));
+
+            return $model !== '' ? $model : '';
+        }
+
+        if ($field === 'equipment') {
+            $label = trim(implode(' - ', array_filter([
+                $equipment->equipment_type ?? null,
+                $equipment->equipment_number ?? null,
+            ])));
+
+            return $label !== '' ? $label : '';
+        }
+
+        return '';
+    }
+
+    private function primaryWorkerEquipment(Worker $worker)
+    {
+        if ($worker->relationLoaded('equipmentAsDriver')) {
+            return $worker->equipmentAsDriver->first();
+        }
+
+        return $worker->equipmentAsDriver()->latest('id')->first();
     }
 
     private function convertDocxToPdf(string $libreOfficePath, string $docxPath, string $outputDir): ?string
