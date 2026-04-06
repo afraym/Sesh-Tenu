@@ -20,6 +20,7 @@
 			? ' <i class="fas fa-sort-up"></i>'
 			: ' <i class="fas fa-sort-down"></i>';
 	};
+	$workerSelectableRowClass = 'worker-selectable-row';
 @endphp
 <div class="content">
 	<div class="row">
@@ -124,13 +125,13 @@
 							{{-- <a href="{{ route('workers.export.pdf.merged') }}" class="btn btn-sm btn-success" title="Export all as merged PDF (HTML-based)" target="_blank">
 								<i class="tim-icons icon-paper"></i> سركي مجمع PDF
 							</a> --}}
-							<a href="{{ route('workers.export.wordpdf.all', ['job_type_id' => request('job_type_id')]) }}" class="btn btn-sm btn-info" title="تحميل ملف واحد لكل العمال pdf" target="_blank">
+							<a href="{{ route('workers.export.wordpdf.all', ['job_type_id' => request('job_type_id')]) }}" data-base-href="{{ route('workers.export.wordpdf.all', ['job_type_id' => request('job_type_id')]) }}" class="btn btn-sm btn-info js-export-selected" title="تحميل ملف واحد لكل العمال pdf" target="_blank">
 								<i class="far fa-file-pdf"></i> سركي مجمع PDF
 							</a>
-							<a href="{{ route('workers.export.word.merged') }}" class="btn btn-sm btn-info" title="تحميل ملف وورد مجمع" target="_blank">
+							<a href="{{ route('workers.export.word.merged') }}" data-base-href="{{ route('workers.export.word.merged') }}" class="btn btn-sm btn-info js-export-selected" title="تحميل ملف وورد مجمع" target="_blank">
 								<i class="far fa-file-word"></i></i> سركي وورد مجمع
 							</a>
-							<a href="{{ route('workers.export.word.all', ['job_type_id' => request('job_type_id')]) }}" class="btn btn-sm btn-danger" title="تحميل ملف وورد مجمعة (ZIP)" target="_blank">
+							<a href="{{ route('workers.export.word.all', ['job_type_id' => request('job_type_id')]) }}" data-base-href="{{ route('workers.export.word.all', ['job_type_id' => request('job_type_id')]) }}" class="btn btn-sm btn-danger js-export-selected" title="تحميل ملف وورد مجمعة (ZIP)" target="_blank">
 								<i class="far fa-file-archive"></i> سراكي وورد مجمعة (ZIP)
 							</a>
 
@@ -155,10 +156,16 @@
 							لا يوجد عمال. اضغط على "اضافة عامل جديد" لإنشاء عامل جديد.
 						</div>
 					@else
+						<div class="d-flex justify-content-end mb-2">
+							<span class="badge badge-info" id="workers-selected-count">0 مختار</span>
+						</div>
 						<div class="table-responsive">
 							<table class="table table-striped table-hover">
 								<thead>
 									<tr>
+										<th class="text-center" style="width: 42px;">
+											<input type="checkbox" id="workers-select-all" class="worker-table-checkbox" aria-label="Select all workers">
+										</th>
 										<th><a href="{{ $sortUrl('id') }}" style="color: inherit;font-weight: 700;"># {!! $sortIcon('id') !!}</a></th>
 										<th><a href="{{ $sortUrl('name') }}" style="color: inherit;font-weight: 700;">Name / الاسم {!! $sortIcon('name') !!}</a></th>
 										{{-- <th>Company / الشركة</th> --}}
@@ -173,7 +180,10 @@
 								</thead>
 								<tbody>
 									@foreach($workersData as $worker)
-										<tr>
+										<tr class="{{ $workerSelectableRowClass }}" data-worker-id="{{ $worker->id }}">
+											<td class="text-center">
+												<input type="checkbox" id="worker-select-{{ $worker->id }}" name="selected_worker_ids[]" class="worker-table-checkbox worker-select-checkbox" value="{{ $worker->id }}" aria-label="Select worker {{ $worker->name }}">
+											</td>
 											<td>
 												@if($workersData instanceof \Illuminate\Pagination\AbstractPaginator)
 													{{ $loop->iteration + ($workersData->currentPage() - 1) * $workersData->perPage() }}
@@ -274,6 +284,94 @@
 			</div>
 		</div>
 	</div>
+
+<style>
+	.worker-table-checkbox {
+		appearance: auto !important;
+		-webkit-appearance: checkbox !important;
+		opacity: 1 !important;
+		visibility: visible !important;
+		position: static !important;
+		width: 16px;
+		height: 16px;
+		margin: 0;
+		accent-color: #00d1b2;
+	}
+
+	.worker-selectable-row.worker-row-selected {
+		background: rgba(56, 178, 172, 0.18) !important;
+	}
+</style>
+
+<script>
+	document.addEventListener('DOMContentLoaded', function () {
+		const selectAllCheckbox = document.getElementById('workers-select-all');
+		const selectedCountElement = document.getElementById('workers-selected-count');
+		const rowCheckboxes = Array.from(document.querySelectorAll('.worker-select-checkbox'));
+			const exportSelectedButtons = Array.from(document.querySelectorAll('.js-export-selected'));
+
+		if (!selectAllCheckbox || rowCheckboxes.length === 0) {
+			return;
+		}
+
+		const syncUI = function () {
+			let selectedCount = 0;
+				const selectedIds = [];
+
+			rowCheckboxes.forEach(function (checkbox) {
+				const row = checkbox.closest('tr');
+				if (!row) {
+					return;
+				}
+
+				if (checkbox.checked) {
+					selectedCount += 1;
+						selectedIds.push(String(checkbox.value));
+					row.classList.add('worker-row-selected');
+				} else {
+					row.classList.remove('worker-row-selected');
+				}
+			});
+
+			selectAllCheckbox.checked = selectedCount > 0 && selectedCount === rowCheckboxes.length;
+			selectAllCheckbox.indeterminate = selectedCount > 0 && selectedCount < rowCheckboxes.length;
+
+			if (selectedCountElement) {
+				selectedCountElement.textContent = selectedCount + ' مختار';
+			}
+
+				exportSelectedButtons.forEach(function (button) {
+					const baseHref = button.getAttribute('data-base-href') || button.getAttribute('href');
+					if (!baseHref) {
+						return;
+					}
+
+					const parsedUrl = new URL(baseHref, window.location.origin);
+					if (selectedIds.length > 0) {
+						parsedUrl.searchParams.set('ids', selectedIds.join(','));
+					} else {
+						parsedUrl.searchParams.delete('ids');
+					}
+
+					button.setAttribute('href', parsedUrl.toString());
+				});
+		};
+
+		selectAllCheckbox.addEventListener('change', function () {
+			rowCheckboxes.forEach(function (checkbox) {
+				checkbox.checked = selectAllCheckbox.checked;
+			});
+
+			syncUI();
+		});
+
+		rowCheckboxes.forEach(function (checkbox) {
+			checkbox.addEventListener('change', syncUI);
+		});
+
+		syncUI();
+	});
+</script>
 
 
 

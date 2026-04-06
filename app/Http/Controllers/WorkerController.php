@@ -70,7 +70,7 @@ class WorkerController extends Controller
 
         $direction = strtolower((string) $request->input('direction', 'desc')) === 'asc' ? 'asc' : 'desc';
 
-        $workers = $query->orderBy($sort, $direction)->paginate(100)->withQueryString();
+        $workers = $query->orderBy($sort, $direction)->paginate(300)->withQueryString();
         $jobTypes = JobType::orderBy('name')->get(['id', 'name']);
 
         return view('back.workers.index', compact('workers', 'jobTypes', 'sort', 'direction', 'companies', 'selectedCompanyId'));
