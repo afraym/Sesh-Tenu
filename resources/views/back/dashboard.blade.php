@@ -351,7 +351,7 @@
 
 	@media (max-width: 575px) {
 		.dashboard-button-grid {
-			grid-template-columns: 1fr;
+			grid-template-columns: repeat(2, minmax(120px, 1fr));
 		}
 
 		.dashboard-glass-btn__label {
