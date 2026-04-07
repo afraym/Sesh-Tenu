@@ -28,6 +28,7 @@
                             <tr><th>رقم التسجيل</th><td>{{ $equipment->reg_no ?? 'غير متوفر' }}</td></tr>
                             <tr><th>رقم رخصة المعدة</th><td>{{ $equipment->equip_reg_issue ?? 'غير متوفر' }}</td></tr>
                             <tr><th>الافراج الجمركي</th><td>{{ $equipment->custom_clearance ?? 'غير متوفر' }}</td></tr>
+                            <tr><th>نوع المعدة (فعلي او اختياري)</th><td>{{ $equipment->equipment_option ?? 'غير متوفر' }}</td></tr>
                         </tbody>
                     </table>
                     <a href="{{ route('equipment.index') }}" class="btn btn-secondary mt-3">رجوع</a>

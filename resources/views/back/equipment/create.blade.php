@@ -175,6 +175,21 @@
                                 </div>
                             </div>
                         </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="equipment_option">نوع المعدة (فعلي او اختياري) / Equipment Option <span class="text-danger">*</span></label>
+                                    <select class="form-control @error('equipment_option') is-invalid @enderror" id="equipment_option" name="equipment_option" required>
+                                        <option value="">-- اختر --</option>
+                                        <option value="فعلي" {{ old('equipment_option') === 'فعلي' ? 'selected' : '' }}>فعلي (Actual)</option>
+                                        <option value="اختياري" {{ old('equipment_option') === 'اختياري' ? 'selected' : '' }}>اختياري (Optional)</option>
+                                    </select>
+                                    @error('equipment_option')
+                                        <span class="invalid-feedback">{{ $message }}</span>
+                                    @enderror
+                                </div>
+                            </div>
+                        </div>
                         <div class="form-group mt-3">
                             <button type="submit" class="btn btn-primary">Save Equipment</button>
                             <a href="{{ route('equipment.index') }}" class="btn btn-secondary">Cancel</a>

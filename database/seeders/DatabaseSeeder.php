@@ -26,7 +26,8 @@ class DatabaseSeeder extends Seeder
             SuperAdminSeeder::class,
             FirstProjectSeeder::class,
             ManpowerCsvSeeder::class,
-            EquipmentStatusCsvSeeder::class,
+            // EquipmentStatusCsvSeeder::class,
+            EquipmentsSeeder::class,
         ]);
     }
 }

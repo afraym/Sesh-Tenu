@@ -45,7 +45,6 @@ class EquipmentStatusCsvSeeder extends Seeder
 
         $seenCodes = [];
         $imported = 0;
-        $skipped = 0;
 
         // Build a lookup map: normalised name => worker id
         $workerMap = Worker::all(['id', 'name'])
@@ -54,28 +53,29 @@ class EquipmentStatusCsvSeeder extends Seeder
 
         while (($row = fgetcsv($handle)) !== false) {
             if (count($row) < 5) {
-                $skipped++;
                 continue;
             }
 
             $serial = $this->normalizeText($row[0] ?? '');
-            if (!is_numeric($serial)) {
-                $skipped++;
+            if ($serial === '') {
                 continue;
             }
 
             $driverName = $this->normalizeText($row[1] ?? '');
-
-            // Try to find a matching worker by name
-            $workerDriverId = $workerMap[$this->normalizeName($driverName)] ?? null;
             $equipmentTypeName = $this->normalizeType($row[2] ?? '');
             $rawCode = $this->normalizeText($row[3] ?? '');
             $equipmentNumber = $this->normalizeText($row[4] ?? '');
 
-            if ($driverName === '' || $equipmentTypeName === '') {
-                $skipped++;
-                continue;
+            // Use serial as fallback for missing driver and equipment type
+            if ($driverName === '') {
+                $driverName = 'Driver ' . $serial;
             }
+            if ($equipmentTypeName === '') {
+                $equipmentTypeName = 'Equipment Type ' . $serial;
+            }
+
+            // Try to find a matching worker by name
+            $workerDriverId = $workerMap[$this->normalizeName($driverName)] ?? null;
 
             EquipmentType::firstOrCreate(
                 ['name' => $equipmentTypeName],
@@ -93,13 +93,14 @@ class EquipmentStatusCsvSeeder extends Seeder
                     'current_driver' => $driverName,
                     'driver_worker_id' => $workerDriverId,
                     'equipment_type' => $equipmentTypeName,
-                    'model_year' => null,
+                    'model_year' => (string) rand(2000, 2009),
                     'equipment_number' => $equipmentNumber !== '' ? $equipmentNumber : null,
                     'manufacture' => null,
                     'entry_per_ser' => null,
                     'reg_no' => null,
                     'equip_reg_issue' => null,
                     'custom_clearance' => null,
+                    'equipment_option' => rand(0, 1) === 0 ? 'فعلي' : 'اختياري',
                 ]
             );
 
@@ -109,7 +110,7 @@ class EquipmentStatusCsvSeeder extends Seeder
         fclose($handle);
 
         $this->command?->info("Imported rows assigned to project: {$firstProject->name}, company ID: {$firstCompany->id}");
-        $this->command?->info("Equipment CSV import done. Imported/updated: {$imported}, Skipped: {$skipped}");
+        $this->command?->info("Equipment CSV import done. Imported/updated: {$imported}");
     }
 
     private function normalizeName(?string $value): string
@@ -134,7 +135,12 @@ class EquipmentStatusCsvSeeder extends Seeder
      */
     private function buildUniqueCode(string $rawCode, int $serial, array &$seenCodes): string
     {
-        $candidate = $rawCode !== '' ? $rawCode : sprintf('AUTO-EQ-%04d', $serial);
+        // If raw code is empty, leave it empty instead of generating auto code
+        if ($rawCode === '') {
+            return '';
+        }
+
+        $candidate = $rawCode;
         $base = $candidate;
         $suffix = 2;
 

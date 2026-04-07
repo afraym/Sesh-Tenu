@@ -95,6 +95,7 @@ class EquipmentController extends Controller
             'reg_no' => 'nullable|string|max:255',
             'equip_reg_issue' => 'nullable|string|max:255',
             'custom_clearance' => 'nullable|string|max:255',
+            'equipment_option' => 'required|in:فعلي,اختياري',
             'driver_user_id' => 'nullable|exists:users,id',
             'driver_worker_id' => 'nullable|exists:workers,id',
         ]);
@@ -133,6 +134,7 @@ class EquipmentController extends Controller
             'reg_no' => $request->reg_no,
             'equip_reg_issue' => $request->equip_reg_issue,
             'custom_clearance' => $request->custom_clearance,
+            'equipment_option' => $request->equipment_option,
         ]);
 
         return redirect()->route('equipment.index')->with('success', 'تم إضافة المُعدة بنجاح');

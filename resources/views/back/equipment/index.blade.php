@@ -50,6 +50,7 @@
                                     <th><a href="{{ $sortUrl('equipment_type') }}" style="color: inherit;">نوع المعدة {!! $sortIcon('equipment_type') !!}</a></th>
                                     <th><a href="{{ $sortUrl('model_year') }}" style="color: inherit;">موديل المعدة {!! $sortIcon('model_year') !!}</a></th>
                                     <th><a href="{{ $sortUrl('equipment_code') }}" style="color: inherit;">كود المعدة {!! $sortIcon('equipment_code') !!}</a></th>
+                                    <th>نوع المعدة (فعلي او اختياري)</th>
                                     <th><a href="{{ $sortUrl('equipment_number') }}" style="color: inherit;">رقم شاسيه المعدة {!! $sortIcon('equipment_number') !!}</a></th>
                                     <th><a href="{{ $sortUrl('current_driver') }}" style="color: inherit;">اسم السائق الحالي {!! $sortIcon('current_driver') !!}</a></th>
                                     <th><a href="{{ $sortUrl('manufacture') }}" style="color: inherit;">المصنع {!! $sortIcon('manufacture') !!}</a></th>
@@ -66,6 +67,7 @@
                                         <td>{{ $equipment->equipment_type }}</td>
                                         <td>{{ $equipment->model_year ?? 'غير متوفر' }}</td>
                                         <td>{{ $equipment->equipment_code }}</td>
+                                        <td>{{ $equipment->equipment_option ?? 'غير متوفر' }}</td>
                                         <td>{{ $equipment->equipment_number ?? 'غير متوفر' }}</td>
                                         <td>{{ $equipment->current_driver ?? 'غير متوفر' }}</td>
                                         <td>{{ $equipment->manufacture ?? 'غير متوفر' }}</td>

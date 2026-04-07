@@ -23,6 +23,7 @@ class Equipment extends Model
         'reg_no',
         'equip_reg_issue',
         'custom_clearance',
+        'equipment_option',
     ];
 
     /**
