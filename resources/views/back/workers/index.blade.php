@@ -250,6 +250,11 @@
 													{{-- <a href="{{ route('workers.export.wordpdf', $worker->id) }}" class="btn btn-sm btn-primary" title="Word to PDF" target="_blank">
 														<i class="tim-icons icon-paper"></i>
 													</a> --}}
+													@if($worker->equipmentAsDriver->isNotEmpty())
+														<a href="{{ route('workers.export.daily-equipment-inspection', $worker->id) }}" class="btn btn-sm btn-warning" title="فحص يومي" target="_blank">
+															<i class="fa-solid fa-clipboard-check"></i>
+														</a>
+													@endif
 													<a href="{{ route('workers.export.word', $worker->id) }}" class="btn btn-sm btn-default" title="Word">
 														<i class="tim-icons icon-single-copy-04"></i>
 													</a>

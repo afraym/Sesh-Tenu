@@ -20,6 +20,8 @@ class WorkerDocumentController extends Controller
 
     private const DRIVER_WORKER_TEMPLATE = 'driver-worker-timesheet.docx';
 
+    private const EQUIPMENT_INSPECTION_TEMPLATE = 'grar-daily-inpect.docx';
+
     // Convert month name to Arabic
     private const MONTH_NAMES = [
         'January' => 'يناير',
@@ -1055,6 +1057,51 @@ PV Power Plant Abydos 2 Solar (MW1000)',
         }
 
         return null;
+    }
+
+    public function exportDailyEquipmentInspection(Worker $worker)
+    {
+        $worker->load(['equipmentAsDriver' => function ($query) {
+            $query->latest('id');
+        }]);
+
+        $equipment = $worker->equipmentAsDriver->first();
+        if (!$equipment) {
+            abort(404, 'لا توجد معدة مخصصة لهذا العامل');
+        }
+
+        $templatePath = storage_path('app/templates/' . self::EQUIPMENT_INSPECTION_TEMPLATE);
+        if (!file_exists($templatePath)) {
+            abort(404, 'فحص يومي للمعدة قالب غير موجود. أضف القالب في ' . $templatePath);
+        }
+
+        $processor = new TemplateProcessor($templatePath);
+
+        $processor->setValues([
+            'worker_name' => $worker->name ?? '',
+            'worker_id' => $worker->national_id ?? '',
+            'worker_phone' => $worker->phone_number ?? '',
+            'equipment_code' => $equipment->equipment_code ?? '',
+            'equipment_type' => $equipment->equipment_type ?? '',
+            'equipment_number' => $equipment->equipment_number ?? '',
+            'equipment_model' => trim(implode(' ', array_filter([
+                $equipment->manufacture ?? null,
+                $equipment->model_year ?? null,
+            ]))) ?: '',
+            'inspection_date' => now()->format('d/m/Y'),
+            'inspection_time' => now()->format('H:i'),
+        ]);
+
+        Storage::makeDirectory('temp');
+        $fileName = 'فحص-يومي-جرار-' . $worker->name . '-' . now()->format('Y-m-d_His') . '.docx';
+        $tempPath = Storage::path('temp/' . $fileName);
+        $processor->saveAs($tempPath);
+
+        return response()->download(
+            $tempPath,
+            $fileName,
+            ['Content-Type' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document']
+        )->deleteFileAfterSend(true);
     }
 
     public function preview(Worker $worker)

@@ -58,6 +58,7 @@ Route::group(['prefix' => 'admin', 'middleware' => ['auth']], function () {
     Route::get('workers/export-word-merged', [WorkerDocumentController::class, 'exportWordMerged'])->name('workers.export.word.merged');
     Route::get('workers/{worker}/export-word-pdf', [WorkerDocumentController::class, 'exportWordPdf'])->name('workers.export.wordpdf');
     Route::get('workers/export-word-pdf-all', [WorkerDocumentController::class, 'exportWordPdfAll'])->name('workers.export.wordpdf.all');
+    Route::get('workers/{worker}/export-daily-equipment-inspection', [WorkerDocumentController::class, 'exportDailyEquipmentInspection'])->name('workers.export.daily-equipment-inspection');
     // Route::get('/workers/{worker}/preview', [WorkerController::class, 'preview'])->name('workers.preview');
 
     Route::resource('workers', WorkerController::class);
