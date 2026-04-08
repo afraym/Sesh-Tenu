@@ -222,6 +222,7 @@ class EquipmentController extends Controller
         $processor->saveAs($outPath);
 
         $this->applyGreyShadingToMarkedCells($outPath);
+        $this->reduceDriverFontSizeIfLong($outPath, $equipment->current_driver);
 
         return response()->download($outPath, $fileName)->deleteFileAfterSend(true);
     }
@@ -359,6 +360,7 @@ private function buildEquipmentWeekValues(Carbon $weekStart, int $month): array
 
             $processor->saveAs($outPath);
             $this->applyGreyShadingToMarkedCells($outPath);
+            $this->reduceDriverFontSizeIfLong($outPath, $equipment->current_driver);
             $files[] = $outPath;
         }
 
@@ -459,6 +461,7 @@ private function buildEquipmentWeekValues(Carbon $weekStart, int $month): array
 
                 $processor->saveAs($outPath);
                 $this->applyGreyShadingToMarkedCells($outPath);
+                $this->reduceDriverFontSizeIfLong($outPath, $equipment->current_driver);
                 $docxPaths[] = $outPath;
             }
         }
@@ -550,6 +553,70 @@ private function buildEquipmentWeekValues(Carbon $weekStart, int $month): array
         $baseZip->deleteName('word/document.xml');
         $baseZip->addFromString('word/document.xml', $baseDom->saveXML());
         $baseZip->close();
+    }
+
+    private function reduceDriverFontSizeIfLong(string $docxPath, ?string $driverName): void
+    {
+        $driverName = trim((string) $driverName);
+        if ($driverName === '' || mb_strlen($driverName) <= 19) {
+            return;
+        }
+
+        $zip = new \ZipArchive();
+        if ($zip->open($docxPath) !== true) {
+            return;
+        }
+
+        $xml = $zip->getFromName('word/document.xml');
+        if ($xml === false) {
+            $zip->close();
+            return;
+        }
+
+        $escapedName = htmlspecialchars($driverName, ENT_QUOTES | ENT_XML1, 'UTF-8');
+        $pattern = '/<w:r\b[\s\S]*?<w:t[^>]*>\s*' . preg_quote($escapedName, '/') . '\s*<\/w:t>[\s\S]*?<\/w:r>/u';
+
+        $updatedXml = preg_replace_callback($pattern, function ($match) {
+            $run = $match[0];
+            $sizeUpdated = false;
+
+            $run = preg_replace_callback('/<w:sz\b[^>]*w:val="(\d+)"[^>]*\/>/', function ($m) use (&$sizeUpdated) {
+                $sizeUpdated = true;
+                $newSize = max(2, ((int) $m[1]) - 2);
+                return preg_replace('/w:val="\d+"/', 'w:val="' . $newSize . '"', $m[0], 1);
+            }, $run, 1);
+
+            $run = preg_replace_callback('/<w:szCs\b[^>]*w:val="(\d+)"[^>]*\/>/', function ($m) {
+                $newSize = max(2, ((int) $m[1]) - 2);
+                return preg_replace('/w:val="\d+"/', 'w:val="' . $newSize . '"', $m[0], 1);
+            }, $run, 1);
+
+            if (! $sizeUpdated) {
+                if (preg_match('/<w:rPr\b[\s\S]*?<\/w:rPr>/', $run)) {
+                    $run = preg_replace(
+                        '/<\/w:rPr>/',
+                        '<w:sz w:val="20"/><w:szCs w:val="20"/></w:rPr>',
+                        $run,
+                        1
+                    );
+                } else {
+                    $run = preg_replace(
+                        '/<w:r>/',
+                        '<w:r><w:rPr><w:sz w:val="20"/><w:szCs w:val="20"/></w:rPr>',
+                        $run,
+                        1
+                    );
+                }
+            }
+
+            return $run;
+        }, $xml);
+
+        if (is_string($updatedXml)) {
+            $zip->addFromString('word/document.xml', $updatedXml);
+        }
+
+        $zip->close();
     }
 
     private function resolveDailyInspectionTemplatePath(Equipment $equipment): string
