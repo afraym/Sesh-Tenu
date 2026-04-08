@@ -38,6 +38,8 @@
                     <div class="d-flex justify-content-center align-items-center flex-wrap mt-2" style="gap: 8px;">
                         <label for="inspection_month" class="mb-0">الشهر:</label>
                         <input type="month" id="inspection_month" class="form-control form-control-sm" style="width: 190px;" value="{{ request('month', now()->format('Y-m')) }}">
+                        <button type="button" class="btn btn-info btn-sm" id="select-all-actual">تحديد كل الفعلي</button>
+                        <button type="button" class="btn btn-info btn-sm" id="select-all-optional">تحديد كل الاختياري</button>
                         <a href="{{ route('equipment.exportWordSelected') }}" data-base-href="{{ route('equipment.exportWordSelected') }}" class="btn btn-warning btn-sm js-export-selected" target="_blank">تحميل الفحص اليومي للمحدد</a>
                         <a href="{{ route('equipment.create') }}" class="btn btn-primary btn-sm">Add Equipment / إضافة معدة</a>
                     </div>
@@ -80,6 +82,7 @@
                                                 name="selected_equipment_ids[]"
                                                 class="equipment-table-checkbox equipment-select-checkbox"
                                                 value="{{ $equipment->id }}"
+                                                data-equipment-option="{{ trim((string) ($equipment->equipment_option ?? '')) }}"
                                                 aria-label="Select equipment {{ $equipment->equipment_code ?? $equipment->id }}"
                                             >
                                         </td>
@@ -140,6 +143,8 @@
         const rowCheckboxes = Array.from(document.querySelectorAll('.equipment-select-checkbox'));
         const exportSelectedButtons = Array.from(document.querySelectorAll('.js-export-selected'));
         const inspectionMonthInput = document.getElementById('inspection_month');
+        const selectAllActualBtn = document.getElementById('select-all-actual');
+        const selectAllOptionalBtn = document.getElementById('select-all-optional');
 
         if (!selectAllCheckbox || rowCheckboxes.length === 0) {
             return;
@@ -216,6 +221,27 @@
         rowCheckboxes.forEach(function (checkbox) {
             checkbox.addEventListener('change', syncUI);
         });
+
+        const selectByOption = function (optionLabel) {
+            rowCheckboxes.forEach(function (checkbox) {
+                const option = (checkbox.dataset.equipmentOption || '').trim();
+                checkbox.checked = option === optionLabel;
+            });
+
+            syncUI();
+        };
+
+        if (selectAllActualBtn) {
+            selectAllActualBtn.addEventListener('click', function () {
+                selectByOption('فعلي');
+            });
+        }
+
+        if (selectAllOptionalBtn) {
+            selectAllOptionalBtn.addEventListener('click', function () {
+                selectByOption('اختياري');
+            });
+        }
 
         if (inspectionMonthInput) {
             inspectionMonthInput.addEventListener('change', syncUI);
