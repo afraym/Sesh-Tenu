@@ -3,6 +3,7 @@
 @php
     $sort = $sort ?? request('sort', 'created_at');
     $direction = $direction ?? request('direction', 'desc');
+    $equipmentSelectableRowClass = 'equipment-selectable-row';
 
     $sortUrl = function (string $column) use ($sort, $direction) {
         $nextDirection = ($sort === $column && $direction === 'asc') ? 'desc' : 'asc';
@@ -34,16 +35,27 @@
             @endif
           </a>
                     <h4 class="card-title">Equipment List / قائمة المعدات</h4>
-                    <a href="{{ route('equipment.create') }}" class="btn btn-primary btn-sm">Add Equipment / إضافة معدة</a>
+                    <div class="d-flex justify-content-center align-items-center flex-wrap mt-2" style="gap: 8px;">
+                        <label for="inspection_month" class="mb-0">الشهر:</label>
+                        <input type="month" id="inspection_month" class="form-control form-control-sm" style="width: 190px;" value="{{ request('month', now()->format('Y-m')) }}">
+                        <a href="{{ route('equipment.exportWordSelected') }}" data-base-href="{{ route('equipment.exportWordSelected') }}" class="btn btn-warning btn-sm js-export-selected" target="_blank">تحميل الفحص اليومي للمحدد</a>
+                        <a href="{{ route('equipment.create') }}" class="btn btn-primary btn-sm">Add Equipment / إضافة معدة</a>
+                    </div>
                 </div>
                 <div class="card-body">
                     @if(session('success'))
                         <div class="alert alert-success">{{ session('success') }}</div>
                     @endif
+                    <div class="d-flex justify-content-end mb-2">
+                        <span class="badge badge-info" id="equipments-selected-count">0 مختار</span>
+                    </div>
                     <div class="table-responsive">
                         <table class="table table-striped table-hover">
                             <thead>
                                 <tr>
+                                    <th class="text-center" style="width: 42px;">
+                                        <input type="checkbox" id="equipments-select-all" class="equipment-table-checkbox" aria-label="Select all equipment">
+                                    </th>
                                     <th><a href="{{ $sortUrl('id') }}" style="color: inherit;"># {!! $sortIcon('id') !!}</a></th>
                                     {{-- <th><a href="{{ $sortUrl('project_name') }}" style="color: inherit;">اسم المشروع {!! $sortIcon('project_name') !!}</a></th> --}}
                                     <th><a href="{{ $sortUrl('company_id') }}" style="color: inherit;">اسم الشركة {!! $sortIcon('company_id') !!}</a></th>
@@ -60,7 +72,17 @@
                             </thead>
                             <tbody>
                                 @foreach($equipments as $equipment)
-                                    <tr>
+                                    <tr class="{{ $equipmentSelectableRowClass }}" data-equipment-id="{{ $equipment->id }}">
+                                        <td class="text-center">
+                                            <input
+                                                type="checkbox"
+                                                id="equipment-select-{{ $equipment->id }}"
+                                                name="selected_equipment_ids[]"
+                                                class="equipment-table-checkbox equipment-select-checkbox"
+                                                value="{{ $equipment->id }}"
+                                                aria-label="Select equipment {{ $equipment->equipment_code ?? $equipment->id }}"
+                                            >
+                                        </td>
                                         <td>{{ $loop->iteration + ($equipments->currentPage() - 1) * $equipments->perPage() }}</td>
                                         {{-- <td>{{ $equipment->project_name }}</td> --}}
                                         <td>{{ optional($equipment->company)->name ?? 'غير متوفر' }}</td>
@@ -93,4 +115,113 @@
         </div>
     </div>
 </div>
+<style>
+    .equipment-table-checkbox {
+        appearance: auto !important;
+        -webkit-appearance: checkbox !important;
+        opacity: 1 !important;
+        visibility: visible !important;
+        position: static !important;
+        width: 16px;
+        height: 16px;
+        margin: 0;
+        accent-color: #00d1b2;
+    }
+
+    .equipment-selectable-row.equipment-row-selected {
+        background: rgba(56, 178, 172, 0.18) !important;
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const selectAllCheckbox = document.getElementById('equipments-select-all');
+        const selectedCountElement = document.getElementById('equipments-selected-count');
+        const rowCheckboxes = Array.from(document.querySelectorAll('.equipment-select-checkbox'));
+        const exportSelectedButtons = Array.from(document.querySelectorAll('.js-export-selected'));
+        const inspectionMonthInput = document.getElementById('inspection_month');
+
+        if (!selectAllCheckbox || rowCheckboxes.length === 0) {
+            return;
+        }
+
+        const syncUI = function () {
+            let selectedCount = 0;
+            const selectedIds = [];
+
+            rowCheckboxes.forEach(function (checkbox) {
+                const row = checkbox.closest('tr');
+                if (!row) {
+                    return;
+                }
+
+                if (checkbox.checked) {
+                    selectedCount++;
+                    selectedIds.push(checkbox.value);
+                    row.classList.add('equipment-row-selected');
+                } else {
+                    row.classList.remove('equipment-row-selected');
+                }
+            });
+
+            if (selectedCountElement) {
+                selectedCountElement.textContent = selectedCount + ' مختار';
+            }
+
+            selectAllCheckbox.checked = selectedCount === rowCheckboxes.length;
+            selectAllCheckbox.indeterminate = selectedCount > 0 && selectedCount < rowCheckboxes.length;
+
+            exportSelectedButtons.forEach(function (button) {
+                const baseHref = button.dataset.baseHref || button.href;
+                if (selectedIds.length > 0) {
+                    const query = new URLSearchParams();
+                    query.set('ids', selectedIds.join(','));
+
+                    if (inspectionMonthInput && inspectionMonthInput.value) {
+                        query.set('month', inspectionMonthInput.value);
+                    }
+
+                    button.href = baseHref + '?' + query.toString();
+                    button.classList.remove('disabled');
+                    button.setAttribute('aria-disabled', 'false');
+                } else {
+                    button.href = baseHref;
+                    button.classList.add('disabled');
+                    button.setAttribute('aria-disabled', 'true');
+                }
+            });
+        };
+
+        exportSelectedButtons.forEach(function (button) {
+            button.addEventListener('click', function (event) {
+                const selectedIds = rowCheckboxes.filter(function (checkbox) {
+                    return checkbox.checked;
+                });
+
+                if (selectedIds.length === 0) {
+                    event.preventDefault();
+                    alert('Please select at least one equipment first.');
+                }
+            });
+        });
+
+        selectAllCheckbox.addEventListener('change', function () {
+            rowCheckboxes.forEach(function (checkbox) {
+                checkbox.checked = selectAllCheckbox.checked;
+            });
+
+            syncUI();
+        });
+
+        rowCheckboxes.forEach(function (checkbox) {
+            checkbox.addEventListener('change', syncUI);
+        });
+
+        if (inspectionMonthInput) {
+            inspectionMonthInput.addEventListener('change', syncUI);
+        }
+
+        syncUI();
+    });
+</script>
 @endsection

@@ -184,7 +184,7 @@ class EquipmentController extends Controller
         $month = $month ?: now()->month;
         $firstDay = Carbon::create($year, $month, 1)->startOfDay();
         $lastDay = $firstDay->copy()->endOfMonth();
-        $templatePath = storage_path('app/templates/tipper-truck-daily-temp.docx');
+        $templatePath = $this->resolveDailyInspectionTemplatePath($equipment);
         if (!is_file($templatePath)) {
             abort(404, 'Equipment Word template not found.');
         }
@@ -199,7 +199,13 @@ class EquipmentController extends Controller
             'company_short_name' => $equipment->company->short_name ?? '',
             'equip_reg_issue'    => $equipment->equip_reg_issue ?? '',
             'driver'             => $equipment->current_driver ?? '',
-            'daily'              => 'يومي',
+            'equipment_code'     => $equipment->equipment_code ?? '',
+            'equipment_number'   => $equipment->equipment_number ?? '',
+            'equipment_model'    => trim(implode(' ', array_filter([
+                $equipment->manufacture ?? null,
+                $equipment->model_year ?? null,
+            ]))) ?: '',
+            'daily'              => '',
         ];
 
         $values += $this->buildEquipmentWeekValues($weekStart,$month);
@@ -229,9 +235,10 @@ private function buildEquipmentWeekValues(Carbon $weekStart, int $month): array
         $date = $weekStart->copy()->addDays($i);
         $inMonth = ((int) $date->month === (int) $month);
 
-        // hide date + daily if out of month
-        $out["{$day}_date"] = $inMonth ? $date->format('d/m') : '';
-        $out["{$day}_daily"] = $inMonth ? 'يومي' : '';
+        // keep date cell visually empty but shaded for out-of-month days
+        $out["{$day}_date"] = $inMonth ? $date->format('d/m') : '[[GREY]]';
+        // keep daily cell visually empty but shaded for out-of-month days
+        $out["{$day}_daily"] = $inMonth ? 'يومي' : '[[GREY]]';
 
         // keep grey marker for out-of-month cells
         $out["{$day}_check_column"] = $inMonth ? '' : '[[GREY]]';
@@ -302,7 +309,7 @@ private function buildEquipmentWeekValues(Carbon $weekStart, int $month): array
     public function exportMonthWord(Equipment $equipment, $year = null, $month = null)
     {
         $equipment->load('company');
-        $templatePath = storage_path('app/templates/tipper-truck-daily-temp.docx');
+        $templatePath = $this->resolveDailyInspectionTemplatePath($equipment);
         if (!is_file($templatePath)) {
             abort(404, 'Template not found.');
         }
@@ -331,6 +338,12 @@ private function buildEquipmentWeekValues(Carbon $weekStart, int $month): array
                 'company_short_name' => $equipment->company->short_name ?? '',
                 'equip_reg_issue'    => $equipment->equip_reg_issue ?? '',
                 'driver'             => $equipment->current_driver ?? '',
+                'equipment_code'     => $equipment->equipment_code ?? '',
+                'equipment_number'   => $equipment->equipment_number ?? '',
+                'equipment_model'    => trim(implode(' ', array_filter([
+                    $equipment->manufacture ?? null,
+                    $equipment->model_year ?? null,
+                ]))) ?: '',
                 'report_month'       => $firstDay->format('F Y'),
             ];
             $values += $this->buildEquipmentWeekValues($weekStart, $month);
@@ -364,6 +377,197 @@ private function buildEquipmentWeekValues(Carbon $weekStart, int $month): array
         }
 
         return response()->download($zipPath)->deleteFileAfterSend(true);
+    }
+
+    public function exportWordSelected(Request $request, $year = null, $month = null)
+    {
+        $ids = collect(explode(',', (string) $request->query('ids')))
+            ->filter(fn ($value) => trim($value) !== '')
+            ->map(fn ($value) => (int) $value)
+            ->values();
+
+        if ($ids->isEmpty()) {
+            abort(404, 'No equipment selected.');
+        }
+
+        $equipments = Equipment::with('company')
+            ->whereIn('id', $ids)
+            ->orderByRaw('FIELD(id,' . $ids->implode(',') . ')')
+            ->get();
+
+        if ($equipments->isEmpty()) {
+            abort(404, 'No equipment selected.');
+        }
+
+        $selectedMonth = trim((string) $request->query('month', ''));
+        if (preg_match('/^(\d{4})-(\d{2})$/', $selectedMonth, $matches) === 1) {
+            $year = (int) $matches[1];
+            $month = (int) $matches[2];
+        } else {
+            $year = $year ?: now()->year;
+            $month = $month ?: now()->month;
+        }
+
+        $firstDay = Carbon::create($year, $month, 1)->startOfDay();
+        $lastDay = $firstDay->copy()->endOfMonth();
+        $firstWeekStart = $firstDay->copy()->startOfWeek(Carbon::SATURDAY);
+
+        $weeks = [];
+        $current = $firstWeekStart->copy();
+        while ($current->lte($lastDay)) {
+            $weeks[] = $current->copy();
+            $current->addWeek();
+        }
+
+        $timestamp = now()->format('Ymd_His');
+        $tempDir = storage_path('app/temp/equipment-selected-' . $timestamp);
+
+        if (!is_dir($tempDir)) {
+            mkdir($tempDir, 0775, true);
+        }
+
+        $docxPaths = [];
+
+        foreach ($equipments as $equipment) {
+            $templatePath = $this->resolveDailyInspectionTemplatePath($equipment);
+            if (!is_file($templatePath)) {
+                abort(404, 'Equipment Word template not found.');
+            }
+
+            foreach ($weeks as $weekStart) {
+                $processor = new TemplateProcessor($templatePath);
+
+                $values = [
+                    'report_month'       => $weekStart->format('F Y'),
+                    'company_short_name' => $equipment->company->short_name ?? '',
+                    'equip_reg_issue'    => $equipment->equip_reg_issue ?? '',
+                    'driver'             => $equipment->current_driver ?? '',
+                    'equipment_code'     => $equipment->equipment_code ?? '',
+                    'equipment_number'   => $equipment->equipment_number ?? '',
+                    'equipment_model'    => trim(implode(' ', array_filter([
+                        $equipment->manufacture ?? null,
+                        $equipment->model_year ?? null,
+                    ]))) ?: '',
+                    'daily'              => '',
+                ];
+
+                $values += $this->buildEquipmentWeekValues($weekStart, $month);
+                $processor->setValues($values);
+
+                $fileName = 'equipment-' . $equipment->id . '-' . $weekStart->format('Ymd') . '.docx';
+                $outPath = $tempDir . DIRECTORY_SEPARATOR . $fileName;
+
+                $processor->saveAs($outPath);
+                $this->applyGreyShadingToMarkedCells($outPath);
+                $docxPaths[] = $outPath;
+            }
+        }
+
+        $combinedDocxPath = storage_path('app/temp/equipment-daily-selected-' . $timestamp . '.docx');
+        $this->mergeDocxFiles($docxPaths, $combinedDocxPath);
+
+        foreach ($docxPaths as $docxPath) {
+            @unlink($docxPath);
+        }
+        @rmdir($tempDir);
+
+        return response()->download(
+            $combinedDocxPath,
+            'equipment-daily-selected-' . $timestamp . '.docx',
+            ['Content-Type' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document']
+        )->deleteFileAfterSend(true);
+    }
+
+    private function mergeDocxFiles(array $docxPaths, string $outputPath): void
+    {
+        if (empty($docxPaths)) {
+            throw new \RuntimeException('No DOCX files to merge.');
+        }
+
+        copy($docxPaths[0], $outputPath);
+
+        $baseZip = new \ZipArchive();
+        if ($baseZip->open($outputPath) !== true) {
+            throw new \RuntimeException('Unable to open base DOCX for merge.');
+        }
+
+        $baseXml = $baseZip->getFromName('word/document.xml');
+        if ($baseXml === false) {
+            $baseZip->close();
+            throw new \RuntimeException('Base DOCX document.xml not found.');
+        }
+
+        $baseDom = new \DOMDocument();
+        $baseDom->loadXML($baseXml);
+        $baseXpath = new \DOMXPath($baseDom);
+        $baseXpath->registerNamespace('w', 'http://schemas.openxmlformats.org/wordprocessingml/2006/main');
+
+        $baseBody = $baseXpath->query('//w:body')->item(0);
+        if (! $baseBody) {
+            $baseZip->close();
+            throw new \RuntimeException('Base DOCX body not found.');
+        }
+
+        $baseSectPr = $baseXpath->query('./w:sectPr', $baseBody)->item(0);
+
+        foreach (array_slice($docxPaths, 1) as $path) {
+            $zip = new \ZipArchive();
+            if ($zip->open($path) !== true) {
+                continue;
+            }
+
+            $xml = $zip->getFromName('word/document.xml');
+            $zip->close();
+
+            if ($xml === false) {
+                continue;
+            }
+
+            $dom = new \DOMDocument();
+            $dom->loadXML($xml);
+            $xpath = new \DOMXPath($dom);
+            $xpath->registerNamespace('w', 'http://schemas.openxmlformats.org/wordprocessingml/2006/main');
+
+            $body = $xpath->query('//w:body')->item(0);
+            if (! $body) {
+                continue;
+            }
+
+            foreach ($body->childNodes as $node) {
+                if ($node->nodeType === XML_ELEMENT_NODE && $node->localName === 'sectPr') {
+                    continue;
+                }
+
+                $imported = $baseDom->importNode($node, true);
+                if ($baseSectPr) {
+                    $baseBody->insertBefore($imported, $baseSectPr);
+                } else {
+                    $baseBody->appendChild($imported);
+                }
+            }
+        }
+
+        $baseZip->deleteName('word/document.xml');
+        $baseZip->addFromString('word/document.xml', $baseDom->saveXML());
+        $baseZip->close();
+    }
+
+    private function resolveDailyInspectionTemplatePath(Equipment $equipment): string
+    {
+        $defaultTemplatePath = storage_path('app/templates/Qalab-daily-inspection.docx');
+        $harasTemplatePath = storage_path('app/templates/haras-daily-inspection.docx');
+        $qalabTemplatePath = storage_path('app/templates/Qalab-daily-inspection.docx');
+
+        $type = trim((string) ($equipment->equipment_type ?? ''));
+        if ($type !== '' && mb_stripos($type, 'قلاب') !== false && is_file($qalabTemplatePath)) {
+            return $qalabTemplatePath;
+        }
+
+        if ($type !== '' && mb_stripos($type, 'هراس') !== false && is_file($harasTemplatePath)) {
+            return $harasTemplatePath;
+        }
+
+        return $defaultTemplatePath;
     }
 
 }
