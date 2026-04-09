@@ -195,17 +195,17 @@ class EquipmentController extends Controller
         $weekStart = $firstDay->copy()->startOfWeek(Carbon::SATURDAY);
 
         $values = [
-            'report_month'       => $weekStart->format('F Y'),
-            'company_short_name' => $equipment->company->short_name ?? '',
-            'equip_reg_issue'    => $equipment->equip_reg_issue ?? '',
-            'driver'             => $equipment->current_driver ?? '',
-            'equipment_code'     => $equipment->equipment_code ?? '',
-            'equipment_number'   => $equipment->equipment_number ?? '',
-            'equipment_model'    => trim(implode(' ', array_filter([
+            'report_month'       => $weekStart->format('F Y') ?: '.......',
+            'company_short_name' => $equipment->company->short_name ?: '.......',
+            'equip_reg_issue'    => $equipment->equip_reg_issue ?: '.......',
+            'driver'             => $equipment->current_driver ?: '.......',
+            'equipment_code'     => $equipment->equipment_code ?: '........',
+            'equipment_number'   => $equipment->equipment_number ?: '.......',
+            'equipment_model'    => ($model = trim(implode(' ', array_filter([
                 $equipment->manufacture ?? null,
                 $equipment->model_year ?? null,
-            ]))) ?: '',
-            'daily'              => '',
+            ])))) ? $model : '.......',
+            'daily'              => '.......',
         ];
 
         $values += $this->buildEquipmentWeekValues($weekStart,$month);
@@ -237,7 +237,8 @@ private function buildEquipmentWeekValues(Carbon $weekStart, int $month): array
         $inMonth = ((int) $date->month === (int) $month);
 
         // keep date cell visually empty but shaded for out-of-month days
-        $out["{$day}_date"] = $inMonth ? $date->format('d/m') : '[[GREY]]';
+        // Format: m/d (month/day)
+        $out["{$day}_date"] = $inMonth ? ($date->month . '/' . $date->day) : '[[GREY]]';
         // keep daily cell visually empty but shaded for out-of-month days
         $out["{$day}_daily"] = $inMonth ? 'يومي' : '[[GREY]]';
 
@@ -274,19 +275,21 @@ private function buildEquipmentWeekValues(Carbon $weekStart, int $month): array
             // Remove marker text
             $tc = str_replace('[[GREY]]', '', $tc);
 
-            // Add/replace shading
+            // Add/replace shading with less dense down diagonal pattern and white background
+            $shdTag = '<w:shd w:val="diagStripe" w:color="auto" w:fill="FFFFFF"/>';
+
             if (preg_match('/<w:tcPr\b[\s\S]*?<\/w:tcPr>/', $tc)) {
                 if (preg_match('/<w:shd\b[^>]*\/>/', $tc)) {
                     $tc = preg_replace(
                         '/<w:shd\b[^>]*\/>/',
-                        '<w:shd w:val="clear" w:color="auto" w:fill="D9D9D9"/>',
+                        $shdTag,
                         $tc,
                         1
                     );
                 } else {
                     $tc = preg_replace(
                         '/<\/w:tcPr>/',
-                        '<w:shd w:val="clear" w:color="auto" w:fill="D9D9D9"/></w:tcPr>',
+                        $shdTag . '</w:tcPr>',
                         $tc,
                         1
                     );
@@ -294,7 +297,7 @@ private function buildEquipmentWeekValues(Carbon $weekStart, int $month): array
             } else {
                 $tc = preg_replace(
                     '/<w:tc>/',
-                    '<w:tc><w:tcPr><w:shd w:val="clear" w:color="auto" w:fill="D9D9D9"/></w:tcPr>',
+                    '<w:tc><w:tcPr>' . $shdTag . '</w:tcPr>',
                     $tc,
                     1
                 );
@@ -336,16 +339,16 @@ private function buildEquipmentWeekValues(Carbon $weekStart, int $month): array
 
             $values = [
                 // Add other placeholders as needed
-                'company_short_name' => $equipment->company->short_name ?? '',
-                'equip_reg_issue'    => $equipment->equip_reg_issue ?? '',
-                'driver'             => $equipment->current_driver ?? '',
-                'equipment_code'     => $equipment->equipment_code ?? '',
-                'equipment_number'   => $equipment->equipment_number ?? '',
-                'equipment_model'    => trim(implode(' ', array_filter([
+                'company_short_name' => $equipment->company->short_name ?: '.......',
+                'equip_reg_issue'    => $equipment->equip_reg_issue ?: '.......',
+                'driver'             => $equipment->current_driver ?: '.......',
+                'equipment_code'     => $equipment->equipment_code ?: '........',
+                'equipment_number'   => $equipment->equipment_number ?: '.......',
+                'equipment_model'    => ($model = trim(implode(' ', array_filter([
                     $equipment->manufacture ?? null,
                     $equipment->model_year ?? null,
-                ]))) ?: '',
-                'report_month'       => $firstDay->format('F Y'),
+                ])))) ? $model : '.......',
+                'report_month'       => $firstDay->format('F Y') ?: '.......',
             ];
             $values += $this->buildEquipmentWeekValues($weekStart, $month);
 
@@ -441,16 +444,16 @@ private function buildEquipmentWeekValues(Carbon $weekStart, int $month): array
 
                 $values = [
                     'report_month'       => $weekStart->format('F Y'),
-                    'company_short_name' => $equipment->company->short_name ?? '',
-                    'equip_reg_issue'    => $equipment->equip_reg_issue ?? '',
-                    'driver'             => $equipment->current_driver ?? '',
-                    'equipment_code'     => $equipment->equipment_code ?? '',
-                    'equipment_number'   => $equipment->equipment_number ?? '',
-                    'equipment_model'    => trim(implode(' ', array_filter([
+                    'company_short_name' => $equipment->company->short_name ?: '.......',
+                    'equip_reg_issue'    => $equipment->equip_reg_issue ?: '.......',
+                    'driver'             => $equipment->current_driver ?: '.......',
+                    'equipment_code'     => $equipment->equipment_code ?: '........',
+                    'equipment_number'   => $equipment->equipment_number ?: '.......',
+                    'equipment_model'    => ($model = trim(implode(' ', array_filter([
                         $equipment->manufacture ?? null,
                         $equipment->model_year ?? null,
-                    ]))) ?: '',
-                    'daily'              => '',
+                    ])))) ? $model : '.......',
+                    'daily'              => '.......',
                 ];
 
                 $values += $this->buildEquipmentWeekValues($weekStart, $month);
@@ -622,9 +625,12 @@ private function buildEquipmentWeekValues(Carbon $weekStart, int $month): array
     private function resolveDailyInspectionTemplatePath(Equipment $equipment): string
     {
         $defaultTemplatePath = storage_path('app/templates/Qalab-daily-inspection.docx');
-        $harasTemplatePath = storage_path('app/templates/haras-daily-inspection.docx');
+        $harasTemplatePath = storage_path('app/templates/haras-final.docx');
         $qalabTemplatePath = storage_path('app/templates/Qalab-daily-inspection.docx');
-
+        $loaderTemplatePath = storage_path('app/templates/Loader-daily-inspection.docx');
+        $hafarTemplatePath = storage_path('app/templates/Hafar-daily-inspection.docx');
+        $graderTemplatePath = storage_path('app/templates/Grader-daily-inspection.docx');
+        $grarTemplatePath = storage_path('app/templates/Grar-daily-inspection.docx');
         $type = trim((string) ($equipment->equipment_type ?? ''));
         if ($type !== '' && mb_stripos($type, 'قلاب') !== false && is_file($qalabTemplatePath)) {
             return $qalabTemplatePath;
@@ -632,6 +638,27 @@ private function buildEquipmentWeekValues(Carbon $weekStart, int $month): array
 
         if ($type !== '' && mb_stripos($type, 'هراس') !== false && is_file($harasTemplatePath)) {
             return $harasTemplatePath;
+        }
+
+        // حفار (excavator)
+        if ($type !== '' && mb_stripos($type, 'حفار') !== false && is_file($hafarTemplatePath)) {
+            return $hafarTemplatePath;
+        }
+
+        // جريدر (Grader)
+        if ($type !== '' && mb_stripos($type, 'جريدر') !== false && is_file($graderTemplatePath)) {
+            return $graderTemplatePath;
+        }
+        if ($type !== '' && (mb_stripos($type, 'جرار') !== false || mb_stripos($type, 'بكارة') !== false) && is_file($grarTemplatePath)) {
+            return $grarTemplatePath;
+        }
+
+
+        $loaderTypes = ['لودر', 'باك لودر', 'ميني لودر', 'بلدوزر'];
+        foreach ($loaderTypes as $loaderType) {
+            if ($type !== '' && mb_stripos($type, $loaderType) !== false && is_file($loaderTemplatePath)) {
+                return $loaderTemplatePath;
+            }
         }
 
         return $defaultTemplatePath;
