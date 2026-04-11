@@ -5,9 +5,19 @@
   body.register-page .page-header {
     background:
       linear-gradient(150deg, rgba(10, 56, 108, 0.55), rgba(6, 27, 62, 0.28)),
-      url('{{ asset('assets/img/site/007.jpeg') }}') center center / cover no-repeat,
+      url('{{ asset('assets/img/site/007.webp') }}') center center / cover no-repeat,
       radial-gradient(circle at 78% 12%, rgba(255, 212, 114, 0.4) 0 16%, rgba(255, 212, 114, 0) 36%),
       linear-gradient(150deg, rgba(10, 56, 108, 0.52), rgba(6, 27, 62, 0.18));
+  }
+
+  @media (max-width: 600px) {
+    body.register-page .page-header {
+      background:
+        linear-gradient(150deg, rgba(10, 56, 108, 0.55), rgba(6, 27, 62, 0.28)),
+        url('{{ asset('assets/img/site/007m.webp') }}') center center / cover no-repeat,
+        radial-gradient(circle at 78% 12%, rgba(255, 212, 114, 0.4) 0 16%, rgba(255, 212, 114, 0) 36%),
+        linear-gradient(150deg, rgba(10, 56, 108, 0.52), rgba(6, 27, 62, 0.18));
+    }
   }
 
   body.register-page .page-header .page-header-image {
@@ -51,7 +61,7 @@
               <div id="square8" class="square square-8"></div>
               <div class="card card-register">
                 <div class="card-header">
-                  <img class="card-img" src="{{ asset('assets/img/square1.png') }}" alt="Card image">
+                  <img class="card-img" src="{{ asset('assets/img/square1.webp') }}" alt="Card image">
                   <h4 class="card-title text-white text-center" style="margin-left: -30%;">دخول</h4>
                 </div>
                 <div class="card-body">
