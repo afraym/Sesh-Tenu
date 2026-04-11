@@ -19,10 +19,9 @@
   <!-- Nucleo Icons -->
   <link href="./assets/css/nucleo-icons.css" rel="stylesheet" />
   <!-- CSS Files -->
-  <link href="./assets/css/blk-design-system.css?v=1.0.0" rel="stylesheet" />
-  <!-- CSS Just for demo purpose, don't include it in your project -->
-  <link href="./assets/demo/demo.css" rel="stylesheet" />
-  <link rel="stylesheet" href="">
+  {{-- <link href="./assets/css/blk-design-system.min.css?v=1.0.0" rel="stylesheet" /> --}}
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/afraym/Sesh-Tenu/public/assets/css/blk-design-system.min.css">
+
 </head>
 <style>
   body,

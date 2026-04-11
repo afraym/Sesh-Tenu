@@ -23,7 +23,8 @@
   <!-- Nucleo Icons -->
   <link href="{{ asset('assets/css/nucleo-icons.css') }}" rel="stylesheet" />
   <!-- CSS Files -->
-  <link href="{{ asset('assets/css/black-dashboard.css?v=1.0.0') }}" rel="stylesheet" />
+  {{-- <link href="{{ asset('assets/css/black-dashboard.min.css?v=1.0.0') }}" rel="stylesheet" /> --}}
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/afraym/Sesh-Tenu/public/assets/css/black-dashboard.min.css">
   <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-rtl/3.4.0/css/bootstrap-rtl.css" rel="stylesheet" />
   <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/css/bootstrap-datepicker3.min.css" rel="stylesheet" />
   <!-- CSS Just for demo purpose, don't include it in your project -->
