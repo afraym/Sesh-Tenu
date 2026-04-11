@@ -61,7 +61,7 @@
               <div id="square8" class="square square-8"></div>
               <div class="card card-register">
                 <div class="card-header">
-                  <img class="card-img" src="{{ asset('assets/img/square1.webp') }}" alt="Card image" loading="eager">
+                  <img class="card-img" src="{{ asset('assets/img/square1.webp') }}" alt="Card image" loading="eager" fetchpriority=high>
                   <h4 class="card-title text-white text-center" style="margin-left: -30%;">دخول</h4>
                 </div>
                 <div class="card-body">
