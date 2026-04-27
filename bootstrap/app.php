@@ -13,8 +13,12 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
             'super.admin' => \App\Http\Middleware\EnsureUserIsSuperAdmin::class,
+            'manage.all' => \App\Http\Middleware\EnsureUserCanManageAll::class,
             'company.owner' => \App\Http\Middleware\EnsureUserIsCompanyOwner::class,
+            'company.subscription' => \App\Http\Middleware\EnsureUserHasActiveSubscription::class,
         ]);
+
+        $middleware->appendToGroup('web', \App\Http\Middleware\SetLocale::class);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

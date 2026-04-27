@@ -22,6 +22,9 @@ class SuperAdminSeeder extends Seeder
                 'role' => 'super_admin',
                 'company_id' => null,
             ],
+        );
+
+        User::updateOrCreate(
             ['email' => '01151543119'],
             [
                 'name' => 'Khaled Atef',

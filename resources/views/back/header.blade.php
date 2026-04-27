@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" dir="{{ app()->getLocale() === 'ar' ? 'rtl' : 'ltr' }}">
 
 <head>
   <meta charset="utf-8" />
@@ -72,16 +72,40 @@
       display: block;
     }
 
+    .sidebar .sidebar-wrapper {
+      max-height: 100vh;
+      overflow-y: auto;
+      overflow-x: hidden;
+      scrollbar-width: thin;
+    }
+
+    .sidebar .sidebar-wrapper::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    .sidebar .sidebar-wrapper::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.28);
+      border-radius: 8px;
+    }
+
+    .sidebar .sidebar-wrapper::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
     @media (max-width: 991.98px) {
       .navbar-center-logo img {
         height: 26px;
+      }
+
+      .sidebar .sidebar-wrapper {
+        max-height: 100dvh;
       }
     }
   </style>
 
 </head>
 
-<body class=" rtl menu-on-right ">
+<body class="{{ app()->getLocale() === 'ar' ? 'rtl menu-on-right' : '' }}">
   <div class="wrapper">
     <div class="sidebar" data="blue">
       <!--
@@ -95,31 +119,31 @@
            <li class="{{ request()->routeIs('dashboard') ? 'active' : '' }}">
             <a href="{{ route('dashboard') }}">
               <i class="fa-solid fa-tv"></i>
-              <p>الرئيسة</p>
+              <p>{{ __('nav.dashboard') }}</p>
             </a>
           </li>
           <li class="{{ request()->routeIs('workers.index') ? 'active' : '' }}">
             <a href="{{ route('workers.index') }}">
               <i class="fa-solid fa-helmet-safety"></i>
-              <p>القوى العاملة</p>
+              <p>{{ __('nav.workers') }}</p>
             </a>
           </li>
           <li class="{{ request()->routeIs('workers.create') ? 'active' : '' }}">
             <a href="{{ route('workers.create') }}">
               <i class="fa-solid fa-user-plus"></i>
-              <p>ادخال جديد</p>
+              <p>{{ __('nav.worker_create') }}</p>
             </a>
           </li>
           <li class="{{ request()->routeIs('equipment.index') ? 'active' : '' }}">
             <a href="{{ route('equipment.index') }}">
               <i class="tim-icons icon-delivery-fast"></i>
-              <p>المُعدات</p>
+              <p>{{ __('nav.equipment') }}</p>
             </a>
           </li>
           <li class="{{ request()->routeIs('equipment-types.index') ? 'active' : '' }}">
             <a href="{{ route('equipment-types.index') }}">
             <i class="fa-solid fa-tractor"></i>
-            <p>أنواع المٌعدات</p>
+            <p>{{ __('nav.equipment_types') }}</p>
             </a>
           </li>
           {{-- <li class="{{ request()->routeIs('equipment.create') ? 'active' : '' }}">
@@ -131,13 +155,13 @@
           <li class="{{ request()->routeIs('worker-document-deliveries.index') ? 'active' : '' }}">
             <a href="{{ route('worker-document-deliveries.index') }}">
               <i class="far fa-calendar-check"></i>
-              <p>متابعة السركي</p>
+              <p>{{ __('nav.worker_delivery_followup') }}</p>
             </a>
           </li>
           <li class="{{ request()->routeIs('worker-document-deliveries.receive') ? 'active' : '' }}">
             <a href="{{ route('worker-document-deliveries.receive') }}">
               <i class="fas fa-user-check"></i>
-              <p>استلام سركي</p>
+              <p>{{ __('nav.worker_delivery_receive') }}</p>
             </a>
           </li>
           {{-- <li class="{{ request()->routeIs('worker-document-deliveries.create') ? 'active' : '' }}">
@@ -150,7 +174,7 @@
             <li class="{{ request()->routeIs('companies.index') ? 'active' : '' }}">
                 <a href="{{ route('companies.index') }}">
                 <i class="tim-icons icon-bank"></i>
-                <p>الشركات</p>
+              <p>{{ __('nav.companies') }}</p>
                 </a>
           </li>
             {{-- <li class="{{ request()->routeIs('companies.create') ? 'active' : '' }}">
@@ -162,7 +186,7 @@
           <li class="{{ request()->routeIs('projects.index') ? 'active' : '' }}">
             <a href="{{ route('projects.index') }}">
               <i class="tim-icons icon-chart-pie-36"></i>
-              <p>المشاريع</p>
+              <p>{{ __('nav.projects') }}</p>
             </a>
           </li>
           {{-- <li class="{{ request()->routeIs('projects.create') ? 'active' : '' }}">
@@ -174,7 +198,7 @@
             <li class="{{ request()->routeIs('jobtypes.index') ? 'active' : '' }}">
                 <a href="{{ route('jobtypes.index') }}">
                 <i class="tim-icons icon-bullet-list-67"></i>
-                <p>أنواع الوظائف</p>
+              <p>{{ __('nav.job_types') }}</p>
                 </a>
             </li>
             {{-- <li class="{{ request()->routeIs('jobtypes.create') ? 'active' : '' }}">
@@ -193,14 +217,23 @@
             <li class="{{ request()->routeIs('users.index') ? 'active' : '' }}">
                 <a href="{{ route('users.index') }}">
                 <i class="tim-icons icon-single-02"></i>
-                <p>المستخدمين</p>
+              <p>{{ __('nav.users') }}</p>
                 </a>
             </li>
             <li class="{{ request()->routeIs('users.create') ? 'active' : '' }}">
                 <a href="{{ route('users.create') }}">
                 <i class="tim-icons icon-simple-add"></i>
-                <p>إضافة مستخدم</p>
+              <p>{{ __('nav.user_create') }}</p>
                 </a>
+            </li>
+            @endif
+
+            @if(auth()->check() && auth()->user()->canManageAll())
+            <li class="{{ request()->routeIs('admin.subscriptions.*') ? 'active' : '' }}">
+              <a href="{{ route('admin.subscriptions.manage') }}">
+              <i class="fa-solid fa-credit-card"></i>
+              <p>{{ __('nav.subscriptions') }}</p>
+              </a>
             </li>
             @endif
         </ul>
@@ -233,18 +266,28 @@
             <ul class="navbar-nav  mr-auto">
               @if(auth()->check() && auth()->user()->isSuperAdmin())
                 <li class="nav-item">
-                  <form action="{{ route('system.update-optimize') }}" method="POST" class="d-inline" onsubmit="return confirm('Run git pull and php artisan optimize now?');">
+                  <form action="{{ route('system.update-optimize') }}" method="POST" class="d-inline" onsubmit="return confirm('{{ __('nav.update_confirm') }}');">
                     @csrf
                     <button type="submit" class="btn btn-sm btn-info mb-0">
-                      <i class="tim-icons icon-refresh-01"></i> تحديث 
+                      <i class="tim-icons icon-refresh-01"></i> {{ __('nav.update') }}
                     </button>
                   </form>
                 </li>
               @endif
               <li class="search-bar input-group">
                 <button class="btn btn-link" id="search-button" data-toggle="modal" data-target="#searchModal"><i class="tim-icons icon-zoom-split" ></i>
-                  <span class="d-lg-none d-md-block">Search</span>
+                  <span class="d-lg-none d-md-block">{{ __('nav.search') }}</span>
                 </button>
+              </li>
+              <li class="nav-item dropdown">
+                <a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown" aria-expanded="false">
+                  <i class="tim-icons icon-world"></i>
+                  <span>{{ strtoupper(app()->getLocale()) }}</span>
+                </a>
+                <div class="dropdown-menu dropdown-menu-right">
+                  <a class="dropdown-item" href="{{ route('locale.switch', ['locale' => 'ar']) }}">{{ __('ui.arabic') }}</a>
+                  <a class="dropdown-item" href="{{ route('locale.switch', ['locale' => 'en']) }}">{{ __('ui.english') }}</a>
+                </div>
               </li>
               @php
                 $notif_workers_today   = \App\Models\Worker::whereDate('created_at', now()->toDateString())->count();
@@ -260,40 +303,40 @@
                     <div class="notification d-none d-lg-block d-xl-block"></div>
                   @endif
                   <i class="tim-icons icon-sound-wave"></i>
-                  <p class="d-lg-none">الإشعارات</p>
+                  <p class="d-lg-none">{{ __('nav.notifications') }}</p>
                 </a>
                 <ul class="dropdown-menu dropdown-menu-right dropdown-navbar" style="min-width:270px">
                   <li class="dropdown-header text-muted px-3 py-2" style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;">
-                    اليوم — {{ now()->translatedFormat('l j M') }}
+                    {{ __('nav.today') }} - {{ now()->translatedFormat('l j M') }}
                   </li>
                   <li class="nav-link">
                     <a href="{{ route('workers.index') }}" class="nav-item dropdown-item d-flex justify-content-between align-items-center">
-                      <span><i class="fa-solid fa-user-plus ml-1" style="color:#3987f6"></i> عمال مضافون اليوم</span>
+                      <span><i class="fa-solid fa-user-plus ml-1" style="color:#3987f6"></i> {{ __('nav.workers_added_today') }}</span>
                       <span class="badge badge-pill" style="background:rgba(57,135,246,.18);color:#3987f6;font-size:12px">{{ $notif_workers_today }}</span>
                     </a>
                   </li>
                   <li class="nav-link">
                     <a href="{{ route('worker-document-deliveries.index') }}" class="nav-item dropdown-item d-flex justify-content-between align-items-center">
-                      <span><i class="fas fa-user-check ml-1" style="color:#22c55e"></i> استلامات سركي اليوم</span>
+                      <span><i class="fas fa-user-check ml-1" style="color:#22c55e"></i> {{ __('nav.deliveries_today') }}</span>
                       <span class="badge badge-pill" style="background:rgba(34,197,94,.18);color:#22c55e;font-size:12px">{{ $notif_deliveries_today }}</span>
                     </a>
                   </li>
                   <li class="dropdown-divider"></li>
                   <li class="nav-link">
                     <a href="{{ route('workers.index') }}" class="nav-item dropdown-item d-flex justify-content-between align-items-center">
-                      <span><i class="fa-solid fa-users ml-1" style="color:#8b6df0"></i> عمال هذا الأسبوع</span>
+                      <span><i class="fa-solid fa-users ml-1" style="color:#8b6df0"></i> {{ __('nav.workers_this_week') }}</span>
                       <span class="badge badge-pill" style="background:rgba(139,109,240,.18);color:#8b6df0;font-size:12px">{{ $notif_workers_week }}</span>
                     </a>
                   </li>
                   <li class="nav-link">
                     <a href="{{ route('workers.index') }}" class="nav-item dropdown-item d-flex justify-content-between align-items-center">
-                      <span><i class="fa-solid fa-person-digging ml-1" style="color:#f2994a"></i> إجمالي العمال</span>
+                      <span><i class="fa-solid fa-person-digging ml-1" style="color:#f2994a"></i> {{ __('nav.workers_total') }}</span>
                       <span class="badge badge-pill" style="background:rgba(242,153,74,.18);color:#f2994a;font-size:12px">{{ $notif_workers_total }}</span>
                     </a>
                   </li>
                   <li class="nav-link">
                     <a href="{{ route('equipment.index') }}" class="nav-item dropdown-item d-flex justify-content-between align-items-center">
-                      <span><i class="tim-icons icon-delivery-fast ml-1" style="color:#00bcd4"></i> إجمالي المعدات</span>
+                      <span><i class="tim-icons icon-delivery-fast ml-1" style="color:#00bcd4"></i> {{ __('nav.equipment_total') }}</span>
                       <span class="badge badge-pill" style="background:rgba(0,188,212,.18);color:#00bcd4;font-size:12px">{{ $notif_equip_total }}</span>
                     </a>
                   </li>
@@ -306,14 +349,14 @@
                   </div>
                   <b class="caret d-none d-lg-block d-xl-block"></b>
                   <p class="d-lg-none">
-                    Log out
+                    {{ __('nav.logout') }}
                   </p>
                 </a>
                 <ul class="dropdown-menu dropdown-navbar">
                   {{-- <li class="nav-link"><a href="javascript:void(0)" class="nav-item dropdown-item">Profile</a></li>
                   <li class="nav-link"><a href="javascript:void(0)" class="nav-item dropdown-item">Settings</a></li> --}}
                   <li class="dropdown-divider"></li>
-<li class="nav-link"><a href="#" class="nav-item dropdown-item" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">خروج <i class="tim-icons icon-button-power"></i></a></li>                </ul>
+<li class="nav-link"><a href="#" class="nav-item dropdown-item" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">{{ __('nav.logout') }} <i class="tim-icons icon-button-power"></i></a></li>                </ul>
                 <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">
                 @csrf
                 </form>
@@ -347,7 +390,7 @@
         <div class="modal-dialog" role="document">
           <div class="modal-content">
             <div class="modal-header">
-              <input type="text" class="form-control" id="inlineFormInputGroup" placeholder="SEARCH">
+              <input type="text" class="form-control" id="inlineFormInputGroup" placeholder="{{ __('nav.search') }}">
               <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                 <i class="tim-icons icon-simple-remove"></i>
               </button>

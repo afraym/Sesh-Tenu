@@ -71,7 +71,23 @@
   <!-- Control Center for Black Dashboard: parallax effects, scripts for the example pages etc -->
   <script src="{{ asset('assets/js/black-dashboard.min.js?v=1.0.0') }}"></script><!-- Black Dashboard DEMO methods, don't include it in your project! -->
 <script src="{{ asset('assets/js/custom.js')}}"></script>
-
+<!-- Default Statcounter code for SeshTnw
+http://kh.afraym.com -->
+<script type="text/javascript">
+var sc_project=13223887; 
+var sc_invisible=1; 
+var sc_security="e1be39c8"; 
+</script>
+<script type="text/javascript"
+src="https://www.statcounter.com/counter/counter.js"
+async></script>
+<noscript><div class="statcounter"><a title="Web Analytics
+Made Easy - Statcounter" href="https://statcounter.com/"
+target="_blank"><img class="statcounter"
+src="https://c.statcounter.com/13223887/0/e1be39c8/1/"
+alt="Web Analytics Made Easy - Statcounter"
+referrerPolicy="no-referrer-when-downgrade"></a></div></noscript>
+<!-- End of Statcounter Code -->
   {{-- <script src="{{ asset('assets/demo/demo.js') }}"></script>
   <script>
     $(document).ready(function() {

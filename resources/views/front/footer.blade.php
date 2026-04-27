@@ -76,6 +76,23 @@
   <script src="./assets/js/plugins/bootstrap-datetimepicker.js" type="text/javascript"></script>
   <!-- Control Center for Black UI Kit: parallax effects, scripts for the example pages etc -->
   <script src="./assets/js/blk-design-system.min.js?v=1.0.0" type="text/javascript"></script>
+  <!-- Default Statcounter code for SeshTnw
+http://kh.afraym.com -->
+<script type="text/javascript">
+var sc_project=13223887; 
+var sc_invisible=1; 
+var sc_security="e1be39c8"; 
+</script>
+<script type="text/javascript"
+src="https://www.statcounter.com/counter/counter.js"
+async></script>
+<noscript><div class="statcounter"><a title="Web Analytics
+Made Easy - Statcounter" href="https://statcounter.com/"
+target="_blank"><img class="statcounter"
+src="https://c.statcounter.com/13223887/0/e1be39c8/1/"
+alt="Web Analytics Made Easy - Statcounter"
+referrerPolicy="no-referrer-when-downgrade"></a></div></noscript>
+<!-- End of Statcounter Code -->
   <script>
     $(document).ready(function() {
       blackKit.initDatePicker();

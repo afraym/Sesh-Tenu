@@ -15,6 +15,8 @@ use App\Http\Controllers\EquipmentController;
 use App\Http\Controllers\SystemCommandController;
 use App\Http\Controllers\WorkerDocumentController;
 use App\Http\Controllers\WorkerDocumentDeliveryController;
+use App\Http\Controllers\SubscriptionController;
+use App\Http\Controllers\SubscriptionAdminController;
 
 Route::get('/', function () {
     if (auth()->check()) {
@@ -34,9 +36,27 @@ Route::get('/', function () {
     return view('welcome', compact('project', 'stats'));
 });
 
+Route::get('/locale/{locale}', function (string $locale) {
+    $supportedLocales = config('app.supported_locales', ['en', 'ar']);
+
+    if (! in_array($locale, $supportedLocales, true)) {
+        abort(404);
+    }
+
+    session(['locale' => $locale]);
+
+    return redirect()->back();
+})->name('locale.switch');
+
 Auth::routes();
 
-Route::group(['prefix' => 'admin', 'middleware' => ['auth', 'super.admin']], function () {
+Route::middleware('auth')->group(function () {
+    Route::get('/billing', [SubscriptionController::class, 'index'])->name('billing.index');
+    Route::post('/billing/subscribe/{plan}', [SubscriptionController::class, 'store'])->name('billing.subscribe');
+    Route::post('/billing/cancel', [SubscriptionController::class, 'destroy'])->name('billing.cancel');
+});
+
+Route::group(['prefix' => 'admin', 'middleware' => ['auth', 'super.admin', 'company.subscription']], function () {
     Route::resource('companies', CompanyController::class);
     Route::resource('projects', ProjectController::class);
     Route::resource('jobtypes', JobTypeController::class);
@@ -47,7 +67,16 @@ Route::group(['prefix' => 'admin', 'middleware' => ['auth', 'super.admin']], fun
         ->name('system.update-optimize');
 });
 
-Route::group(['prefix' => 'admin', 'middleware' => ['auth']], function () {
+Route::group(['prefix' => 'admin', 'middleware' => ['auth', 'manage.all', 'company.subscription']], function () {
+    Route::get('subscriptions/manage', [SubscriptionAdminController::class, 'index'])->name('admin.subscriptions.manage');
+    Route::post('subscriptions/plans', [SubscriptionAdminController::class, 'storePlan'])->name('admin.subscriptions.plans.store');
+    Route::put('subscriptions/plans/{plan}', [SubscriptionAdminController::class, 'updatePlan'])->name('admin.subscriptions.plans.update');
+    Route::delete('subscriptions/plans/{plan}', [SubscriptionAdminController::class, 'destroyPlan'])->name('admin.subscriptions.plans.destroy');
+    Route::post('subscriptions/companies/{company}', [SubscriptionAdminController::class, 'assignCompanySubscription'])->name('admin.subscriptions.companies.assign');
+    Route::post('subscriptions/companies/{company}/cancel', [SubscriptionAdminController::class, 'cancelCompanySubscription'])->name('admin.subscriptions.companies.cancel');
+});
+
+Route::group(['prefix' => 'admin', 'middleware' => ['auth', 'company.subscription']], function () {
     Route::get('dashboard', function () {
         return view('back.dashboard');
     })->name('dashboard');

@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Company extends Model
@@ -43,8 +44,37 @@ class Company extends Model
     /**
      * Get the company owner.
      */
-    public function owner()
+    public function owner(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'user_id'); // or hasOne
+        return $this->belongsTo(User::class, 'user_id');
+    }
+
+    /**
+     * Get the subscriptions for the company.
+     */
+    public function subscriptions(): HasMany
+    {
+        return $this->hasMany(Subscription::class);
+    }
+
+    /**
+     * Get the latest active subscription for the company.
+     */
+    public function currentSubscription(): ?Subscription
+    {
+        return $this->subscriptions()
+            ->with('plan')
+            ->where('status', 'active')
+            ->where('ends_at', '>=', now())
+            ->orderByDesc('ends_at')
+            ->first();
+    }
+
+    /**
+     * Check if the company has an active subscription.
+     */
+    public function hasActiveSubscription(): bool
+    {
+        return $this->currentSubscription() !== null;
     }
 }

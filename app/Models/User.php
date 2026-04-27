@@ -5,6 +5,7 @@ namespace App\Models;
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Notifications\Notifiable;
 
 class User extends Authenticatable
@@ -51,7 +52,7 @@ class User extends Authenticatable
     /**
      * Get the company that the user belongs to.
      */
-    public function company()
+    public function company(): BelongsTo
     {
         return $this->belongsTo(Company::class);
     }
@@ -94,5 +95,29 @@ class User extends Authenticatable
     public function canManageAll(): bool
     {
         return in_array($this->role, ['super_admin', 'admin']);
+    }
+
+    /**
+     * Determine whether the user can access subscription-gated areas.
+     */
+    public function canManageSubscription(): bool
+    {
+        return $this->canManageAll() || $this->isCompanyOwner();
+    }
+
+    /**
+     * Determine whether the user should be blocked by subscription checks.
+     */
+    public function requiresSubscription(): bool
+    {
+        return !$this->canManageAll();
+    }
+
+    /**
+     * Determine whether the user's company has an active subscription.
+     */
+    public function hasActiveSubscription(): bool
+    {
+        return (bool) ($this->company?->hasActiveSubscription());
     }
 }

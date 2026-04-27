@@ -1,0 +1,28 @@
+<?php
+
+return [
+    'dashboard' => 'الرئيسية',
+    'workers' => 'القوى العاملة',
+    'worker_create' => 'ادخال جديد',
+    'equipment' => 'المعدات',
+    'equipment_types' => 'انواع المعدات',
+    'worker_delivery_followup' => 'متابعة السركي',
+    'worker_delivery_receive' => 'استلام سركي',
+    'companies' => 'الشركات',
+    'projects' => 'المشاريع',
+    'job_types' => 'انواع الوظائف',
+    'users' => 'المستخدمين',
+    'user_create' => 'اضافة مستخدم',
+    'subscriptions' => 'الاشتراكات',
+    'update' => 'تحديث',
+    'update_confirm' => 'تشغيل git pull و php artisan optimize الان؟',
+    'search' => 'بحث',
+    'notifications' => 'الاشعارات',
+    'today' => 'اليوم',
+    'workers_added_today' => 'عمال مضافون اليوم',
+    'deliveries_today' => 'استلامات سركي اليوم',
+    'workers_this_week' => 'عمال هذا الاسبوع',
+    'workers_total' => 'اجمالي العمال',
+    'equipment_total' => 'اجمالي المعدات',
+    'logout' => 'خروج',
+];

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Foundation\Auth\AuthenticatesUsers;
+use Illuminate\Support\Facades\Auth;
 
 class LoginController extends Controller
 {
@@ -26,6 +27,21 @@ class LoginController extends Controller
      * @var string
      */
     protected $redirectTo = '/admin/dashboard';
+
+    protected function redirectTo(): string
+    {
+        $user = Auth::user();
+
+        if (!$user) {
+            return '/admin/dashboard';
+        }
+
+        if (!$user->canManageAll() && !$user->hasActiveSubscription()) {
+            return route('billing.index');
+        }
+
+        return '/admin/dashboard';
+    }
 
     /**
      * Create a new controller instance.

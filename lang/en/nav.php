@@ -1,0 +1,28 @@
+<?php
+
+return [
+    'dashboard' => 'Dashboard',
+    'workers' => 'Workforce',
+    'worker_create' => 'New Entry',
+    'equipment' => 'Equipment',
+    'equipment_types' => 'Equipment Types',
+    'worker_delivery_followup' => 'Document Follow-up',
+    'worker_delivery_receive' => 'Receive Document',
+    'companies' => 'Companies',
+    'projects' => 'Projects',
+    'job_types' => 'Job Types',
+    'users' => 'Users',
+    'user_create' => 'Add User',
+    'subscriptions' => 'Subscriptions',
+    'update' => 'Update',
+    'update_confirm' => 'Run git pull and php artisan optimize now?',
+    'search' => 'Search',
+    'notifications' => 'Notifications',
+    'today' => 'Today',
+    'workers_added_today' => 'Workers added today',
+    'deliveries_today' => 'Document receipts today',
+    'workers_this_week' => 'Workers this week',
+    'workers_total' => 'Total workers',
+    'equipment_total' => 'Total equipment',
+    'logout' => 'Logout',
+];
