@@ -18,7 +18,9 @@
                   <h4 class="card-title">Register</h4>
                 </div>
                 <div class="card-body">
-                  <form class="form">
+                  <form class="form" method="POST" action="{{ route('register') }}">
+                    @csrf
+                      {!! RecaptchaV3::field('register') !!}
                     <div class="input-group">
                       <div class="input-group-prepend">
                         <div class="input-group-text">

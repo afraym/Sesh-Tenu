@@ -73,9 +73,11 @@
     }
 
     .sidebar .sidebar-wrapper {
-      max-height: 100vh;
+      height: 100%;
+      max-height: 100%;
       overflow-y: auto;
       overflow-x: hidden;
+      -webkit-overflow-scrolling: touch;
       scrollbar-width: thin;
     }
 
@@ -98,7 +100,8 @@
       }
 
       .sidebar .sidebar-wrapper {
-        max-height: 100dvh;
+        height: 100%;
+        max-height: 100%;
       }
     }
   </style>
@@ -214,6 +217,9 @@
               <p>إضافة نوع معدة</p>
               </a>
             </li> --}}
+            @endif
+
+            @if(auth()->check() && auth()->user()->canManageAll())
             <li class="{{ request()->routeIs('users.index') ? 'active' : '' }}">
                 <a href="{{ route('users.index') }}">
                 <i class="tim-icons icon-single-02"></i>

@@ -62,12 +62,12 @@ Route::group(['prefix' => 'admin', 'middleware' => ['auth', 'super.admin', 'comp
     Route::resource('jobtypes', JobTypeController::class);
     Route::resource('equipment-types', EquipmentTypeController::class)
         ->parameters(['equipment-types' => 'equipmentType']);
-    Route::resource('users', UserController::class);
     Route::post('system/update-optimize', [SystemCommandController::class, 'updateAndOptimize'])
         ->name('system.update-optimize');
 });
 
 Route::group(['prefix' => 'admin', 'middleware' => ['auth', 'manage.all', 'company.subscription']], function () {
+    Route::resource('users', UserController::class);
     Route::get('subscriptions/manage', [SubscriptionAdminController::class, 'index'])->name('admin.subscriptions.manage');
     Route::post('subscriptions/plans', [SubscriptionAdminController::class, 'storePlan'])->name('admin.subscriptions.plans.store');
     Route::put('subscriptions/plans/{plan}', [SubscriptionAdminController::class, 'updatePlan'])->name('admin.subscriptions.plans.update');

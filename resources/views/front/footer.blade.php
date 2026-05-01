@@ -93,6 +93,8 @@ src="https://c.statcounter.com/13223887/0/e1be39c8/1/"
 alt="Web Analytics Made Easy - Statcounter"
 referrerPolicy="no-referrer-when-downgrade"></a></div></noscript>
 <!-- End of Statcounter Code -->
+{!! RecaptchaV3::initJs() !!}
+
   <script>
     $(document).ready(function() {
       blackKit.initDatePicker();
