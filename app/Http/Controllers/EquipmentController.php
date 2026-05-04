@@ -221,7 +221,7 @@ class EquipmentController extends Controller
 
         $processor->saveAs($outPath);
 
-        $this->applyGreyShadingToMarkedCells($outPath);
+        $this->applyGreyCrossLinesToMarkedCells($outPath);
         $this->reduceDriverFontSizeIfLong($outPath, $equipment->current_driver);
 
         return response()->download($outPath, $fileName)->deleteFileAfterSend(true);
@@ -250,9 +250,9 @@ private function buildEquipmentWeekValues(Carbon $weekStart, int $month): array
 }
 
     /**
-     * Replace [[GREY]] markers with real Word cell background shading.
+    * Replace [[GREY]] markers with diagonal Word cell borders that draw an X.
      */
-    private function applyGreyShadingToMarkedCells(string $docxPath): void
+    private function applyGreyCrossLinesToMarkedCells(string $docxPath): void
     {
         $zip = new \ZipArchive();
         if ($zip->open($docxPath) !== true) {
@@ -275,21 +275,21 @@ private function buildEquipmentWeekValues(Carbon $weekStart, int $month): array
             // Remove marker text
             $tc = str_replace('[[GREY]]', '', $tc);
 
-            // Add/replace shading with less dense down diagonal pattern and white background
-            $shdTag = '<w:shd w:val="diagStripe" w:color="auto" w:fill="FFFFFF"/>';
+            // Add/replace diagonal borders so the cell renders as a large X
+            $borderTag = '<w:tcBorders><w:tl2br w:val="single" w:sz="8" w:space="0" w:color="000000"/><w:tr2bl w:val="single" w:sz="8" w:space="0" w:color="000000"/></w:tcBorders>';
 
             if (preg_match('/<w:tcPr\b[\s\S]*?<\/w:tcPr>/', $tc)) {
-                if (preg_match('/<w:shd\b[^>]*\/>/', $tc)) {
+                if (preg_match('/<w:tcBorders\b[\s\S]*?<\/w:tcBorders>/', $tc)) {
                     $tc = preg_replace(
-                        '/<w:shd\b[^>]*\/>/',
-                        $shdTag,
+                        '/<w:tcBorders\b[\s\S]*?<\/w:tcBorders>/',
+                        $borderTag,
                         $tc,
                         1
                     );
                 } else {
                     $tc = preg_replace(
                         '/<\/w:tcPr>/',
-                        $shdTag . '</w:tcPr>',
+                        $borderTag . '</w:tcPr>',
                         $tc,
                         1
                     );
@@ -297,7 +297,7 @@ private function buildEquipmentWeekValues(Carbon $weekStart, int $month): array
             } else {
                 $tc = preg_replace(
                     '/<w:tc>/',
-                    '<w:tc><w:tcPr>' . $shdTag . '</w:tcPr>',
+                    '<w:tc><w:tcPr>' . $borderTag . '</w:tcPr>',
                     $tc,
                     1
                 );
@@ -362,7 +362,7 @@ private function buildEquipmentWeekValues(Carbon $weekStart, int $month): array
             }
 
             $processor->saveAs($outPath);
-            $this->applyGreyShadingToMarkedCells($outPath);
+            $this->applyGreyCrossLinesToMarkedCells($outPath);
             $this->reduceDriverFontSizeIfLong($outPath, $equipment->current_driver);
             $files[] = $outPath;
         }
@@ -463,7 +463,7 @@ private function buildEquipmentWeekValues(Carbon $weekStart, int $month): array
                 $outPath = $tempDir . DIRECTORY_SEPARATOR . $fileName;
 
                 $processor->saveAs($outPath);
-                $this->applyGreyShadingToMarkedCells($outPath);
+                $this->applyGreyCrossLinesToMarkedCells($outPath);
                 $this->reduceDriverFontSizeIfLong($outPath, $equipment->current_driver);
                 $docxPaths[] = $outPath;
             }
@@ -624,9 +624,9 @@ private function buildEquipmentWeekValues(Carbon $weekStart, int $month): array
 
     private function resolveDailyInspectionTemplatePath(Equipment $equipment): string
     {
-        $defaultTemplatePath = storage_path('app/templates/Qalab-daily-inspection.docx');
+        $defaultTemplatePath = storage_path('app/templates/Qalab-daily-inspection-f.docx');
         $harasTemplatePath = storage_path('app/templates/haras-final.docx');
-        $qalabTemplatePath = storage_path('app/templates/Qalab-daily-inspection.docx');
+        $qalabTemplatePath = storage_path('app/templates/Qalab-daily-inspection-f.docx');
         $loaderTemplatePath = storage_path('app/templates/Loader-daily-inspection.docx');
         $hafarTemplatePath = storage_path('app/templates/Hafar-daily-inspection.docx');
         $graderTemplatePath = storage_path('app/templates/Grader-daily-inspection.docx');
