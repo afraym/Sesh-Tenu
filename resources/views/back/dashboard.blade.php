@@ -105,6 +105,16 @@
 			'action' => 'عرض المعدات',
 			'count' => $counts['equipment'],
 		],
+        [
+            'title' => 'ادخال معدة',
+            'subtitle' => 'إضافة معدة جديدة للنظام',
+            'icon' => 'fa-solid fa-plus',
+            'icon_color' => '#8b6df0',
+            'icon_bg' => 'rgba(139, 109, 240, 0.18)',
+            'route' => 'equipment.create',
+            'action' => 'إضافة معدة',
+            'count' => 0,
+        ],
 		[
 			'title' => 'شهادة معايرة',
 			'subtitle' => 'متابعة شهادات معايرة المعدات',
@@ -185,8 +195,9 @@
 	// Reorder buttons by frequent workflow usage (manual priority map).
 	$usagePriority = [
 		'المُعدات' => 300,
-		'العمال' => 299,
+		'العمال' => 98,
 		'افراد امن' => 298,
+        'ادخال معدة' => 299,
 		'ادخال جديد' => 97,
 		'استلام سركي' => 95,
 		'متابعة السركي' => 94,
