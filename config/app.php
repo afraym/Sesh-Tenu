@@ -78,7 +78,7 @@ return [
     |
     */
 
-    'locale' => env('APP_LOCALE', 'en'),
+    'locale' => 'ar',
 
     'supported_locales' => ['en', 'ar'],
 
