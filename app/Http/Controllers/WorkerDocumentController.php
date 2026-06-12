@@ -978,13 +978,8 @@ PV Power Plant Abydos 2 Solar (MW1000)',
 
             if ($this->isFridayRow($rowXml)) {
                 $cells = $xpath->query('.//w:tc', $row);
-                $cellCount = 0;
 
                 foreach ($cells as $cell) {
-                    if ($cellCount >= 2) {
-                        break;
-                    }
-
                     $tcPrList = $xpath->query('.//w:tcPr', $cell);
 
                     if ($tcPrList->length > 0) {
@@ -1005,8 +1000,6 @@ PV Power Plant Abydos 2 Solar (MW1000)',
                     // Light blue fill for Friday rows (was red 'FF0000')
                     $shd->setAttribute('w:fill', 'D9EDF7');
                     $tcPr->appendChild($shd);
-
-                    $cellCount++;
                 }
             }
         }
