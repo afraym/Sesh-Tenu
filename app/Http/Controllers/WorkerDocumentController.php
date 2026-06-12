@@ -1002,7 +1002,8 @@ PV Power Plant Abydos 2 Solar (MW1000)',
                     $shd = $dom->createElementNS('http://schemas.openxmlformats.org/wordprocessingml/2006/main', 'w:shd');
                     $shd->setAttribute('w:val', 'clear');
                     $shd->setAttribute('w:color', 'auto');
-                    $shd->setAttribute('w:fill', 'FF0000');
+                    // Light blue fill for Friday rows (was red 'FF0000')
+                    $shd->setAttribute('w:fill', 'D9EDF7');
                     $tcPr->appendChild($shd);
 
                     $cellCount++;
