@@ -4,6 +4,7 @@
 	$workersData = $workers ?? collect();
 	$sort = $sort ?? request('sort', 'created_at');
 	$direction = $direction ?? request('direction', 'desc');
+	$selectedMonth = request('month', now()->format('Y-m'));
 	$sortUrl = function (string $column) use ($sort, $direction) {
 		$nextDirection = ($sort === $column && $direction === 'asc') ? 'desc' : 'asc';
 		return route('workers.index', array_merge(request()->query(), [
@@ -65,6 +66,12 @@
 							</form>
 						</div>
 					</div>
+					<div class="row mt-3">
+						<div class="col-md-6">
+							<label for="worker_month" class="mb-1 font-weight-bold">الشهر:</label>
+							<input type="month" id="worker_month" class="form-control form-control-sm" style="max-width: 190px;" value="{{ $selectedMonth }}">
+						</div>
+					</div>
 					@if(auth()->check() && auth()->user()->isSuperAdmin())
 					<div class="row mt-3">
 						<div class="col-md-6">
@@ -78,6 +85,7 @@
 											</option>
 										@endforeach
 									</select>
+									<input type="hidden" name="month" value="{{ $selectedMonth }}">
 									<input type="hidden" name="sort" value="{{ $sort }}">
 									<input type="hidden" name="direction" value="{{ $direction }}">
 									<div class="input-group-append">
@@ -106,6 +114,7 @@
 		@if(request()->filled('search'))
 			<input type="hidden" name="search" value="{{ request('search') }}">
 		@endif
+		<input type="hidden" name="month" value="{{ $selectedMonth }}">
 		<input type="hidden" name="sort" value="{{ $sort }}">
 		<input type="hidden" name="direction" value="{{ $direction }}">
 
@@ -125,13 +134,13 @@
 							{{-- <a href="{{ route('workers.export.pdf.merged') }}" class="btn btn-sm btn-success" title="Export all as merged PDF (HTML-based)" target="_blank">
 								<i class="tim-icons icon-paper"></i> سركي مجمع PDF
 							</a> --}}
-							<a href="{{ route('workers.export.wordpdf.all', ['job_type_id' => request('job_type_id')]) }}" data-base-href="{{ route('workers.export.wordpdf.all', ['job_type_id' => request('job_type_id')]) }}" class="btn btn-sm btn-info js-export-selected" title="تحميل ملف واحد لكل العمال pdf" target="_blank">
+												<a href="{{ route('workers.export.wordpdf.all', array_filter(['job_type_id' => request('job_type_id'), 'month' => $selectedMonth])) }}" data-base-href="{{ route('workers.export.wordpdf.all', array_filter(['job_type_id' => request('job_type_id'), 'month' => $selectedMonth])) }}" class="btn btn-sm btn-info js-export-selected" title="تحميل ملف واحد لكل العمال pdf" target="_blank">
 								<i class="far fa-file-pdf"></i> سركي مجمع PDF
 							</a>
-							<a href="{{ route('workers.export.word.merged') }}" data-base-href="{{ route('workers.export.word.merged') }}" class="btn btn-sm btn-info js-export-selected" title="تحميل ملف وورد مجمع" target="_blank">
+												<a href="{{ route('workers.export.word.merged', ['month' => $selectedMonth]) }}" data-base-href="{{ route('workers.export.word.merged', ['month' => $selectedMonth]) }}" class="btn btn-sm btn-info js-export-selected" title="تحميل ملف وورد مجمع" target="_blank">
 								<i class="far fa-file-word"></i></i> سركي وورد مجمع
 							</a>
-							<a href="{{ route('workers.export.word.all', ['job_type_id' => request('job_type_id')]) }}" data-base-href="{{ route('workers.export.word.all', ['job_type_id' => request('job_type_id')]) }}" class="btn btn-sm btn-danger js-export-selected" title="تحميل ملف وورد مجمعة (ZIP)" target="_blank">
+												<a href="{{ route('workers.export.word.all', array_filter(['job_type_id' => request('job_type_id'), 'month' => $selectedMonth])) }}" data-base-href="{{ route('workers.export.word.all', array_filter(['job_type_id' => request('job_type_id'), 'month' => $selectedMonth])) }}" class="btn btn-sm btn-danger js-export-selected" title="تحميل ملف وورد مجمعة (ZIP)" target="_blank">
 								<i class="far fa-file-archive"></i> سراكي وورد مجمعة (ZIP)
 							</a>
 
@@ -255,7 +264,7 @@
 															<i class="fa-solid fa-clipboard-check"></i>
 														</a>
 													@endif
-													<a href="{{ route('workers.export.word', $worker->id) }}" class="btn btn-sm btn-default" title="Word">
+													<a href="{{ route('workers.export.word', ['worker' => $worker->id, 'month' => $selectedMonth]) }}" data-base-href="{{ route('workers.export.word', ['worker' => $worker->id]) }}" class="btn btn-sm btn-default js-worker-month-export" title="Word">
 														<i class="tim-icons icon-single-copy-04"></i>
 													</a>
 													<a href="{{ route('workers.show', $worker->id) }}" class="btn btn-info btn-sm" title="View">
@@ -314,6 +323,9 @@
 		const selectedCountElement = document.getElementById('workers-selected-count');
 		const rowCheckboxes = Array.from(document.querySelectorAll('.worker-select-checkbox'));
 			const exportSelectedButtons = Array.from(document.querySelectorAll('.js-export-selected'));
+			const workerMonthExportButtons = Array.from(document.querySelectorAll('.js-worker-month-export'));
+			const workerMonthInput = document.getElementById('worker_month');
+			const workerMonthHiddenInputs = Array.from(document.querySelectorAll('input[type="hidden"][name="month"]'));
 
 		if (!selectAllCheckbox || rowCheckboxes.length === 0) {
 			return;
@@ -345,6 +357,12 @@
 				selectedCountElement.textContent = selectedCount + ' مختار';
 			}
 
+			if (workerMonthInput && workerMonthHiddenInputs.length > 0) {
+				workerMonthHiddenInputs.forEach(function (input) {
+					input.value = workerMonthInput.value || '';
+				});
+			}
+
 				exportSelectedButtons.forEach(function (button) {
 					const baseHref = button.getAttribute('data-base-href') || button.getAttribute('href');
 					if (!baseHref) {
@@ -356,6 +374,28 @@
 						parsedUrl.searchParams.set('ids', selectedIds.join(','));
 					} else {
 						parsedUrl.searchParams.delete('ids');
+					}
+
+					if (workerMonthInput && workerMonthInput.value) {
+						parsedUrl.searchParams.set('month', workerMonthInput.value);
+					} else {
+						parsedUrl.searchParams.delete('month');
+					}
+
+					button.setAttribute('href', parsedUrl.toString());
+				});
+
+				workerMonthExportButtons.forEach(function (button) {
+					const baseHref = button.getAttribute('data-base-href') || button.getAttribute('href');
+					if (!baseHref) {
+						return;
+					}
+
+					const parsedUrl = new URL(baseHref, window.location.origin);
+					if (workerMonthInput && workerMonthInput.value) {
+						parsedUrl.searchParams.set('month', workerMonthInput.value);
+					} else {
+						parsedUrl.searchParams.delete('month');
 					}
 
 					button.setAttribute('href', parsedUrl.toString());
@@ -373,6 +413,10 @@
 		rowCheckboxes.forEach(function (checkbox) {
 			checkbox.addEventListener('change', syncUI);
 		});
+
+		if (workerMonthInput) {
+			workerMonthInput.addEventListener('change', syncUI);
+		}
 
 		syncUI();
 	});

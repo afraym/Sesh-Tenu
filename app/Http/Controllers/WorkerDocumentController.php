@@ -38,6 +38,21 @@ class WorkerDocumentController extends Controller
         'December' => 'ديسمبر',
     ];
 
+    private function resolveSelectedMonthStart(Request $request): Carbon
+    {
+        $selectedMonth = trim((string) $request->query('month', ''));
+
+        if (preg_match('/^\d{4}-\d{2}$/', $selectedMonth) === 1) {
+            try {
+                return Carbon::createFromFormat('Y-m', $selectedMonth)->startOfMonth();
+            } catch (\Throwable $e) {
+                // Fallback to the current month.
+            }
+        }
+
+        return now()->startOfMonth();
+    }
+
     public function exportPdf(Worker $worker)
     {
         $worker->load(['company', 'jobType']);
@@ -152,7 +167,7 @@ class WorkerDocumentController extends Controller
         return "\u{200E}" . trim($text) . "\u{200E}";
     }
 
-    public function exportWord(Worker $worker)
+    public function exportWord(Request $request, Worker $worker)
     {
         $worker->load([
             'company',
@@ -165,7 +180,7 @@ class WorkerDocumentController extends Controller
 
         $templatePath = $this->resolveWorkerTemplatePath($worker);
 
-        $monthStart = now()->startOfMonth();
+        $monthStart = $this->resolveSelectedMonthStart($request);
         $daysInMonth = $monthStart->daysInMonth;
 
         $weekdayRows = [];
@@ -284,9 +299,9 @@ PV Power Plant Abydos 2 Solar (MW1000)',
         Storage::makeDirectory('temp');
         $tempDir = Storage::path('temp');
         $docxPaths = [];
+        $monthStart = $this->resolveSelectedMonthStart($request);
 
         foreach ($workers as $worker) {
-            $monthStart = now()->startOfMonth();
             $daysInMonth = $monthStart->daysInMonth;
             $weekdayRows = [];
 
@@ -417,13 +432,14 @@ PV Power Plant Abydos 2 Solar (MW1000)',
         $exportFolder = "workers-export/{$timestamp}";
         Storage::makeDirectory($exportFolder);
         $exportPath = Storage::path($exportFolder);
+        $monthStart = $this->resolveSelectedMonthStart($request);
 
         $combinedDocxPath = $exportPath . DIRECTORY_SEPARATOR . 'workers-merged-' . $timestamp . '.docx';
 
         $docxPaths = [];
         foreach ($workers as $worker) {
             $workerDocxPath = $exportPath . DIRECTORY_SEPARATOR . 'worker-' . $worker->id . '.docx';
-            $this->generateWorkerDocxFromTemplate($worker, $project, $workerDocxPath);
+            $this->generateWorkerDocxFromTemplate($worker, $project, $workerDocxPath, $monthStart);
             $docxPaths[] = $workerDocxPath;
         }
 
@@ -433,7 +449,6 @@ PV Power Plant Abydos 2 Solar (MW1000)',
             @unlink($docxPath);
         }
 
-        $monthStart = now()->startOfMonth();
         $monthAr = self::MONTH_NAMES[$monthStart->format('F')] ?? $monthStart->format('F');
 
         return response()->download(
@@ -572,6 +587,7 @@ PV Power Plant Abydos 2 Solar (MW1000)',
         $exportFolder = "workers-export/{$timestamp}";
         Storage::makeDirectory($exportFolder);
         $exportPath = Storage::path($exportFolder);
+        $monthStart = $this->resolveSelectedMonthStart($request);
 
         $combinedDocxPath = $exportPath . DIRECTORY_SEPARATOR . 'workers-merged-' . $timestamp . '.docx';
         $combinedPdfPath = $exportPath . DIRECTORY_SEPARATOR . 'workers-merged-' . $timestamp . '.pdf';
@@ -579,13 +595,12 @@ PV Power Plant Abydos 2 Solar (MW1000)',
         $docxPaths = [];
         foreach ($workers as $worker) {
             $workerDocxPath = $exportPath . DIRECTORY_SEPARATOR . 'worker-' . $worker->id . '.docx';
-            $this->generateWorkerDocxFromTemplate($worker, $project, $workerDocxPath);
+            $this->generateWorkerDocxFromTemplate($worker, $project, $workerDocxPath, $monthStart);
             $docxPaths[] = $workerDocxPath;
         }
 
         $this->mergeDocxFiles($docxPaths, $combinedDocxPath);
 
-        $monthStart = now()->startOfMonth();
         $monthAr = self::MONTH_NAMES[$monthStart->format('F')] ?? $monthStart->format('F');
 
         $libreOfficePath = $this->findLibreOffice();
@@ -657,10 +672,9 @@ PV Power Plant Abydos 2 Solar (MW1000)',
         )->deleteFileAfterSend(true);
     }
 
-    private function generateWorkerDocxFromTemplate(Worker $worker, $project, string $outputPath): void
+    private function generateWorkerDocxFromTemplate(Worker $worker, $project, string $outputPath, Carbon $monthStart): void
     {
         $templatePath = $this->resolveWorkerTemplatePath($worker);
-        $monthStart = now()->startOfMonth();
         $daysInMonth = $monthStart->daysInMonth;
 
         $weekdayRows = [];
