@@ -25,16 +25,34 @@
                                 </div>
                             </div>
 
-                            <div class="col-md-6">
+                            <div class="col-md-12">
                                 <div class="form-group">
-                                    <label for="email">البريد الإلكتروني او الهاتف<span class="text-danger">*</span></label>
-                                    <input type="text" class="form-control @error('email') is-invalid @enderror"
-                                           id="email" name="email"
-                                           value="{{ old('email') }}"
-                                           placeholder="Enter email or phone number" required>
-                                    @error('email')
-                                        <span class="invalid-feedback">{{ $message }}</span>
-                                    @enderror
+                                    <label>Username / Email / Phone (provide one) / اسم المستخدم أو البريد الإلكتروني أو رقم الهاتف (أدخل واحداً على الأقل)</label>
+                                    <div class="d-flex align-items-center">
+                                        <div class="flex-fill">
+                                            <input type="text" class="form-control @error('username') is-invalid @enderror mb-0" 
+                                                   id="username" name="username" value="{{ old('username') }}" placeholder="Username">
+                                            @error('username')
+                                                <span class="invalid-feedback d-block">{{ $message }}</span>
+                                            @enderror
+                                        </div>
+                                        <span class="mx-2">or</span>
+                                        <div class="flex-fill">
+                                            <input type="text" class="form-control @error('email') is-invalid @enderror mb-0" 
+                                                   id="email" name="email" value="{{ old('email') }}" placeholder="Email">
+                                            @error('email')
+                                                <span class="invalid-feedback d-block">{{ $message }}</span>
+                                            @enderror
+                                        </div>
+                                        <span class="mx-2">or</span>
+                                        <div class="flex-fill">
+                                            <input type="text" class="form-control @error('phone') is-invalid @enderror mb-0" 
+                                                   id="phone" name="phone" value="{{ old('phone') }}" placeholder="Phone">
+                                            @error('phone')
+                                                <span class="invalid-feedback d-block">{{ $message }}</span>
+                                            @enderror
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>

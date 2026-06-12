@@ -28,12 +28,36 @@
 
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label for="email">البريد الإلكتروني او الهاتف<span class="text-danger">*</span></label>
+                                    <label for="username">اسم المستخدم (اختياري)</label>
+                                    <input type="text" class="form-control @error('username') is-invalid @enderror"
+                                           id="username" name="username"
+                                           value="{{ old('username', $user->username) }}"
+                                           placeholder="Username">
+                                    @error('username')
+                                        <span class="invalid-feedback">{{ $message }}</span>
+                                    @enderror
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="email">البريد الإلكتروني (اختياري)</label>
                                     <input type="text" class="form-control @error('email') is-invalid @enderror"
                                            id="email" name="email"
                                            value="{{ old('email', $user->email) }}"
-                                           placeholder="Enter email address" required>
+                                           placeholder="Email">
                                     @error('email')
+                                        <span class="invalid-feedback">{{ $message }}</span>
+                                    @enderror
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="phone">رقم الهاتف (اختياري)</label>
+                                    <input type="text" class="form-control @error('phone') is-invalid @enderror"
+                                           id="phone" name="phone"
+                                           value="{{ old('phone', $user->phone) }}"
+                                           placeholder="Phone">
+                                    @error('phone')
                                         <span class="invalid-feedback">{{ $message }}</span>
                                     @enderror
                                 </div>

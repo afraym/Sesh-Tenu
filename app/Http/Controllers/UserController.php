@@ -35,7 +35,9 @@ class UserController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|string|max:255|unique:users',
+            'username' => 'nullable|string|max:255|unique:users',
+            'email' => 'nullable|string|max:255|unique:users',
+            'phone' => 'nullable|string|max:255|unique:users',
             'password' => 'required|string|min:8|confirmed',
             'role' => ['required', Rule::in(['super_admin', 'admin', 'company_owner', 'employee'])],
             'company_id' => 'nullable|exists:companies,id',
@@ -53,7 +55,9 @@ class UserController extends Controller
 
         User::create([
             'name' => $validated['name'],
-            'email' => $validated['email'],
+            'username' => $validated['username'] ?? null,
+            'email' => $validated['email'] ?? null,
+            'phone' => $validated['phone'] ?? null,
             'password' => Hash::make($validated['password']),
             'role' => $validated['role'],
             'company_id' => $validated['company_id'],
@@ -87,7 +91,9 @@ class UserController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users')->ignore($user->id)],
+            'username' => ['nullable', 'string', 'max:255', Rule::unique('users')->ignore($user->id)],
+            'email' => ['nullable', 'string', 'max:255', Rule::unique('users')->ignore($user->id)],
+            'phone' => ['nullable', 'string', 'max:255', Rule::unique('users')->ignore($user->id)],
             'password' => 'nullable|string|min:8|confirmed',
             'role' => ['required', Rule::in(['super_admin', 'admin', 'company_owner', 'employee'])],
             'company_id' => 'nullable|exists:companies,id',
@@ -105,7 +111,9 @@ class UserController extends Controller
 
         $user->update([
             'name' => $validated['name'],
-            'email' => $validated['email'],
+            'username' => $validated['username'] ?? null,
+            'email' => $validated['email'] ?? null,
+            'phone' => $validated['phone'] ?? null,
             'role' => $validated['role'],
             'company_id' => $validated['company_id'],
         ]);
