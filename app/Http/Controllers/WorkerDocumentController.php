@@ -6,7 +6,9 @@ use App\Models\Project;
 use App\Models\Worker;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Storage;
 use PhpOffice\PhpWord\IOFactory;
@@ -53,6 +55,30 @@ class WorkerDocumentController extends Controller
         return now()->startOfMonth();
     }
 
+    public function downloadGeneratedDocument(string $token)
+    {
+        $cacheKey = $this->generatedDocumentCacheKey($token);
+        $document = Cache::pull($cacheKey);
+
+        if (! is_array($document)) {
+            abort(404, 'Document not found.');
+        }
+
+        $filePath = $document['path'] ?? null;
+        $fileName = $document['name'] ?? 'document';
+        $mimeType = $document['mime'] ?? 'application/octet-stream';
+
+        if (! is_string($filePath) || ! file_exists($filePath)) {
+            abort(404, 'Document file not found.');
+        }
+
+        return response()->download(
+            $filePath,
+            $fileName,
+            ['Content-Type' => $mimeType]
+        )->deleteFileAfterSend(true);
+    }
+
     public function exportPdf(Worker $worker)
     {
         $worker->load(['company', 'jobType']);
@@ -70,7 +96,17 @@ class WorkerDocumentController extends Controller
               'chroot' => public_path(),
           ]);
 
-        return $pdf->download('worker-' . $worker->name . '.pdf');
+        $fileName = 'worker-' . $worker->name . '.pdf';
+                Storage::makeDirectory('temp');
+        $tempPath = Storage::path('temp/' . $fileName);
+        file_put_contents($tempPath, $pdf->output());
+
+        return $this->respondWithGeneratedDocument(
+            request(),
+            $tempPath,
+            $fileName,
+            'application/pdf'
+        );
     }
 
     public function exportPdfMerged(Request $request)
@@ -150,11 +186,12 @@ class WorkerDocumentController extends Controller
             @unlink($path);
         }
 
-        return response()->download(
+        return $this->respondWithGeneratedDocument(
+            $request,
             $mergedPath,
             'workers-merged-' . $timestamp . '.pdf',
-            ['Content-Type' => 'application/pdf']
-        )->deleteFileAfterSend(true);
+            'application/pdf'
+        );
     }
 
     private function rtl(string $text): string
@@ -255,11 +292,12 @@ PV Power Plant Abydos 2 Solar (MW1000)',
 
         $this->addRedShadingToFridayCells($fullPath);
 
-        return response()->download(
+        return $this->respondWithGeneratedDocument(
+            $request,
             $fullPath,
             $fileName,
-            ['Content-Type' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document']
-        )->deleteFileAfterSend(true);
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+        );
     }
 
     public function exportWordAll(Request $request)
@@ -387,11 +425,12 @@ PV Power Plant Abydos 2 Solar (MW1000)',
             @unlink($docxPath);
         }
 
-        return response()->download(
+        return $this->respondWithGeneratedDocument(
+            $request,
             $zipPath,
             'workers-timesheets.zip',
-            ['Content-Type' => 'application/zip']
-        )->deleteFileAfterSend(true);
+            'application/zip'
+        );
     }
 
     public function exportWordMerged(Request $request)
@@ -451,11 +490,12 @@ PV Power Plant Abydos 2 Solar (MW1000)',
 
         $monthAr = self::MONTH_NAMES[$monthStart->format('F')] ?? $monthStart->format('F');
 
-        return response()->download(
+        return $this->respondWithGeneratedDocument(
+            $request,
             $combinedDocxPath,
             'سركي مجمع شهر ' . $monthAr . ' ' . $timestamp . '.docx',
-            ['Content-Type' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document']
-        )->deleteFileAfterSend(true);
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+        );
     }
 
     // public function exportWordPdf(Worker $worker)
@@ -632,11 +672,12 @@ PV Power Plant Abydos 2 Solar (MW1000)',
                     @unlink($docxPath);
                 }
 
-                return response()->download(
+                return $this->respondWithGeneratedDocument(
+                    $request,
                     $combinedDocxPath,
                     'سركي مجمع شهر ' . $monthAr . ' ' . $timestamp . '.docx',
-                    ['Content-Type' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document']
-                )->deleteFileAfterSend(true);
+                    'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+                );
             }
 
             $fpdi = new Fpdi();
@@ -658,18 +699,20 @@ PV Power Plant Abydos 2 Solar (MW1000)',
         }
 
         if (! file_exists($combinedPdfPath) || filesize($combinedPdfPath) <= 100) {
-            return response()->download(
-                $combinedDocxPath,
-                'سركي مجمع شهر ' . $monthAr . ' ' . $timestamp . '.docx',
-                ['Content-Type' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document']
-            )->deleteFileAfterSend(true);
+                return $this->respondWithGeneratedDocument(
+                    $request,
+                    $combinedDocxPath,
+                    'سركي مجمع شهر ' . $monthAr . ' ' . $timestamp . '.docx',
+                    'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+                );
         }
 
-        return response()->download(
+        return $this->respondWithGeneratedDocument(
+            $request,
             $combinedPdfPath,
             'سركي مجمع شهر ' . $monthAr . ' ' . $timestamp . '.pdf',
-            ['Content-Type' => 'application/pdf']
-        )->deleteFileAfterSend(true);
+            'application/pdf'
+        );
     }
 
     private function generateWorkerDocxFromTemplate(Worker $worker, $project, string $outputPath, Carbon $monthStart): void
@@ -1105,11 +1148,12 @@ PV Power Plant Abydos 2 Solar (MW1000)',
         $tempPath = Storage::path('temp/' . $fileName);
         $processor->saveAs($tempPath);
 
-        return response()->download(
+        return $this->respondWithGeneratedDocument(
+            request(),
             $tempPath,
             $fileName,
-            ['Content-Type' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document']
-        )->deleteFileAfterSend(true);
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+        );
     }
 
     public function preview(Worker $worker)
@@ -1121,5 +1165,34 @@ PV Power Plant Abydos 2 Solar (MW1000)',
             'worker' => $worker,
             'project' => $project,
         ]);
+    }
+
+    private function respondWithGeneratedDocument(Request $request, string $filePath, string $fileName, string $mimeType)
+    {
+        if ($request->ajax() || $request->expectsJson()) {
+            $token = (string) Str::uuid();
+
+            Cache::put($this->generatedDocumentCacheKey($token), [
+                'path' => $filePath,
+                'name' => $fileName,
+                'mime' => $mimeType,
+            ], now()->addMinutes(15));
+
+            return response()->json([
+                'download_url' => route('workers.documents.download', ['token' => $token]),
+                'filename' => $fileName,
+            ]);
+        }
+
+        return response()->download(
+            $filePath,
+            $fileName,
+            ['Content-Type' => $mimeType]
+        )->deleteFileAfterSend(true);
+    }
+
+    private function generatedDocumentCacheKey(string $token): string
+    {
+        return 'workers.generated-document.' . $token;
     }
 }

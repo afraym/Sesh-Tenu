@@ -44,7 +44,7 @@
 					</div>
 					<div class="row mt-3">
 						<div class="col-md-8">
-							<form method="GET" action="{{ route('workers.index') }}" class="mb-0">
+							<form method="GET" action="{{ route('workers.index') }}" class="mb-0 js-workers-filter-form">
 								<div class="input-group">
 									<input
 										type="text"
@@ -60,7 +60,7 @@
 									<input type="hidden" name="direction" value="{{ $direction }}">
 									<div class="input-group-append">
 										<button type="submit" class="btn btn-primary btn-sm"><i class="tim-icons icon-zoom-split"></i></button>
-										<a href="{{ route('workers.index') }}" class="btn btn-secondary btn-sm"><i class="tim-icons icon-refresh-01"></i></a>
+										<a href="{{ route('workers.index') }}" class="btn btn-secondary btn-sm js-workers-reset-link"><i class="tim-icons icon-refresh-01"></i></a>
 									</div>
 								</div>
 							</form>
@@ -69,13 +69,13 @@
 					<div class="row mt-3">
 						<div class="col-md-6">
 							<label for="worker_month" class="mb-1 font-weight-bold">الشهر:</label>
-							<input type="month" id="worker_month" class="form-control form-control-sm" style="max-width: 190px;" value="{{ $selectedMonth }}">
+							<input type="month" id="worker_month" class="form-control form-control-sm js-workers-month-input" style="max-width: 190px;" value="{{ $selectedMonth }}">
 						</div>
 					</div>
 					@if(auth()->check() && auth()->user()->isSuperAdmin())
 					<div class="row mt-3">
 						<div class="col-md-6">
-							<form method="GET" action="{{ route('workers.index') }}">
+							<form method="GET" action="{{ route('workers.index') }}" class="js-workers-filter-form">
 								<div class="input-group">
 									<select name="company_id" class="form-control">
 										<option value="">All Companies / جميع الشركات</option>
@@ -90,6 +90,7 @@
 									<input type="hidden" name="direction" value="{{ $direction }}">
 									<div class="input-group-append">
 										<button class="btn btn-sm btn-outline-secondary" type="submit">عرض</button>
+										<a href="{{ route('workers.index') }}" class="btn btn-sm btn-secondary js-workers-reset-link"><i class="tim-icons icon-refresh-01"></i></a>
 									</div>
 								</div>
 							</form>
@@ -98,7 +99,7 @@
 						@endif
 						<div class="row">
 						<div class="col-md-6">
-								<form method="GET" action="{{ route('workers.index') }}" class="mb-3">
+								<form method="GET" action="{{ route('workers.index') }}" class="mb-3 js-workers-filter-form">
     <div class="input-group">
         <select name="job_type_id" class="form-control" style="max-width:260px;">
             <option value="">كل العمال</option>
@@ -119,7 +120,7 @@
 		<input type="hidden" name="direction" value="{{ $direction }}">
 
         <button type="submit" class="btn btn-sm btn-primary">عرض</button>
-        <a href="{{ route('workers.index') }}" class="btn btn-sm btn-secondary"><i class="tim-icons icon-refresh-01"></i></a>
+									<a href="{{ route('workers.index') }}" class="btn btn-sm btn-secondary js-workers-reset-link"><i class="tim-icons icon-refresh-01"></i></a>
     </div>
 </form>
 						</div>
@@ -150,6 +151,8 @@
 						</div>
 				</div>
 				<div class="card-body">
+					<div id="workers-ajax-alerts"></div>
+					<div id="workers-results">
 					@if(session('success'))
 						<div class="alert alert-success alert-dismissible fade show" role="alert">
 							<i class="tim-icons icon-check-2"></i> {{ session('success') }}
@@ -175,15 +178,15 @@
 										<th class="text-center" style="width: 42px;">
 											<input type="checkbox" id="workers-select-all" class="worker-table-checkbox" aria-label="Select all workers">
 										</th>
-										<th><a href="{{ $sortUrl('id') }}" style="color: inherit;font-weight: 700;"># {!! $sortIcon('id') !!}</a></th>
-										<th><a href="{{ $sortUrl('name') }}" style="color: inherit;font-weight: 700;">Name / الاسم {!! $sortIcon('name') !!}</a></th>
+											<th><a href="{{ $sortUrl('id') }}" class="js-workers-sort-link" style="color: inherit;font-weight: 700;"># {!! $sortIcon('id') !!}</a></th>
+											<th><a href="{{ $sortUrl('name') }}" class="js-workers-sort-link" style="color: inherit;font-weight: 700;">Name / الاسم {!! $sortIcon('name') !!}</a></th>
 										{{-- <th>Company / الشركة</th> --}}
-										<th><a href="{{ $sortUrl('job_type_id') }}" style="color: inherit;font-weight: 700;">Job Type / الوظيفة {!! $sortIcon('job_type_id') !!}</a></th>
-										<th><a href="{{ $sortUrl('national_id') }}" style="color: inherit;font-weight: 700;">الرقم القومي {!! $sortIcon('national_id') !!}</a></th>
-										<th><a href="{{ $sortUrl('phone_number') }}" style="color: inherit;font-weight: 700;">الهاتف {!! $sortIcon('phone_number') !!}</a></th>
-										<th><a href="{{ $sortUrl('equipmentAsDriver') }}" style="color: inherit;font-weight: 700;">المعدات {!! $sortIcon('equipmentAsDriver') !!}</a></th>
-										<th><a href="{{ $sortUrl('join_date') }}" style="color: inherit;font-weight: 700;">تاريخ الانضمام {!! $sortIcon('join_date') !!}</a></th>
-										<th><a href="{{ $sortUrl('is_on_company_payroll') }}" style="color: inherit;font-weight: 700;">على قوة الشركة {!! $sortIcon('is_on_company_payroll') !!}</a></th>
+											<th><a href="{{ $sortUrl('job_type_id') }}" class="js-workers-sort-link" style="color: inherit;font-weight: 700;">Job Type / الوظيفة {!! $sortIcon('job_type_id') !!}</a></th>
+											<th><a href="{{ $sortUrl('national_id') }}" class="js-workers-sort-link" style="color: inherit;font-weight: 700;">الرقم القومي {!! $sortIcon('national_id') !!}</a></th>
+											<th><a href="{{ $sortUrl('phone_number') }}" class="js-workers-sort-link" style="color: inherit;font-weight: 700;">الهاتف {!! $sortIcon('phone_number') !!}</a></th>
+											<th><a href="{{ $sortUrl('equipmentAsDriver') }}" class="js-workers-sort-link" style="color: inherit;font-weight: 700;">المعدات {!! $sortIcon('equipmentAsDriver') !!}</a></th>
+											<th><a href="{{ $sortUrl('join_date') }}" class="js-workers-sort-link" style="color: inherit;font-weight: 700;">تاريخ الانضمام {!! $sortIcon('join_date') !!}</a></th>
+											<th><a href="{{ $sortUrl('is_on_company_payroll') }}" class="js-workers-sort-link" style="color: inherit;font-weight: 700;">على قوة الشركة {!! $sortIcon('is_on_company_payroll') !!}</a></th>
 										<th class="text-center">Actions / الإجراءات</th>
 									</tr>
 								</thead>
@@ -260,7 +263,7 @@
 														<i class="tim-icons icon-paper"></i>
 													</a> --}}
 													@if($worker->equipmentAsDriver->isNotEmpty())
-														<a href="{{ route('workers.export.daily-equipment-inspection', $worker->id) }}" class="btn btn-sm btn-warning" title="فحص يومي" target="_blank">
+														<a href="{{ route('workers.export.daily-equipment-inspection', $worker->id) }}" class="btn btn-sm btn-warning js-worker-document-export" title="فحص يومي" target="_blank">
 															<i class="fa-solid fa-clipboard-check"></i>
 														</a>
 													@endif
@@ -273,7 +276,7 @@
 													<a href="{{ route('workers.edit', $worker->id) }}" class="btn btn-warning btn-sm" title="Edit">
 														<i class="tim-icons icon-pencil"></i>
 													</a>
-													<form action="{{ route('workers.destroy', $worker->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this worker?');">
+														<form action="{{ route('workers.destroy', $worker->id) }}" method="POST" class="d-inline js-worker-delete-form" onsubmit="return confirm('Are you sure you want to delete this worker?');">
 														@csrf
 														@method('DELETE')
 														<button type="submit" class="btn btn-danger btn-sm" title="Delete">
@@ -289,11 +292,12 @@
 						</div>
 
 						@if($workersData instanceof \Illuminate\Pagination\AbstractPaginator)
-							<div class="mt-3">
+								<div class="mt-3" data-workers-pagination>
 								{{ $workersData->links() }}
 							</div>
 						@endif
 					@endif
+					</div>
 				</div>
 			</div>
 		</div>
@@ -319,104 +323,417 @@
 
 <script>
 	document.addEventListener('DOMContentLoaded', function () {
-		const selectAllCheckbox = document.getElementById('workers-select-all');
-		const selectedCountElement = document.getElementById('workers-selected-count');
-		const rowCheckboxes = Array.from(document.querySelectorAll('.worker-select-checkbox'));
-			const exportSelectedButtons = Array.from(document.querySelectorAll('.js-export-selected'));
-			const workerMonthExportButtons = Array.from(document.querySelectorAll('.js-worker-month-export'));
-			const workerMonthInput = document.getElementById('worker_month');
-			const workerMonthHiddenInputs = Array.from(document.querySelectorAll('input[type="hidden"][name="month"]'));
+		const csrfTokenElement = document.querySelector('meta[name="csrf-token"]');
+		const csrfToken = csrfTokenElement ? csrfTokenElement.getAttribute('content') : '';
 
-		if (!selectAllCheckbox || rowCheckboxes.length === 0) {
-			return;
-		}
+		const getResultsElement = function () {
+			return document.getElementById('workers-results');
+		};
+
+		const getAlertsElement = function () {
+			return document.getElementById('workers-ajax-alerts');
+		};
+
+		const getMonthInput = function () {
+			return document.getElementById('worker_month');
+		};
+
+		const getRowCheckboxes = function () {
+			return Array.from(document.querySelectorAll('.worker-select-checkbox'));
+		};
+
+		const getSelectAllCheckbox = function () {
+			return document.getElementById('workers-select-all');
+		};
+
+		const getSelectedCountElement = function () {
+			return document.getElementById('workers-selected-count');
+		};
+
+		const getExportSelectedButtons = function () {
+			return Array.from(document.querySelectorAll('.js-export-selected'));
+		};
+
+		const getWorkerMonthExportButtons = function () {
+			return Array.from(document.querySelectorAll('.js-worker-month-export'));
+		};
+
+		const escapeHtml = function (value) {
+			return String(value)
+				.replace(/&/g, '&amp;')
+				.replace(/</g, '&lt;')
+				.replace(/>/g, '&gt;')
+				.replace(/"/g, '&quot;')
+				.replace(/'/g, '&#039;');
+		};
+
+		const renderAlert = function (message, type) {
+			const alerts = getAlertsElement();
+			if (!alerts) {
+				return;
+			}
+
+			alerts.innerHTML = '<div class="alert alert-' + type + ' alert-dismissible fade show" role="alert">' +
+				'<i class="tim-icons icon-check-2"></i> ' + escapeHtml(message) +
+				'<button type="button" class="close" data-dismiss="alert" aria-label="Close">' +
+					'<span aria-hidden="true">&times;</span>' +
+				'</button>' +
+			'</div>';
+		};
+
+		const clearAlerts = function () {
+			const alerts = getAlertsElement();
+			if (alerts) {
+				alerts.innerHTML = '';
+			}
+		};
 
 		const syncUI = function () {
+			const rowCheckboxes = getRowCheckboxes();
+			const selectAllCheckbox = getSelectAllCheckbox();
+			const selectedCountElement = getSelectedCountElement();
+			const workerMonthInput = getMonthInput();
+			const selectedIds = [];
 			let selectedCount = 0;
-				const selectedIds = [];
 
 			rowCheckboxes.forEach(function (checkbox) {
 				const row = checkbox.closest('tr');
-				if (!row) {
-					return;
-				}
 
 				if (checkbox.checked) {
 					selectedCount += 1;
-						selectedIds.push(String(checkbox.value));
-					row.classList.add('worker-row-selected');
-				} else {
+					selectedIds.push(String(checkbox.value));
+					if (row) {
+						row.classList.add('worker-row-selected');
+					}
+				} else if (row) {
 					row.classList.remove('worker-row-selected');
 				}
 			});
 
-			selectAllCheckbox.checked = selectedCount > 0 && selectedCount === rowCheckboxes.length;
-			selectAllCheckbox.indeterminate = selectedCount > 0 && selectedCount < rowCheckboxes.length;
+			if (selectAllCheckbox) {
+				selectAllCheckbox.checked = selectedCount > 0 && selectedCount === rowCheckboxes.length;
+				selectAllCheckbox.indeterminate = selectedCount > 0 && selectedCount < rowCheckboxes.length;
+			}
 
 			if (selectedCountElement) {
 				selectedCountElement.textContent = selectedCount + ' مختار';
 			}
 
-			if (workerMonthInput && workerMonthHiddenInputs.length > 0) {
-				workerMonthHiddenInputs.forEach(function (input) {
+			if (workerMonthInput) {
+				Array.from(document.querySelectorAll('input[type="hidden"][name="month"]')).forEach(function (input) {
 					input.value = workerMonthInput.value || '';
 				});
 			}
 
-				exportSelectedButtons.forEach(function (button) {
-					const baseHref = button.getAttribute('data-base-href') || button.getAttribute('href');
-					if (!baseHref) {
-						return;
-					}
+			getExportSelectedButtons().forEach(function (button) {
+				const baseHref = button.getAttribute('data-base-href') || button.getAttribute('href');
+				if (!baseHref) {
+					return;
+				}
 
-					const parsedUrl = new URL(baseHref, window.location.origin);
-					if (selectedIds.length > 0) {
-						parsedUrl.searchParams.set('ids', selectedIds.join(','));
-					} else {
-						parsedUrl.searchParams.delete('ids');
-					}
+				const parsedUrl = new URL(baseHref, window.location.origin);
+				if (selectedIds.length > 0) {
+					parsedUrl.searchParams.set('ids', selectedIds.join(','));
+				} else {
+					parsedUrl.searchParams.delete('ids');
+				}
 
-					if (workerMonthInput && workerMonthInput.value) {
-						parsedUrl.searchParams.set('month', workerMonthInput.value);
-					} else {
-						parsedUrl.searchParams.delete('month');
-					}
+				if (workerMonthInput && workerMonthInput.value) {
+					parsedUrl.searchParams.set('month', workerMonthInput.value);
+				} else {
+					parsedUrl.searchParams.delete('month');
+				}
 
-					button.setAttribute('href', parsedUrl.toString());
-				});
-
-				workerMonthExportButtons.forEach(function (button) {
-					const baseHref = button.getAttribute('data-base-href') || button.getAttribute('href');
-					if (!baseHref) {
-						return;
-					}
-
-					const parsedUrl = new URL(baseHref, window.location.origin);
-					if (workerMonthInput && workerMonthInput.value) {
-						parsedUrl.searchParams.set('month', workerMonthInput.value);
-					} else {
-						parsedUrl.searchParams.delete('month');
-					}
-
-					button.setAttribute('href', parsedUrl.toString());
-				});
-		};
-
-		selectAllCheckbox.addEventListener('change', function () {
-			rowCheckboxes.forEach(function (checkbox) {
-				checkbox.checked = selectAllCheckbox.checked;
+				button.setAttribute('href', parsedUrl.toString());
 			});
 
+			getWorkerMonthExportButtons().forEach(function (button) {
+				const baseHref = button.getAttribute('data-base-href') || button.getAttribute('href');
+				if (!baseHref) {
+					return;
+				}
+
+				const parsedUrl = new URL(baseHref, window.location.origin);
+				if (workerMonthInput && workerMonthInput.value) {
+					parsedUrl.searchParams.set('month', workerMonthInput.value);
+				} else {
+					parsedUrl.searchParams.delete('month');
+				}
+
+				button.setAttribute('href', parsedUrl.toString());
+			});
+		};
+
+		const buildUrl = function (baseUrl, overrides) {
+			const url = new URL(baseUrl, window.location.origin);
+
+			Object.keys(overrides).forEach(function (key) {
+				const value = overrides[key];
+				if (value === null || value === undefined || value === '') {
+					url.searchParams.delete(key);
+				} else {
+					url.searchParams.set(key, value);
+				}
+			});
+
+			return url.toString();
+		};
+
+		const buildUrlFromForm = function (form) {
+			const url = new URL(form.action || window.location.href, window.location.origin);
+			const params = new URLSearchParams(window.location.search);
+			const formData = new FormData(form);
+			const workerMonthInput = getMonthInput();
+
+			formData.forEach(function (value, key) {
+				if (typeof value === 'string' && value.trim() === '') {
+					params.delete(key);
+				} else {
+					params.set(key, value);
+				}
+			});
+
+			if (workerMonthInput && workerMonthInput.value) {
+				params.set('month', workerMonthInput.value);
+			} else {
+				params.delete('month');
+			}
+
+			url.search = params.toString();
+			return url.toString();
+		};
+
+		const replaceResultsFromHtml = function (html) {
+			const parser = new DOMParser();
+			const doc = parser.parseFromString(html, 'text/html');
+			const nextResults = doc.getElementById('workers-results');
+			const currentResults = getResultsElement();
+
+			if (!nextResults || !currentResults) {
+				return false;
+			}
+
+			currentResults.replaceWith(nextResults);
+			return true;
+		};
+
+		const loadWorkers = async function (url, updateHistory, preserveAlerts) {
+			const response = await fetch(url, {
+				headers: {
+					'X-Requested-With': 'XMLHttpRequest',
+					'Accept': 'application/json',
+				},
+			});
+
+			if (!response.ok) {
+				throw new Error('Failed to load workers.');
+			}
+
+			const payload = await response.json();
+
+			if (!payload.html || !replaceResultsFromHtml(payload.html)) {
+				throw new Error('Invalid workers response.');
+			}
+
+			if (updateHistory && payload.url) {
+				window.history.pushState({ workersAjax: true }, '', payload.url);
+			}
+
+			if (payload.message) {
+				renderAlert(payload.message, 'success');
+			} else if (!preserveAlerts) {
+				clearAlerts();
+			}
+
 			syncUI();
+		};
+
+		const reloadCurrentList = function (preserveAlerts) {
+			return loadWorkers(window.location.href, false, preserveAlerts);
+		};
+
+		const downloadBlob = function (blob, filename) {
+			const objectUrl = window.URL.createObjectURL(blob);
+			const link = document.createElement('a');
+			link.href = objectUrl;
+			link.download = filename || 'document';
+			document.body.appendChild(link);
+			link.click();
+			link.remove();
+			window.URL.revokeObjectURL(objectUrl);
+		};
+
+		const requestDocumentDownload = async function (url) {
+			const response = await fetch(url, {
+				headers: {
+					'X-Requested-With': 'XMLHttpRequest',
+					'Accept': 'application/json',
+				},
+			});
+
+			if (!response.ok) {
+				const payload = await response.json().catch(function () {
+					return {};
+				});
+
+				throw new Error(payload.message || 'Failed to generate document.');
+			}
+
+			const payload = await response.json();
+
+			if (!payload.download_url) {
+				throw new Error('Document download URL was not returned.');
+			}
+
+			const downloadResponse = await fetch(payload.download_url, {
+				headers: {
+					'X-Requested-With': 'XMLHttpRequest',
+				},
+			});
+
+			if (!downloadResponse.ok) {
+				throw new Error('Failed to fetch generated document.');
+			}
+
+			const blob = await downloadResponse.blob();
+			downloadBlob(blob, payload.filename || 'document');
+		};
+
+		document.addEventListener('submit', function (event) {
+			const form = event.target;
+			if (!(form instanceof HTMLFormElement)) {
+				return;
+			}
+
+			if (form.matches('.js-workers-filter-form')) {
+				event.preventDefault();
+				loadWorkers(buildUrlFromForm(form), true).catch(function (error) {
+					renderAlert(error.message || 'Failed to load workers.', 'danger');
+				});
+				return;
+			}
+
+			if (form.matches('.js-worker-delete-form')) {
+				event.preventDefault();
+
+				if (!window.confirm('Are you sure you want to delete this worker?')) {
+					return;
+				}
+
+				const formData = new FormData(form);
+
+				fetch(form.action, {
+					method: 'POST',
+					headers: {
+						'X-Requested-With': 'XMLHttpRequest',
+						'Accept': 'application/json',
+						'X-CSRF-TOKEN': csrfToken,
+					},
+					body: formData,
+				})
+					.then(async function (response) {
+						const payload = await response.json().catch(function () {
+							return {};
+						});
+
+						if (!response.ok) {
+							throw new Error(payload.message || 'Failed to delete worker.');
+						}
+
+						if (payload.message) {
+							renderAlert(payload.message, 'success');
+						}
+
+						return reloadCurrentList(true);
+					})
+					.catch(function (error) {
+						renderAlert(error.message || 'Failed to delete worker.', 'danger');
+					});
+			}
 		});
 
-		rowCheckboxes.forEach(function (checkbox) {
-			checkbox.addEventListener('change', syncUI);
+		document.addEventListener('click', function (event) {
+			const documentExportLink = event.target.closest('.js-export-selected, .js-worker-month-export, .js-worker-document-export');
+			if (documentExportLink) {
+				event.preventDefault();
+				documentExportLink.classList.add('disabled');
+				requestDocumentDownload(documentExportLink.href)
+					.catch(function (error) {
+						renderAlert(error.message || 'Failed to generate document.', 'danger');
+					})
+					.finally(function () {
+						documentExportLink.classList.remove('disabled');
+					});
+				return;
+			}
+
+			const resetLink = event.target.closest('.js-workers-reset-link');
+			if (resetLink) {
+				event.preventDefault();
+				loadWorkers(buildUrl(resetLink.href, {
+					month: getMonthInput() ? getMonthInput().value : '',
+				}), true).catch(function (error) {
+					renderAlert(error.message || 'Failed to load workers.', 'danger');
+				});
+				return;
+			}
+
+			const sortLink = event.target.closest('.js-workers-sort-link');
+			if (sortLink) {
+				event.preventDefault();
+				loadWorkers(buildUrl(sortLink.href, {
+					month: getMonthInput() ? getMonthInput().value : '',
+				}), true).catch(function (error) {
+					renderAlert(error.message || 'Failed to load workers.', 'danger');
+				});
+				return;
+			}
+
+			const paginationLink = event.target.closest('[data-workers-pagination] a');
+			if (paginationLink) {
+				event.preventDefault();
+				loadWorkers(buildUrl(paginationLink.href, {
+					month: getMonthInput() ? getMonthInput().value : '',
+				}), true).catch(function (error) {
+					renderAlert(error.message || 'Failed to load workers.', 'danger');
+				});
+			}
 		});
 
-		if (workerMonthInput) {
-			workerMonthInput.addEventListener('change', syncUI);
-		}
+		document.addEventListener('change', function (event) {
+			const target = event.target;
+
+			if (!(target instanceof HTMLElement)) {
+				return;
+			}
+
+			if (target.id === 'workers-select-all') {
+				getRowCheckboxes().forEach(function (checkbox) {
+					checkbox.checked = target.checked;
+				});
+				syncUI();
+				return;
+			}
+
+			if (target.classList.contains('worker-select-checkbox')) {
+				syncUI();
+				return;
+			}
+
+			if (target.id === 'worker_month') {
+				loadWorkers(buildUrl(window.location.href, {
+					month: target.value,
+				}), true).catch(function (error) {
+					renderAlert(error.message || 'Failed to load workers.', 'danger');
+				});
+			}
+		});
+
+		window.addEventListener('popstate', function () {
+			reloadCurrentList().catch(function (error) {
+				renderAlert(error.message || 'Failed to load workers.', 'danger');
+			});
+		});
 
 		syncUI();
 	});

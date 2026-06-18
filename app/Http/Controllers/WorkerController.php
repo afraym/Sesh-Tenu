@@ -14,66 +14,17 @@ class WorkerController extends Controller
      */
     public function index(Request $request)
     {
-        $user = $request->user();
-        $query = Worker::query()->with(['company', 'jobType', 'equipmentAsDriver']);
-        $companies = collect();
-        $selectedCompanyId = null;
+        $data = $this->buildIndexData($request);
 
-        $allowedSorts = [
-            'id',
-            'name',
-            'job_type_id',
-            'national_id',
-            'phone_number',
-            'join_date',
-            'is_on_company_payroll',
-            'created_at',
-        ];
-
-        if ($user && !$user->isSuperAdmin()) {
-            $selectedCompanyId = $user->company_id;
-            $query->where('company_id', $user->company_id);
-        } else {
-            $companies = Company::orderBy('name')->get(['id', 'name']);
-            if ($request->filled('company_id')) {
-                $selectedCompanyId = (int) $request->company_id;
-                $query->where('company_id', $request->company_id);
-            }
+        if ($request->ajax() || $request->expectsJson()) {
+            return response()->json([
+                'html' => view('back.workers.index', $data)->render(),
+                'message' => $request->session()->get('success'),
+                'url' => $request->fullUrl(),
+            ]);
         }
 
-        $jobTypeFilter = (string) $request->input('job_type_id', '');
-        if ($jobTypeFilter === 'equipment_operator') {
-            $query->whereHas('jobType', function ($q) {
-                $q->where('name', 'like', '%سائق%');
-            });
-        } elseif ($request->filled('job_type_id')) {
-            $query->where('job_type_id', $request->job_type_id);
-        }
-
-        $search = trim((string) $request->input('search', ''));
-        if ($search !== '') {
-            $query->where(function ($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                    ->orWhere('national_id', 'like', "%{$search}%")
-                    ->orWhere('phone_number', 'like', "%{$search}%");
-
-                if (is_numeric($search)) {
-                    $q->orWhere('id', (int) $search);
-                }
-            });
-        }
-
-        $sort = $request->input('sort', 'created_at');
-        if (!in_array($sort, $allowedSorts, true)) {
-            $sort = 'created_at';
-        }
-
-        $direction = strtolower((string) $request->input('direction', 'desc')) === 'asc' ? 'asc' : 'desc';
-
-        $workers = $query->orderBy($sort, $direction)->paginate(300)->withQueryString();
-        $jobTypes = JobType::orderBy('name')->get(['id', 'name']);
-
-        return view('back.workers.index', compact('workers', 'jobTypes', 'sort', 'direction', 'companies', 'selectedCompanyId'));
+        return view('back.workers.index', $data);
     }
 
     /**
@@ -215,6 +166,13 @@ class WorkerController extends Controller
         $this->ensureWorkerVisibleForUser($worker);
 
         $worker->delete();
+
+        if (request()->ajax() || request()->expectsJson()) {
+            return response()->json([
+                'message' => 'تم حذف العامل بنجاح.',
+            ]);
+        }
+
         return redirect()->route('workers.index')->with('success', 'تم حذف العامل بنجاح.'); 
     }
 
@@ -225,5 +183,73 @@ class WorkerController extends Controller
         if ($user && !$user->isSuperAdmin() && (int) $worker->company_id !== (int) $user->company_id) {
             abort(403, 'ليس لديك صلاحية الوصول إلى هذا العامل.');
         }
+    }
+
+    private function buildIndexData(Request $request): array
+    {
+        $user = $request->user();
+        $query = Worker::query()->with(['company', 'jobType', 'equipmentAsDriver']);
+        $companies = collect();
+        $selectedCompanyId = null;
+
+        $allowedSorts = [
+            'id',
+            'name',
+            'job_type_id',
+            'national_id',
+            'phone_number',
+            'join_date',
+            'is_on_company_payroll',
+            'created_at',
+        ];
+
+        if ($user && ! $user->isSuperAdmin()) {
+            $selectedCompanyId = $user->company_id;
+            $query->where('company_id', $user->company_id);
+        } else {
+            $companies = Company::orderBy('name')->get(['id', 'name']);
+            if ($request->filled('company_id')) {
+                $selectedCompanyId = (int) $request->company_id;
+                $query->where('company_id', $request->company_id);
+            }
+        }
+
+        $jobTypeFilter = (string) $request->input('job_type_id', '');
+        if ($jobTypeFilter === 'equipment_operator') {
+            $query->whereHas('jobType', function ($q) {
+                $q->where('name', 'like', '%سائق%');
+            });
+        } elseif ($request->filled('job_type_id')) {
+            $query->where('job_type_id', $request->job_type_id);
+        }
+
+        $search = trim((string) $request->input('search', ''));
+        if ($search !== '') {
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('national_id', 'like', "%{$search}%")
+                    ->orWhere('phone_number', 'like', "%{$search}%");
+
+                if (is_numeric($search)) {
+                    $q->orWhere('id', (int) $search);
+                }
+            });
+        }
+
+        $sort = $request->input('sort', 'created_at');
+        if (! in_array($sort, $allowedSorts, true)) {
+            $sort = 'created_at';
+        }
+
+        $direction = strtolower((string) $request->input('direction', 'desc')) === 'asc' ? 'asc' : 'desc';
+
+        return [
+            'workers' => $query->orderBy($sort, $direction)->paginate(300)->withQueryString(),
+            'jobTypes' => JobType::orderBy('name')->get(['id', 'name']),
+            'sort' => $sort,
+            'direction' => $direction,
+            'companies' => $companies,
+            'selectedCompanyId' => $selectedCompanyId,
+        ];
     }
 }
