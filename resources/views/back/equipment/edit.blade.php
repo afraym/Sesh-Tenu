@@ -1,0 +1,214 @@
+@extends('layouts.back')
+@section('content')
+<div class="content">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="card-title">Edit Equipment / تعديل معدة</h4>
+                </div>
+                <div class="card-body">
+                    <form action="{{ route('equipment.update', $equipment->id) }}" method="POST">
+                        @csrf
+                        @method('PUT')
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="project_name">اسم المشروع / Project Name <span class="text-danger">*</span></label>
+                                    @php
+                                        $selectedProjectId = old('project_id', $equipment->project_id ?? (optional(\App\Models\Project::where('name', $equipment->project_name)->first())->id));
+                                    @endphp
+                                    <select name="project_id" id="project_id" class="form-control" required>
+                                        <option value="">-- اختار مشروع --</option>
+                                        @foreach($projects as $project)
+                                            <option value="{{ $project->id }}" {{ (string)$selectedProjectId === (string)$project->id ? 'selected' : '' }}>
+                                                {{ $project->name }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="company_id">اسم الشركة / Company <span class="text-danger">*</span></label>
+                                       <select class="form-control @error('company_id') is-invalid @enderror" 
+                                            id="company_id" name="company_id" required>
+                                        <option value="">اختر شركة</option>
+                                        @if( !auth()->user()->isSuperAdmin())
+                                            <option value="{{ auth()->user()->company_id }}" selected>
+                                                {{ auth()->user()->company->name }}
+                                            </option>
+                                        @else
+                                            @foreach($companies ?? [] as $company)
+                                                <option value="{{ $company->id }}" {{ old('company_id', $equipment->company_id) == $company->id ? 'selected' : '' }}>
+                                                    {{ $company->name }}
+                                                </option>
+                                            @endforeach
+                                        @endif
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <!-- <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="previous_driver">اسم السائق السابق / Previous Driver</label>
+                                    <input type="text" class="form-control" id="previous_driver" name="previous_driver" value="{{ old('previous_driver', $equipment->previous_driver) }}">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="driver_user_id">السائق الحالي (مستخدم مرتبط) / Linked Driver</label>
+                                    <select class="form-control" id="driver_user_id" name="driver_user_id">
+                                        <option value="">-- بدون ربط / No Link --</option>
+                                        @foreach($drivers ?? [] as $driver)
+                                            <option value="{{ $driver->id }}" {{ old('driver_user_id', $equipment->driver_user_id) == $driver->id ? 'selected' : '' }}>
+                                                {{ $driver->name }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    <small class="form-text text-muted">اختر مستخدماً لربط المعدة بحسابه، أو اتركه فارغاً وأدخل الاسم يدوياً أدناه.</small>
+                                </div>
+                            </div> -->
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="driver_worker_id">مشغل المعدة / Equipment Operator</label>
+                                    <select class="form-control @error('driver_worker_id') is-invalid @enderror" id="driver_worker_id" name="driver_worker_id">
+                                        <option value="">-- اختر مشغل معدة --</option>
+                                        @foreach($workerDrivers ?? [] as $workerDriver)
+                                            <option value="{{ $workerDriver->id }}" {{ old('driver_worker_id', $equipment->driver_worker_id) == $workerDriver->id ? 'selected' : '' }}>
+                                                {{ $workerDriver->name }}{{ $workerDriver->jobType ? ' - ' . $workerDriver->jobType->name : '' }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    @error('driver_worker_id')
+                                        <span class="invalid-feedback">{{ $message }}</span>
+                                    @enderror
+                                    <small class="form-text text-muted">تعرض هذه القائمة العمال الذين تحتوي وظيفتهم على كلمة "سائق".</small>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="current_driver">اسم السائق الحالي / Current Driver <small class="text-muted">(يدوي)</small></label>
+                                    <input type="text" class="form-control" id="current_driver" name="current_driver" value="{{ old('current_driver', $equipment->current_driver) }}" placeholder="يُملأ تلقائياً عند اختيار مستخدم">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="equipment_type">نوع المعدة / Equipment Type <span class="text-danger">*</span></label>
+                                    <select class="form-control @error('equipment_type') is-invalid @enderror" id="equipment_type" name="equipment_type" required>
+                                        <option value="">اختر نوع المعدة</option>
+                                        @foreach($equipmentTypes ?? [] as $equipmentType)
+                                            <option value="{{ $equipmentType->name }}" {{ old('equipment_type', $equipment->equipment_type) === $equipmentType->name ? 'selected' : '' }}>
+                                                {{ $equipmentType->name }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    @error('equipment_type')
+                                        <span class="invalid-feedback">{{ $message }}</span>
+                                    @enderror
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="model_year">موديل المعدة / Model Year</label>
+                                    <input type="text" class="form-control" id="model_year" name="model_year" value="{{ old('model_year', $equipment->model_year) }}">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="equipment_code">كود المعدة / Equipment Code <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="equipment_code" name="equipment_code" value="{{ old('equipment_code', $equipment->equipment_code) }}" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="equipment_number">رقم شاسيه المعدة / Equipment Number</label>
+                                    <input type="text" class="form-control" id="equipment_number" name="equipment_number" value="{{ old('equipment_number', $equipment->equipment_number) }}">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="manufacture">المصنع / Manufacture</label>
+                                    <input type="text" class="form-control" id="manufacture" name="manufacture" value="{{ old('manufacture', $equipment->manufacture) }}">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="entry_per_ser">تصريح الدخول / Entry Per. Ser.</label>
+                                    <input type="text" class="form-control" id="entry_per_ser" name="entry_per_ser" value="{{ old('entry_per_ser', $equipment->entry_per_ser) }}">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="reg_no">رقم التسجيل / Reg. No.</label>
+                                    <input type="text" class="form-control" id="reg_no" name="reg_no" value="{{ old('reg_no', $equipment->reg_no) }}">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="equip_reg_issue">رقم رخصة المعدة / Equip. Reg. Issue</label>
+                                    <input type="text" class="form-control" id="equip_reg_issue" name="equip_reg_issue" value="{{ old('equip_reg_issue', $equipment->equip_reg_issue) }}">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="custom_clearance">الافراج الجمركي / Custom Clearance</label>
+                                    <input type="text" class="form-control" id="custom_clearance" name="custom_clearance" value="{{ old('custom_clearance', $equipment->custom_clearance) }}">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="equipment_option">نوع المعدة (فعلي او اختياري) / Equipment Option <span class="text-danger">*</span></label>
+                                    <select class="form-control @error('equipment_option') is-invalid @enderror" id="equipment_option" name="equipment_option" required>
+                                        <option value="">-- اختر --</option>
+                                        <option value="فعلي" {{ old('equipment_option', $equipment->equipment_option) === 'فعلي' ? 'selected' : '' }}>فعلي (Actual)</option>
+                                        <option value="اختياري" {{ old('equipment_option', $equipment->equipment_option) === 'اختياري' ? 'selected' : '' }}>اختياري (Optional)</option>
+                                    </select>
+                                    @error('equipment_option')
+                                        <span class="invalid-feedback">{{ $message }}</span>
+                                    @enderror
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group mt-3">
+                            <button type="submit" class="btn btn-primary">Update Equipment</button>
+                            <a href="{{ route('equipment.index') }}" class="btn btn-secondary">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    document.getElementById('driver_user_id').addEventListener('change', function () {
+        var selected = this.options[this.selectedIndex];
+        var nameField = document.getElementById('current_driver');
+        if (selected.value) {
+            nameField.value = selected.text.trim();
+        }
+    });
+
+    document.getElementById('driver_worker_id').addEventListener('change', function () {
+        var selected = this.options[this.selectedIndex];
+        var nameField = document.getElementById('current_driver');
+        if (selected.value) {
+            var workerName = selected.text.split('-')[0].trim();
+            nameField.value = workerName;
+        }
+    });
+</script>
+@endsection

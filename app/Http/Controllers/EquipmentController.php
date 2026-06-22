@@ -156,8 +156,17 @@ class EquipmentController extends Controller
     {
         $companies = \App\Models\Company::orderBy('name')->get();
         $projects = Project::orderBy('name')->get(['id', 'name']);
+        $equipmentTypes = EquipmentType::where('is_active', true)->orderBy('name')->get(['id', 'name']);
+        $drivers = \App\Models\User::orderBy('name')->get(['id', 'name', 'company_id']);
+        $workerDrivers = Worker::query()
+            ->whereHas('jobType', function ($query) {
+                $query->where('name', 'like', '%سائق%');
+            })
+            ->with(['jobType:id,name'])
+            ->orderBy('name')
+            ->get(['id', 'name', 'job_type_id']);
 
-        return view('back.equipments.edit', compact('equipment', 'companies', 'projects'));
+        return view('back.equipment.edit', compact('equipment', 'companies', 'projects', 'equipmentTypes', 'drivers', 'workerDrivers'));
     }
 
     /**
@@ -165,7 +174,62 @@ class EquipmentController extends Controller
      */
     public function update(Request $request, Equipment $equipment)
     {
-        //
+        $request->validate([
+            'project_id' => 'required|exists:projects,id',
+            'company_id' => 'required|exists:companies,id',
+            'previous_driver' => 'nullable|string|max:255',
+            'current_driver' => 'nullable|string|max:255',
+            'equipment_type' => 'required|string|max:255|exists:equipment_types,name',
+            'model_year' => 'nullable|string|max:255',
+            'equipment_code' => 'required|string|max:255|unique:equipment,equipment_code,' . $equipment->id,
+            'equipment_number' => 'nullable|string|max:255',
+            'manufacture' => 'nullable|string|max:255',
+            'entry_per_ser' => 'nullable|string|max:255',
+            'reg_no' => 'nullable|string|max:255',
+            'equip_reg_issue' => 'nullable|string|max:255',
+            'custom_clearance' => 'nullable|string|max:255',
+            'equipment_option' => 'required|in:فعلي,اختياري',
+            'driver_user_id' => 'nullable|exists:users,id',
+            'driver_worker_id' => 'nullable|exists:workers,id',
+        ]);
+
+        $project = Project::findOrFail($request->project_id);
+
+        $currentDriver = $request->current_driver;
+        if ($request->filled('driver_worker_id')) {
+            $workerDriver = Worker::find($request->driver_worker_id);
+            if ($workerDriver) {
+                $currentDriver = $workerDriver->name;
+            }
+        }
+
+        if ($request->filled('driver_user_id')) {
+            $driverUser = \App\Models\User::find($request->driver_user_id);
+            if ($driverUser) {
+                $currentDriver = $driverUser->name;
+            }
+        }
+
+        $equipment->update([
+            'project_name' => $project->name,
+            'company_id' => $request->company_id,
+            'previous_driver' => $request->previous_driver,
+            'current_driver' => $currentDriver,
+            'driver_user_id' => $request->driver_user_id,
+            'driver_worker_id' => $request->driver_worker_id,
+            'equipment_type' => $request->equipment_type,
+            'model_year' => $request->model_year,
+            'equipment_code' => $request->equipment_code,
+            'equipment_number' => $request->equipment_number,
+            'manufacture' => $request->manufacture,
+            'entry_per_ser' => $request->entry_per_ser,
+            'reg_no' => $request->reg_no,
+            'equip_reg_issue' => $request->equip_reg_issue,
+            'custom_clearance' => $request->custom_clearance,
+            'equipment_option' => $request->equipment_option,
+        ]);
+
+        return redirect()->route('equipment.index')->with('success', 'تم تحديث المُعدة بنجاح');
     }
 
     /**
