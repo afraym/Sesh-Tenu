@@ -39,6 +39,8 @@
                                         <th>#</th>
                                         <th>Name / الاسم</th>
                                         <th>Email / البريد الإلكتروني</th>
+                                        <th>Phone / رقم الهاتف</th>
+                                        <th>Username / اسم المستخدم</th>
                                         <th>Role / الدور</th>
                                         <th>Company / الشركة</th>
                                         <th>Joined / تاريخ الانضمام</th>
@@ -53,6 +55,8 @@
                                                 <strong>{{ $user->name }}</strong>
                                             </td>
                                             <td>{{ $user->email }}</td>
+                                            <td>{{ $user->phone ?? 'N/A' }}</td>
+                                            <td>{{ $user->username ?? 'N/A' }}</td>
                                             <td>
                                                 @if($user->role === 'super_admin')
                                                     <span class="badge badge-danger">Super Admin</span>
