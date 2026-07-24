@@ -498,93 +498,63 @@ PV Power Plant Abydos 2 Solar (MW1000)',
         );
     }
 
-    // public function exportWordPdf(Worker $worker)
-    // {
-    //     if (! class_exists(\Dompdf\Dompdf::class)) {
-    //         abort(500, 'PDF rendering requires dompdf. Install with: composer require dompdf/dompdf');
-    //     }
+    public function exportWordPdf(Request $request, Worker $worker)
+    {
+        $worker->load([
+            'company',
+            'jobType',
+            'equipmentAsDriver' => function ($query) {
+                $query->latest('id');
+            },
+        ]);
+        $project = Project::latest('id')->with('company')->first();
 
-    //     $worker->load(['company', 'jobType']);
-    //     $project = Project::latest('id')->with('company')->first();
+        $monthStart = $this->resolveSelectedMonthStart($request);
+        $monthAr = self::MONTH_NAMES[$monthStart->format('F')] ?? $monthStart->format('F');
 
-    //     $templatePath = storage_path('app/templates/worker-timesheet.docx');
+        $timestamp = now()->format('Y-m-d_His');
+        $exportFolder = "workers-export/{$timestamp}";
+        Storage::makeDirectory($exportFolder);
+        $exportPath = Storage::path($exportFolder);
 
-    //     if (! file_exists($templatePath)) {
-    //         abort(404, 'Word template not found. Add a template at storage/app/templates/worker-timesheet.docx with the expected placeholders.');
-    //     }
+        $fileNameBase = $worker->name . ' - سركي - ' . $monthAr;
+        $docxFileName = $fileNameBase . '.docx';
+        $pdfFileName = $fileNameBase . '.pdf';
 
-    //     $monthStart = now()->startOfMonth();
-    //     $daysInMonth = $monthStart->daysInMonth;
+        $docxPath = $exportPath . DIRECTORY_SEPARATOR . 'worker-' . $worker->id . '.docx';
 
-    //     $weekdayRows = [];
+        $this->generateWorkerDocxFromTemplate($worker, $project, $docxPath, $monthStart);
 
-    //     for ($i = 0; $i < $daysInMonth; $i++) {
-    //         $day = $monthStart->copy()->addDays($i);
-    //         $base = [
-    //             'serial' => $i + 1,
-    //             'date' => $day->format('j/n/Y'),
-    //             'start' => '',
-    //             'end' => '',
-    //             'break' => '',
-    //             'hours' => '',
-    //             'location' => '',
-    //             'note' => '',
-    //             'supervisor' => '',
-    //             'engineer' => '',
-    //         ];
+        $libreOfficePath = $this->findLibreOffice();
+        if (! $libreOfficePath) {
+            return $this->respondWithGeneratedDocument(
+                $request,
+                $docxPath,
+                $docxFileName,
+                'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+            );
+        }
 
-    //         $weekdayRows[] = [
-    //             'row_serial' => $base['serial'],
-    //             'row_date' => $base['date'],
-    //             'row_start' => $base['start'],
-    //             'row_end' => $base['end'],
-    //             'row_break' => $base['break'],
-    //             'row_hours' => $base['hours'],
-    //             'row_location' => $base['location'],
-    //             'row_note' => $base['note'],
-    //             'row_supervisor' => $base['supervisor'],
-    //             'row_engineer' => $base['engineer'],
-    //         ];
-    //     }
+        $pdfPath = $this->convertDocxToPdf($libreOfficePath, $docxPath, $exportPath);
 
-    //     $processor = new TemplateProcessor($templatePath);
+        if (! $pdfPath || ! file_exists($pdfPath) || filesize($pdfPath) <= 100) {
+            return $this->respondWithGeneratedDocument(
+                $request,
+                $docxPath,
+                $docxFileName,
+                'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+            );
+        }
 
-    //     $processor->setValues([
-    //         'project_name_en' => optional($project)->name ?? '-',
-    //         'company_name' => optional($worker->company)->name ?: (optional($worker->company)->short_name ?? '-'),
-    //         'consortium_name' => optional(optional($project)->company)->name
-    //             ?? (optional($worker->company)->name ?: (optional($worker->company)->short_name ?? '-')),
-    //         'worker_name' => $worker->name ?? '-',
-    //         'worker_job' => optional($worker->jobType)->name ?? '-',
-    //         'worker_id' => $worker->national_id ?? '-',
-    //         'worker_phone' => $worker->phone_number ?? '-',
-    //         'access_code' => $worker->entity ?? $worker->id,
-    //         'report_month' => $monthStart->format('F Y'),
-    //     ]);
+        @unlink($docxPath);
 
-    //     $processor->cloneRowAndSetValues('row_serial', $weekdayRows);
-
-    //     Storage::makeDirectory('temp');
-    //     $docxPath = Storage::path('temp/worker-' . $worker->id . '.docx');
-    //     $pdfPath = Storage::path('temp/worker-' . $worker->id . '.pdf');
-
-    //     $processor->saveAs($docxPath);
-    //     $this->addRedShadingToFridayCells($docxPath);
-
-    //     Settings::setPdfRenderer(Settings::PDF_RENDERER_DOMPDF, base_path('vendor/dompdf/dompdf'));
-
-    //     $phpWord = IOFactory::load($docxPath);
-    //     $pdfWriter = IOFactory::createWriter($phpWord, 'PDF');
-    //     $pdfWriter->save($pdfPath);
-
-    //     @unlink($docxPath);
-
-    //     return response()->download(
-    //         $pdfPath,
-    //         'worker-' . $worker->id . '.pdf',
-    //         ['Content-Type' => 'application/pdf']
-    //     )->deleteFileAfterSend(true);
-    // }
+        return $this->respondWithGeneratedDocument(
+            $request,
+            $pdfPath,
+            $pdfFileName,
+            'application/pdf'
+        );
+    }
 
     public function exportWordPdfAll(Request $request)
     {
@@ -891,7 +861,7 @@ PV Power Plant Abydos 2 Solar (MW1000)',
             $profileUri = 'file://' . str_replace(DIRECTORY_SEPARATOR, '/', $profileDir);
 
             $command = sprintf(
-                'HOME=%s XDG_CACHE_HOME=%s XDG_CONFIG_HOME=%s SAL_USE_VCLPLUGIN=gen %s --headless -env:UserInstallation=%s --convert-to pdf --outdir %s %s 2>&1',
+                'HOME=%s XDG_CACHE_HOME=%s XDG_CONFIG_HOME=%s %s --headless -env:UserInstallation=%s --convert-to pdf --outdir %s %s 2>&1',
                 escapeshellarg($homeDir),
                 escapeshellarg($cacheDir),
                 escapeshellarg($configDir),
