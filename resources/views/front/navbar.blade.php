@@ -27,12 +27,21 @@
           </div>
         </div>
         <ul class="navbar-nav">
+          @php
+            $currentLocale = app()->getLocale();
+            $currentLocaleLabel = match ($currentLocale) {
+                'ar' => __('ui.arabic'),
+                'arz' => __('ui.egyptian_arabic'),
+                default => __('ui.english'),
+            };
+          @endphp
           <li class="nav-item dropdown">
             <a class="nav-link dropdown-toggle" href="#" id="frontLocaleDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-              <i class="tim-icons icon-world"></i> {{ strtoupper(app()->getLocale()) }}
+              <i class="tim-icons icon-world"></i> {{ $currentLocaleLabel }}
             </a>
             <div class="dropdown-menu dropdown-menu-right" aria-labelledby="frontLocaleDropdown">
               <a class="dropdown-item" href="{{ route('locale.switch', ['locale' => 'ar']) }}">{{ __('ui.arabic') }}</a>
+              <a class="dropdown-item" href="{{ route('locale.switch', ['locale' => 'arz']) }}">{{ __('ui.egyptian_arabic') }}</a>
               <a class="dropdown-item" href="{{ route('locale.switch', ['locale' => 'en']) }}">{{ __('ui.english') }}</a>
             </div>
           </li>

@@ -41,6 +41,32 @@ class EquipmentController extends Controller
             }
         }
 
+        $selectedIdsInput = trim((string) $request->input('selected_ids', ''));
+        $selectedIds = [];
+        if ($selectedIdsInput !== '') {
+            $selectedIds = collect(explode(',', $selectedIdsInput))
+                ->filter(fn ($val) => is_numeric($val))
+                ->map(fn ($val) => (int)$val)
+                ->values()
+                ->toArray();
+        }
+
+        $search = trim((string) $request->input('search', ''));
+        if ($search !== '') {
+            $query->where(function ($q) use ($search, $selectedIds) {
+                $q->where(function ($q2) use ($search) {
+                    $q2->where('equipment_code', 'like', "%{$search}%")
+                        ->orWhere('current_driver', 'like', "%{$search}%")
+                        ->orWhere('equipment_type', 'like', "%{$search}%")
+                        ->orWhere('equipment_number', 'like', "%{$search}%");
+                });
+
+                if (!empty($selectedIds)) {
+                    $q->orWhereIn('id', $selectedIds);
+                }
+            });
+        }
+
         $sort = $request->input('sort', 'created_at');
         if (!in_array($sort, $allowedSorts, true)) {
             $sort = 'created_at';
@@ -52,6 +78,14 @@ class EquipmentController extends Controller
             ->orderBy($sort, $direction)
             ->paginate(100)
             ->withQueryString();
+
+        if ($request->ajax() || $request->expectsJson()) {
+            return response()->json([
+                'html' => view('back.equipment.index', compact('equipments', 'sort', 'direction'))->render(),
+                'message' => $request->session()->get('success'),
+                'url' => $request->fullUrl(),
+            ]);
+        }
 
         return view('back.equipment.index', compact('equipments', 'sort', 'direction'));
     }

@@ -288,10 +288,21 @@
               <li class="nav-item dropdown">
                 <a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown" aria-expanded="false">
                   <i class="tim-icons icon-world"></i>
-                  <span>{{ strtoupper(app()->getLocale()) }}</span>
+                  <span>
+                    @php
+                      $currentLocale = app()->getLocale();
+                      $currentLocaleLabel = match ($currentLocale) {
+                          'ar' => __('ui.arabic'),
+                          'arz' => __('ui.egyptian_arabic'),
+                          default => __('ui.english'),
+                      };
+                    @endphp
+                    {{ $currentLocaleLabel }}
+                  </span>
                 </a>
                 <div class="dropdown-menu dropdown-menu-right">
                   <a class="dropdown-item" href="{{ route('locale.switch', ['locale' => 'ar']) }}">{{ __('ui.arabic') }}</a>
+                  <a class="dropdown-item" href="{{ route('locale.switch', ['locale' => 'arz']) }}">{{ __('ui.egyptian_arabic') }}</a>
                   <a class="dropdown-item" href="{{ route('locale.switch', ['locale' => 'en']) }}">{{ __('ui.english') }}</a>
                 </div>
               </li>

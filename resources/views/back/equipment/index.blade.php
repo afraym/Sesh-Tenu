@@ -51,13 +51,45 @@
                             <a href="{{ route('equipment.create') }}" class="btn btn-primary btn-sm">Add Equipment / إضافة
                                 معدة</a>
                         </div>
+                        <div class="row mt-3 justify-content-center">
+                            <div class="col-md-8">
+                                <form method="GET" action="{{ route('equipment.index') }}" class="mb-0 js-equipments-filter-form">
+                                    <div class="input-group">
+                                        <input
+                                            type="text"
+                                            name="search"
+                                            class="form-control"
+                                            placeholder="ابحث بكود المعدة، النوع، الرقم، أو السائق..."
+                                            value="{{ request('search') }}"
+                                        >
+                                        <input type="hidden" name="month" value="{{ request('month', now()->format('Y-m')) }}">
+                                        <input type="hidden" name="sort" value="{{ $sort }}">
+                                        <input type="hidden" name="direction" value="{{ $direction }}">
+                                        <div class="input-group-append">
+                                            <button type="submit" class="btn btn-primary btn-sm"><i class="tim-icons icon-zoom-split"></i></button>
+                                            <a href="{{ route('equipment.index') }}" class="btn btn-secondary btn-sm js-equipments-reset-link"><i class="tim-icons icon-refresh-01"></i></a>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
                     </div>
                     <div class="card-body">
+                        <div id="equipments-ajax-alerts"></div>
+                        <div id="equipments-results">
                         @if(session('success'))
-                            <div class="alert alert-success">{{ session('success') }}</div>
+                            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                                {{ session('success') }}
+                                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                    <span aria-hidden="true">&times;</span>
+                                </button>
+                            </div>
                         @endif
-                        <div class="d-flex justify-content-end mb-2">
+                        <div class="d-flex justify-content-end align-items-center mb-2" style="gap: 10px;">
                             <span class="badge badge-info" id="equipments-selected-count">0 مختار</span>
+                            <button type="button" class="btn btn-sm btn-outline-danger m-0" id="equipments-clear-selection" style="display: none;">
+                                إلغاء التحديد <i class="tim-icons icon-simple-remove"></i>
+                            </button>
                         </div>
                         <div class="table-responsive">
                             <table class="table table-striped table-hover">
@@ -67,26 +99,26 @@
                                             <input type="checkbox" id="equipments-select-all"
                                                 class="equipment-table-checkbox" aria-label="Select all equipment">
                                         </th>
-                                        <th><a href="{{ $sortUrl('id') }}" style="color: inherit;">#
+                                        <th><a href="{{ $sortUrl('id') }}" class="js-equipments-sort-link" style="color: inherit;">#
                                                 {!! $sortIcon('id') !!}</a></th>
-                                        <th><a href="{{ $sortUrl('current_driver') }}" style="color: inherit;">اسم السائق
+                                        <th><a href="{{ $sortUrl('current_driver') }}" class="js-equipments-sort-link" style="color: inherit;">اسم السائق
                                                 الحالي {!! $sortIcon('current_driver') !!}</a></th>
-                                        {{-- <th><a href="{{ $sortUrl('project_name') }}" style="color: inherit;">اسم
+                                        {{-- <th><a href="{{ $sortUrl('project_name') }}" class="js-equipments-sort-link" style="color: inherit;">اسم
                                                 المشروع {!! $sortIcon('project_name') !!}</a></th> --}}
-                                        <th><a href="{{ $sortUrl('company_id') }}" style="color: inherit;">اسم الشركة
+                                        <th><a href="{{ $sortUrl('company_id') }}" class="js-equipments-sort-link" style="color: inherit;">اسم الشركة
                                                 {!! $sortIcon('company_id') !!}</a></th>
-                                        <th><a href="{{ $sortUrl('equipment_type') }}" style="color: inherit;">نوع المعدة
+                                        <th><a href="{{ $sortUrl('equipment_type') }}" class="js-equipments-sort-link" style="color: inherit;">نوع المعدة
                                                 {!! $sortIcon('equipment_type') !!}</a></th>
-                                        <th><a href="{{ $sortUrl('model_year') }}" style="color: inherit;">موديل المعدة
+                                        <th><a href="{{ $sortUrl('model_year') }}" class="js-equipments-sort-link" style="color: inherit;">موديل المعدة
                                                 {!! $sortIcon('model_year') !!}</a></th>
-                                        <th><a href="{{ $sortUrl('equipment_code') }}" style="color: inherit;">كود المعدة
+                                        <th><a href="{{ $sortUrl('equipment_code') }}" class="js-equipments-sort-link" style="color: inherit;">كود المعدة
                                                 {!! $sortIcon('equipment_code') !!}</a></th>
                                         <th>نوع المعدة (فعلي او اختياري)</th>
-                                        <th><a href="{{ $sortUrl('equipment_number') }}" style="color: inherit;">رقم شاسيه
+                                        <th><a href="{{ $sortUrl('equipment_number') }}" class="js-equipments-sort-link" style="color: inherit;">رقم شاسيه
                                                 المعدة {!! $sortIcon('equipment_number') !!}</a></th>
-                                        <th><a href="{{ $sortUrl('manufacture') }}" style="color: inherit;">المصنع
+                                        <th><a href="{{ $sortUrl('manufacture') }}" class="js-equipments-sort-link" style="color: inherit;">المصنع
                                                 {!! $sortIcon('manufacture') !!}</a></th>
-                                        <th><a href="{{ $sortUrl('entry_per_ser') }}" style="color: inherit;">تصريح الدخول
+                                        <th><a href="{{ $sortUrl('entry_per_ser') }}" class="js-equipments-sort-link" style="color: inherit;">تصريح الدخول
                                                 {!! $sortIcon('entry_per_ser') !!}</a></th>
                                         <th>الإجراءات</th>
                                     </tr>
@@ -143,8 +175,9 @@
                                 </tbody>
                             </table>
                         </div>
-                        <div class="mt-3">
+                        <div class="mt-3" data-equipments-pagination>
                             {{ $equipments->links() }}
+                        </div>
                         </div>
                     </div>
                 </div>
@@ -171,64 +204,118 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-            const selectAllCheckbox = document.getElementById('equipments-select-all');
-            const selectedCountElement = document.getElementById('equipments-selected-count');
-            const rowCheckboxes = Array.from(document.querySelectorAll('.equipment-select-checkbox'));
-            const exportSelectedButtons = Array.from(document.querySelectorAll('.js-export-selected'));
-            const rowExportButtons = Array.from(document.querySelectorAll('.js-equipment-document-export'));
-            const inspectionMonthInput = document.getElementById('inspection_month');
-            const selectAllActualBtn = document.getElementById('select-all-actual');
-            const selectAllOptionalBtn = document.getElementById('select-all-optional');
+            const getInspectionMonthInput = () => document.getElementById('inspection_month');
+            const getSelectAllCheckbox = () => document.getElementById('equipments-select-all');
+            const getSelectedCountElement = () => document.getElementById('equipments-selected-count');
+            const getRowCheckboxes = () => Array.from(document.querySelectorAll('.equipment-select-checkbox'));
+            const getExportSelectedButtons = () => Array.from(document.querySelectorAll('.js-export-selected'));
+            const getRowExportButtons = () => Array.from(document.querySelectorAll('.js-equipment-document-export'));
+            const getClearSelectionBtn = () => document.getElementById('equipments-clear-selection');
 
-            if (!selectAllCheckbox || rowCheckboxes.length === 0) {
-                return;
-            }
+            let persistedSelectedIds = new Set();
+            let persistedExcludedDates = {};
+
+            try {
+                const stored = JSON.parse(sessionStorage.getItem('equipmentSelections'));
+                if (stored && stored.ids) {
+                    stored.ids.forEach(id => persistedSelectedIds.add(String(id)));
+                    persistedExcludedDates = stored.dates || {};
+                }
+            } catch (e) {}
+
+            const saveSelections = () => {
+                sessionStorage.setItem('equipmentSelections', JSON.stringify({
+                    ids: Array.from(persistedSelectedIds),
+                    dates: persistedExcludedDates
+                }));
+            };
+
+            const restoreDOMFromPersisted = function () {
+                const rowCheckboxes = getRowCheckboxes();
+                rowCheckboxes.forEach(checkbox => {
+                    const id = String(checkbox.value);
+                    const row = checkbox.closest('tr');
+                    const excludedDatesInput = row ? row.querySelector('.js-equipment-excluded-dates') : null;
+                    
+                    if (persistedSelectedIds.has(id)) {
+                        checkbox.checked = true;
+                        if (row) row.classList.add('equipment-row-selected');
+                        if (excludedDatesInput && persistedExcludedDates[id] !== undefined) {
+                            excludedDatesInput.value = persistedExcludedDates[id];
+                        }
+                    } else {
+                        checkbox.checked = false;
+                        if (row) row.classList.remove('equipment-row-selected');
+                    }
+                });
+            };
 
             const syncUI = function () {
-                let selectedCount = 0;
-                const selectedIds = [];
-                const selectedExcludedDates = {};
+                const rowCheckboxes = getRowCheckboxes();
+                const selectAllCheckbox = getSelectAllCheckbox();
+                const selectedCountElement = getSelectedCountElement();
+                const exportSelectedButtons = getExportSelectedButtons();
+                const rowExportButtons = getRowExportButtons();
+                const inspectionMonthInput = getInspectionMonthInput();
+                const clearSelectionBtn = getClearSelectionBtn();
+
+                let currentPageSelectedCount = 0;
 
                 rowCheckboxes.forEach(function (checkbox) {
+                    const id = String(checkbox.value);
                     const row = checkbox.closest('tr');
                     const excludedDatesInput = row ? row.querySelector('.js-equipment-excluded-dates') : null;
                     const excludedDates = excludedDatesInput ? excludedDatesInput.value.trim() : '';
 
-                    if (!row) {
-                        return;
-                    }
-
                     if (checkbox.checked) {
-                        selectedCount++;
-                        selectedIds.push(checkbox.value);
+                        currentPageSelectedCount++;
+                        persistedSelectedIds.add(id);
                         if (excludedDates) {
-                            selectedExcludedDates[checkbox.value] = excludedDates;
+                            persistedExcludedDates[id] = excludedDates;
+                        } else {
+                            delete persistedExcludedDates[id];
                         }
-                        row.classList.add('equipment-row-selected');
+                        if (row) row.classList.add('equipment-row-selected');
                     } else {
-                        row.classList.remove('equipment-row-selected');
+                        persistedSelectedIds.delete(id);
+                        delete persistedExcludedDates[id];
+                        if (row) row.classList.remove('equipment-row-selected');
                     }
                 });
 
+                saveSelections();
+
+                const totalSelectedCount = persistedSelectedIds.size;
+
                 if (selectedCountElement) {
-                    selectedCountElement.textContent = selectedCount + ' مختار';
+                    selectedCountElement.textContent = totalSelectedCount + ' مختار';
                 }
 
-                selectAllCheckbox.checked = selectedCount === rowCheckboxes.length;
-                selectAllCheckbox.indeterminate = selectedCount > 0 && selectedCount < rowCheckboxes.length;
+                if (clearSelectionBtn) {
+                    clearSelectionBtn.style.display = totalSelectedCount > 0 ? 'inline-block' : 'none';
+                }
+                
+                if (selectAllCheckbox) {
+                    selectAllCheckbox.checked = currentPageSelectedCount > 0 && currentPageSelectedCount === rowCheckboxes.length;
+                    selectAllCheckbox.indeterminate = currentPageSelectedCount > 0 && currentPageSelectedCount < rowCheckboxes.length;
+                }
+
+                const selectedIdsArr = Array.from(persistedSelectedIds);
 
                 exportSelectedButtons.forEach(function (button) {
                     const baseHref = button.dataset.baseHref || button.href;
-                    if (selectedIds.length > 0) {
+                    if (selectedIdsArr.length > 0) {
                         const query = new URLSearchParams();
-                        query.set('ids', selectedIds.join(','));
+                        query.set('ids', selectedIdsArr.join(','));
 
                         if (inspectionMonthInput && inspectionMonthInput.value) {
                             query.set('month', inspectionMonthInput.value);
                         }
 
-                        Object.keys(selectedExcludedDates).forEach(function (equipmentId) {
-                            query.set('excluded_dates[' + equipmentId + ']', selectedExcludedDates[equipmentId]);
+                        selectedIdsArr.forEach(function (equipmentId) {
+                            if (persistedExcludedDates[equipmentId]) {
+                                query.set('excluded_dates[' + equipmentId + ']', persistedExcludedDates[equipmentId]);
+                            }
                         });
 
                         button.href = baseHref + '?' + query.toString();
@@ -245,9 +332,7 @@
                     const baseHref = button.dataset.baseHref || button.href;
                     const row = button.closest('tr');
 
-                    if (!baseHref || !row) {
-                        return;
-                    }
+                    if (!baseHref || !row) return;
 
                     const equipmentId = row.getAttribute('data-equipment-id');
                     const excludedDatesInput = row.querySelector('.js-equipment-excluded-dates');
@@ -270,55 +355,217 @@
                 });
             };
 
-            exportSelectedButtons.forEach(function (button) {
-                button.addEventListener('click', function (event) {
-                    const selectedIds = rowCheckboxes.filter(function (checkbox) {
-                        return checkbox.checked;
+            const getResultsElement = () => document.getElementById('equipments-results');
+            const getAlertsElement = () => document.getElementById('equipments-ajax-alerts');
+
+            const renderAlert = function (message, type) {
+                const alerts = getAlertsElement();
+                if (!alerts) return;
+                alerts.innerHTML = '<div class="alert alert-' + type + ' alert-dismissible fade show" role="alert">' +
+                    message +
+                    '<button type="button" class="close" data-dismiss="alert" aria-label="Close">' +
+                        '<span aria-hidden="true">&times;</span>' +
+                    '</button>' +
+                '</div>';
+            };
+
+            const clearAlerts = function () {
+                const alerts = getAlertsElement();
+                if (alerts) alerts.innerHTML = '';
+            };
+
+            const replaceResultsFromHtml = function (html) {
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+                const nextResults = doc.getElementById('equipments-results');
+                const currentResults = getResultsElement();
+
+                if (!nextResults || !currentResults) return false;
+
+                currentResults.replaceWith(nextResults);
+                return true;
+            };
+
+            const loadEquipments = async function (url, updateHistory, preserveAlerts) {
+                try {
+                    const response = await fetch(url, {
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'Accept': 'application/json',
+                        },
                     });
 
-                    if (selectedIds.length === 0) {
+                    if (!response.ok) throw new Error('Failed to load equipments.');
+
+                    const payload = await response.json();
+
+                    if (!payload.html || !replaceResultsFromHtml(payload.html)) {
+                        throw new Error('Invalid equipments response.');
+                    }
+
+                    if (updateHistory && payload.url) {
+                        window.history.pushState({ equipmentsAjax: true }, '', payload.url);
+                    }
+
+                    if (payload.message) {
+                        renderAlert(payload.message, 'success');
+                    } else if (!preserveAlerts) {
+                        clearAlerts();
+                    }
+                    
+                    restoreDOMFromPersisted();
+                    syncUI();
+                } catch (error) {
+                    renderAlert(error.message || 'Failed to load equipments.', 'danger');
+                }
+            };
+
+            const buildUrlFromForm = function (form) {
+                const url = new URL(form.action || window.location.href, window.location.origin);
+                const params = new URLSearchParams(window.location.search);
+                const formData = new FormData(form);
+
+                formData.forEach(function (value, key) {
+                    if (typeof value === 'string' && value.trim() === '') {
+                        params.delete(key);
+                    } else {
+                        params.set(key, value);
+                    }
+                });
+
+                const inspectionMonthInput = getInspectionMonthInput();
+                if (inspectionMonthInput && inspectionMonthInput.value) {
+                    params.set('month', inspectionMonthInput.value);
+                }
+
+                const selectedIdsArr = Array.from(persistedSelectedIds);
+                if (selectedIdsArr.length > 0) {
+                    params.set('selected_ids', selectedIdsArr.join(','));
+                } else {
+                    params.delete('selected_ids');
+                }
+
+                url.search = params.toString();
+                return url.toString();
+            };
+            
+            const buildUrl = function (baseUrl, overrides) {
+                const url = new URL(baseUrl, window.location.origin);
+
+                const selectedIdsArr = Array.from(persistedSelectedIds);
+                if (selectedIdsArr.length > 0) {
+                    url.searchParams.set('selected_ids', selectedIdsArr.join(','));
+                } else {
+                    url.searchParams.delete('selected_ids');
+                }
+
+                Object.keys(overrides).forEach(function (key) {
+                    const value = overrides[key];
+                    if (value === null || value === undefined || value === '') {
+                        url.searchParams.delete(key);
+                    } else {
+                        url.searchParams.set(key, value);
+                    }
+                });
+                return url.toString();
+            };
+
+            document.addEventListener('submit', function (event) {
+                const form = event.target;
+                if (form && form.matches('.js-equipments-filter-form')) {
+                    event.preventDefault();
+                    loadEquipments(buildUrlFromForm(form), true);
+                }
+            });
+
+            document.addEventListener('click', function (event) {
+                const exportSelectedButton = event.target.closest('.js-export-selected');
+                if (exportSelectedButton) {
+                    if (persistedSelectedIds.size === 0) {
                         event.preventDefault();
                         alert('Please select at least one equipment first.');
                     }
-                });
+                    return;
+                }
+
+                const clearSelectionBtn = event.target.closest('#equipments-clear-selection');
+                if (clearSelectionBtn) {
+                    persistedSelectedIds.clear();
+                    persistedExcludedDates = {};
+                    saveSelections();
+                    restoreDOMFromPersisted();
+                    syncUI();
+                    return;
+                }
+
+                const resetLink = event.target.closest('.js-equipments-reset-link');
+                if (resetLink) {
+                    event.preventDefault();
+                    loadEquipments(buildUrl(resetLink.href, {
+                        month: getInspectionMonthInput() ? getInspectionMonthInput().value : '',
+                    }), true);
+                    return;
+                }
+
+                const sortLink = event.target.closest('.js-equipments-sort-link');
+                if (sortLink) {
+                    event.preventDefault();
+                    loadEquipments(buildUrl(sortLink.href, {
+                        month: getInspectionMonthInput() ? getInspectionMonthInput().value : '',
+                    }), true);
+                    return;
+                }
+
+                const paginationLink = event.target.closest('[data-equipments-pagination] a');
+                if (paginationLink) {
+                    event.preventDefault();
+                    loadEquipments(buildUrl(paginationLink.href, {
+                        month: getInspectionMonthInput() ? getInspectionMonthInput().value : '',
+                    }), true);
+                    return;
+                }
+
+                const selectAllActualBtn = event.target.closest('#select-all-actual');
+                if (selectAllActualBtn) {
+                    getRowCheckboxes().forEach(function (checkbox) {
+                        const option = (checkbox.dataset.equipmentOption || '').trim();
+                        checkbox.checked = option === 'فعلي';
+                    });
+                    syncUI();
+                    return;
+                }
+
+                const selectAllOptionalBtn = event.target.closest('#select-all-optional');
+                if (selectAllOptionalBtn) {
+                    getRowCheckboxes().forEach(function (checkbox) {
+                        const option = (checkbox.dataset.equipmentOption || '').trim();
+                        checkbox.checked = option === 'اختياري';
+                    });
+                    syncUI();
+                    return;
+                }
             });
 
-            selectAllCheckbox.addEventListener('change', function () {
-                rowCheckboxes.forEach(function (checkbox) {
-                    checkbox.checked = selectAllCheckbox.checked;
-                });
+            document.addEventListener('change', function (event) {
+                const target = event.target;
 
-                syncUI();
+                if (target.id === 'equipments-select-all') {
+                    getRowCheckboxes().forEach(function (checkbox) {
+                        checkbox.checked = target.checked;
+                    });
+                    syncUI();
+                    return;
+                }
+
+                if (target.classList.contains('equipment-select-checkbox')) {
+                    syncUI();
+                    return;
+                }
+
+                if (target.id === 'inspection_month') {
+                    syncUI();
+                }
             });
-
-            rowCheckboxes.forEach(function (checkbox) {
-                checkbox.addEventListener('change', syncUI);
-            });
-
-            const selectByOption = function (optionLabel) {
-                rowCheckboxes.forEach(function (checkbox) {
-                    const option = (checkbox.dataset.equipmentOption || '').trim();
-                    checkbox.checked = option === optionLabel;
-                });
-
-                syncUI();
-            };
-
-            if (selectAllActualBtn) {
-                selectAllActualBtn.addEventListener('click', function () {
-                    selectByOption('فعلي');
-                });
-            }
-
-            if (selectAllOptionalBtn) {
-                selectAllOptionalBtn.addEventListener('click', function () {
-                    selectByOption('اختياري');
-                });
-            }
-
-            if (inspectionMonthInput) {
-                inspectionMonthInput.addEventListener('change', syncUI);
-            }
 
             document.addEventListener('input', function (event) {
                 if (event.target && event.target.classList && event.target.classList.contains('js-equipment-excluded-dates')) {
@@ -326,6 +573,11 @@
                 }
             });
 
+            window.addEventListener('popstate', function () {
+                loadEquipments(window.location.href, false, false);
+            });
+
+            restoreDOMFromPersisted();
             syncUI();
         });
     </script>

@@ -80,7 +80,7 @@ return [
 
     'locale' => 'ar',
 
-    'supported_locales' => ['en', 'ar'],
+    'supported_locales' => ['en', 'ar', 'arz'],
 
     'fallback_locale' => env('APP_FALLBACK_LOCALE', 'en'),
 

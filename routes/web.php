@@ -19,11 +19,11 @@ use App\Http\Controllers\SubscriptionController;
 use App\Http\Controllers\SubscriptionAdminController;
 
 Route::get('/', function () {
-    if (auth()->check()) {
-        return redirect('/admin/workers');
-    } else {
-        return redirect('/login');
-    }
+    // if (auth()->check()) {
+    //     return redirect('/admin/workers');
+    // } else {
+    //     return redirect('/login');
+    // }
 
     $project = ProjectModel::latest('id')->with('company')->first();
     $stats = [
@@ -37,7 +37,7 @@ Route::get('/', function () {
 });
 
 Route::get('/locale/{locale}', function (string $locale) {
-    $supportedLocales = config('app.supported_locales', ['en', 'ar']);
+    $supportedLocales = config('app.supported_locales', ['en', 'ar', 'arz']);
 
     if (! in_array($locale, $supportedLocales, true)) {
         abort(404);

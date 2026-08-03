@@ -2,6 +2,7 @@
 
 return [
     'arabic' => 'Arabic',
+    'egyptian_arabic' => 'Egyptian Arabic',
     'english' => 'English',
     'login' => 'Login',
     'register' => 'Register',

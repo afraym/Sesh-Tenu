@@ -24,14 +24,17 @@
         <div class="container">
             <div class="row align-items-center" style="min-height: 70vh;">
                 <div class="col-lg-7 col-md-8">
-                    <h1 class="display-3 font-weight-bold mb-3">Solar Panel Project Management System</h1>
+                    <p class="text-uppercase text-white-50 mb-2" style="letter-spacing: 0.18em;">{{ __('welcome.hero_eyebrow') }}</p>
+                    <h1 class="display-3 font-weight-bold mb-3">{{ __('welcome.hero_title') }}</h1>
                     <p class="lead text-white mb-4">
-                        A centralized platform to plan, execute, and monitor utility-scale solar projects across workforce, equipment, and documentation.
+                        {{ __('welcome.hero_description') }}
                     </p>
-                    <p class="text-white mb-4"><strong>{{ $projectName }}</strong> · {{ $companyName }}</p>
+                    <p class="text-white mb-4">
+                        <strong>{{ $projectName }}</strong> · {{ $companyName }}
+                    </p>
                     <div class="d-flex flex-wrap">
-                        <a href="/login" class="btn btn-success btn-round mr-2 mb-2">Get Started</a>
-                        <a href="#platform-modules" class="btn btn-outline-light btn-round mb-2">Explore Modules</a>
+                        <a href="/login" class="btn btn-success btn-round mr-2 mb-2">{{ __('welcome.cta_primary') }}</a>
+                        <a href="#platform-modules" class="btn btn-outline-light btn-round mb-2">{{ __('welcome.cta_secondary') }}</a>
                     </div>
                 </div>
                 <div class="col-lg-5 col-md-4">
@@ -39,22 +42,22 @@
                         <div class="card-body">
                             <div class="row">
                                 <div class="col-12 mb-2">
-                                    <h5 class="card-title mb-0">System Highlights</h5>
+                                    <h5 class="card-title mb-0">{{ __('welcome.highlights_title') }}</h5>
                                 </div>
                                 <div class="col-6 mt-3">
-                                    <p class="card-category mb-1">Workforce</p>
+                                    <p class="card-category mb-1">{{ __('welcome.metric_manpower') }}</p>
                                     <h3 class="card-title">{{ $statsData['workers'] ?? 0 }}</h3>
                                 </div>
                                 <div class="col-6 mt-3">
-                                    <p class="card-category mb-1">Equipment</p>
+                                    <p class="card-category mb-1">{{ __('welcome.metric_equipment') }}</p>
                                     <h3 class="card-title">{{ $statsData['equipment'] ?? 0 }}</h3>
                                 </div>
                                 <div class="col-6 mt-3">
-                                    <p class="card-category mb-1">Companies</p>
+                                    <p class="card-category mb-1">{{ __('welcome.metric_companies') }}</p>
                                     <h3 class="card-title">{{ $statsData['companies'] ?? 0 }}</h3>
                                 </div>
                                 <div class="col-6 mt-3">
-                                    <p class="card-category mb-1">Projects</p>
+                                    <p class="card-category mb-1">{{ __('welcome.metric_projects') }}</p>
                                     <h3 class="card-title text-success">{{ $statsData['projects'] ?? 0 }}</h3>
                                 </div>
                             </div>
@@ -70,9 +73,9 @@
             <div class="container">
                 <div class="row mb-5">
                     <div class="col-lg-8 mx-auto text-center">
-                        <h2 class="title">Built for Solar Project Operations</h2>
+                        <h2 class="title">{{ __('welcome.overview_title') }}</h2>
                         <p class="description">
-                            Manage field teams, monitor project resources, and generate operational documents from one unified dashboard.
+                            {{ __('welcome.overview_description') }}
                         </p>
                     </div>
                 </div>
@@ -80,52 +83,52 @@
                 <div class="row" id="platform-modules">
                     <div class="col-md-4 mb-4">
                         <div class="card h-100">
-                            <img src="{{ $siteImage1 }}" class="card-img-top" alt="Solar Site Image 1" style="height:180px; object-fit:cover;">
+                            <img src="{{ $siteImage1 }}" class="card-img-top" alt="{{ __('welcome.project_site_alt_1') }}" style="height:180px; object-fit:cover;">
                             <div class="card-body">
-                                <h4 class="card-title">Worker Management</h4>
-                                <p class="card-text">Register workforce details, assign job types, and maintain payroll and community status.</p>
+                                <h4 class="card-title">{{ __('welcome.module_manpower_title') }}</h4>
+                                <p class="card-text">{{ __('welcome.module_manpower_description') }}</p>
                             </div>
                         </div>
                     </div>
                     <div class="col-md-4 mb-4">
                         <div class="card h-100">
-                            <img src="{{ $siteImage2 }}" class="card-img-top" alt="Solar Site Image 2" style="height:180px; object-fit:cover;">
+                            <img src="{{ $siteImage2 }}" class="card-img-top" alt="{{ __('welcome.project_site_alt_2') }}" style="height:180px; object-fit:cover;">
                             <div class="card-body">
-                                <h4 class="card-title">Equipment Module</h4>
-                                <p class="card-text">Track project equipment records and keep resource availability visible to operations teams.</p>
+                                <h4 class="card-title">{{ __('welcome.module_equipment_title') }}</h4>
+                                <p class="card-text">{{ __('welcome.module_equipment_description') }}</p>
                             </div>
                         </div>
                     </div>
                     <div class="col-md-4 mb-4">
                         <div class="card h-100">
-                            <img src="{{ $siteImage3 }}" class="card-img-top" alt="Solar Site Image 3" style="height:180px; object-fit:cover;">
+                            <img src="{{ $siteImage3 }}" class="card-img-top" alt="{{ __('welcome.project_site_alt_3') }}" style="height:180px; object-fit:cover;">
                             <div class="card-body">
-                                <h4 class="card-title">Document Automation</h4>
-                                <p class="card-text">Generate worker timesheets and project documents in Word/PDF formats with one click.</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-4 mb-4">
-                        <div class="card h-100">
-                            <div class="card-body">
-                                <h4 class="card-title">Project Registry</h4>
-                                <p class="card-text">Maintain project metadata and company associations for structured, auditable records.</p>
+                                <h4 class="card-title">{{ __('welcome.module_document_title') }}</h4>
+                                <p class="card-text">{{ __('welcome.module_document_description') }}</p>
                             </div>
                         </div>
                     </div>
                     <div class="col-md-4 mb-4">
                         <div class="card h-100">
                             <div class="card-body">
-                                <h4 class="card-title">Role-Based Access</h4>
-                                <p class="card-text">Secure access with admin controls and authentication to protect operational data.</p>
+                                <h4 class="card-title">{{ __('welcome.module_project_title') }}</h4>
+                                <p class="card-text">{{ __('welcome.module_project_description') }}</p>
                             </div>
                         </div>
                     </div>
                     <div class="col-md-4 mb-4">
                         <div class="card h-100">
                             <div class="card-body">
-                                <h4 class="card-title">Export & Reporting</h4>
-                                <p class="card-text">Produce consolidated outputs for management review and contractor handover.</p>
+                                <h4 class="card-title">{{ __('welcome.module_access_title') }}</h4>
+                                <p class="card-text">{{ __('welcome.module_access_description') }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-4">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <h4 class="card-title">{{ __('welcome.module_reporting_title') }}</h4>
+                                <p class="card-text">{{ __('welcome.module_reporting_description') }}</p>
                             </div>
                         </div>
                     </div>
@@ -137,25 +140,25 @@
             <div class="container">
                 <div class="row text-center mb-4">
                     <div class="col-lg-8 mx-auto">
-                        <h3 class="title">How It Works</h3>
+                        <h3 class="title">{{ __('welcome.steps_title') }}</h3>
                     </div>
                 </div>
                 <div class="row text-center">
                     <div class="col-md-3 mb-3">
                         <h4 class="mb-1">1</h4>
-                        <p class="description">Set up company, project, and job types.</p>
+                        <p class="description">{{ __('welcome.step1') }}</p>
                     </div>
                     <div class="col-md-3 mb-3">
                         <h4 class="mb-1">2</h4>
-                        <p class="description">Register workers and equipment records.</p>
+                        <p class="description">{{ __('welcome.step2') }}</p>
                     </div>
                     <div class="col-md-3 mb-3">
                         <h4 class="mb-1">3</h4>
-                        <p class="description">Manage daily operations from dashboard.</p>
+                        <p class="description">{{ __('welcome.step3') }}</p>
                     </div>
                     <div class="col-md-3 mb-3">
                         <h4 class="mb-1">4</h4>
-                        <p class="description">Export project documents and reports.</p>
+                        <p class="description">{{ __('welcome.step4') }}</p>
                     </div>
                 </div>
             </div>
@@ -165,9 +168,9 @@
             <div class="container">
                 <div class="card card-plain">
                     <div class="card-body text-center">
-                        <h3 class="mb-3">Ready to run your solar panel project efficiently?</h3>
-                        <a href="/login" class="btn btn-primary btn-round mr-2">Sign In</a>
-                        <a href="/admin/dashboard" class="btn btn-info btn-round">Open Dashboard</a>
+                        <h3 class="mb-3">{{ __('welcome.closing_title') }}</h3>
+                        <a href="/login" class="btn btn-primary btn-round mr-2">{{ __('welcome.sign_in') }}</a>
+                        <a href="/admin/dashboard" class="btn btn-info btn-round">{{ __('welcome.open_dashboard') }}</a>
                     </div>
                 </div>
             </div>

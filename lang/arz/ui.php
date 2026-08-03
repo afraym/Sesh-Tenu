@@ -3,11 +3,11 @@
 return [
     'arabic' => 'العربية',
     'egyptian_arabic' => 'المصرية',
-    'english' => 'الانجليزية',
-    'login' => 'تسجيل الدخول',
-    'register' => 'تسجيل حساب',
+    'english' => 'English',
+    'login' => 'دخول',
+    'register' => 'إنشاء حساب',
     'system_name' => 'نظام سيش تنو',
     'twitter' => 'تويتر',
     'facebook' => 'فيسبوك',
-    'instagram' => 'انستغرام',
+    'instagram' => 'إنستجرام',
 ];

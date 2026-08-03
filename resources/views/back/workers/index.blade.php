@@ -168,8 +168,11 @@
 							لا يوجد عمال. اضغط على "اضافة عامل جديد" لإنشاء عامل جديد.
 						</div>
 					@else
-						<div class="d-flex justify-content-end mb-2">
+						<div class="d-flex justify-content-end align-items-center mb-2" style="gap: 10px;">
 							<span class="badge badge-info" id="workers-selected-count">0 مختار</span>
+							<button type="button" class="btn btn-sm btn-outline-danger m-0" id="workers-clear-selection" style="display: none;">
+								إلغاء التحديد <i class="tim-icons icon-simple-remove"></i>
+							</button>
 						</div>
 						<div class="table-responsive">
 							<table class="table table-striped table-hover">
@@ -358,6 +361,41 @@
 			return Array.from(document.querySelectorAll('.js-worker-month-export'));
 		};
 
+		const getClearSelectionBtn = function () {
+			return document.getElementById('workers-clear-selection');
+		};
+
+		let persistedWorkerSelectedIds = new Set();
+
+		try {
+			const stored = JSON.parse(sessionStorage.getItem('workerSelections'));
+			if (stored && stored.ids) {
+				stored.ids.forEach(id => persistedWorkerSelectedIds.add(String(id)));
+			}
+		} catch (e) {}
+
+		const saveSelections = () => {
+			sessionStorage.setItem('workerSelections', JSON.stringify({
+				ids: Array.from(persistedWorkerSelectedIds)
+			}));
+		};
+
+		const restoreDOMFromPersisted = function () {
+			const rowCheckboxes = getRowCheckboxes();
+			rowCheckboxes.forEach(checkbox => {
+				const id = String(checkbox.value);
+				const row = checkbox.closest('tr');
+				
+				if (persistedWorkerSelectedIds.has(id)) {
+					checkbox.checked = true;
+					if (row) row.classList.add('worker-row-selected');
+				} else {
+					checkbox.checked = false;
+					if (row) row.classList.remove('worker-row-selected');
+				}
+			});
+		};
+
 		const escapeHtml = function (value) {
 			return String(value)
 				.replace(/&/g, '&amp;')
@@ -393,30 +431,39 @@
 			const selectAllCheckbox = getSelectAllCheckbox();
 			const selectedCountElement = getSelectedCountElement();
 			const workerMonthInput = getMonthInput();
-			const selectedIds = [];
-			let selectedCount = 0;
+			const clearSelectionBtn = getClearSelectionBtn();
+
+			let currentPageSelectedCount = 0;
 
 			rowCheckboxes.forEach(function (checkbox) {
+				const id = String(checkbox.value);
 				const row = checkbox.closest('tr');
 
 				if (checkbox.checked) {
-					selectedCount += 1;
-					selectedIds.push(String(checkbox.value));
-					if (row) {
-						row.classList.add('worker-row-selected');
-					}
-				} else if (row) {
-					row.classList.remove('worker-row-selected');
+					currentPageSelectedCount += 1;
+					persistedWorkerSelectedIds.add(id);
+					if (row) row.classList.add('worker-row-selected');
+				} else {
+					persistedWorkerSelectedIds.delete(id);
+					if (row) row.classList.remove('worker-row-selected');
 				}
 			});
 
+			saveSelections();
+
+			const totalSelectedCount = persistedWorkerSelectedIds.size;
+
 			if (selectAllCheckbox) {
-				selectAllCheckbox.checked = selectedCount > 0 && selectedCount === rowCheckboxes.length;
-				selectAllCheckbox.indeterminate = selectedCount > 0 && selectedCount < rowCheckboxes.length;
+				selectAllCheckbox.checked = currentPageSelectedCount > 0 && currentPageSelectedCount === rowCheckboxes.length;
+				selectAllCheckbox.indeterminate = currentPageSelectedCount > 0 && currentPageSelectedCount < rowCheckboxes.length;
 			}
 
 			if (selectedCountElement) {
-				selectedCountElement.textContent = selectedCount + ' مختار';
+				selectedCountElement.textContent = totalSelectedCount + ' مختار';
+			}
+
+			if (clearSelectionBtn) {
+				clearSelectionBtn.style.display = totalSelectedCount > 0 ? 'inline-block' : 'none';
 			}
 
 			if (workerMonthInput) {
@@ -425,6 +472,8 @@
 				});
 			}
 
+			const selectedIdsArr = Array.from(persistedWorkerSelectedIds);
+
 			getExportSelectedButtons().forEach(function (button) {
 				const baseHref = button.getAttribute('data-base-href') || button.getAttribute('href');
 				if (!baseHref) {
@@ -432,8 +481,8 @@
 				}
 
 				const parsedUrl = new URL(baseHref, window.location.origin);
-				if (selectedIds.length > 0) {
-					parsedUrl.searchParams.set('ids', selectedIds.join(','));
+				if (selectedIdsArr.length > 0) {
+					parsedUrl.searchParams.set('ids', selectedIdsArr.join(','));
 				} else {
 					parsedUrl.searchParams.delete('ids');
 				}
@@ -467,6 +516,13 @@
 		const buildUrl = function (baseUrl, overrides) {
 			const url = new URL(baseUrl, window.location.origin);
 
+			const selectedIdsArr = Array.from(persistedWorkerSelectedIds);
+			if (selectedIdsArr.length > 0) {
+				url.searchParams.set('selected_ids', selectedIdsArr.join(','));
+			} else {
+				url.searchParams.delete('selected_ids');
+			}
+
 			Object.keys(overrides).forEach(function (key) {
 				const value = overrides[key];
 				if (value === null || value === undefined || value === '') {
@@ -497,6 +553,13 @@
 				params.set('month', workerMonthInput.value);
 			} else {
 				params.delete('month');
+			}
+
+			const selectedIdsArr = Array.from(persistedWorkerSelectedIds);
+			if (selectedIdsArr.length > 0) {
+				params.set('selected_ids', selectedIdsArr.join(','));
+			} else {
+				params.delete('selected_ids');
 			}
 
 			url.search = params.toString();
@@ -545,6 +608,7 @@
 				clearAlerts();
 			}
 
+			restoreDOMFromPersisted();
 			syncUI();
 		};
 
@@ -653,9 +717,24 @@
 		});
 
 		document.addEventListener('click', function (event) {
+			const clearSelectionBtn = event.target.closest('#workers-clear-selection');
+			if (clearSelectionBtn) {
+				persistedWorkerSelectedIds.clear();
+				saveSelections();
+				restoreDOMFromPersisted();
+				syncUI();
+				return;
+			}
+
 			const documentExportLink = event.target.closest('.js-export-selected, .js-worker-month-export, .js-worker-document-export');
 			if (documentExportLink) {
 				event.preventDefault();
+
+				if (documentExportLink.classList.contains('js-export-selected') && persistedWorkerSelectedIds.size === 0) {
+					alert('Please select at least one worker first.');
+					return;
+				}
+
 				documentExportLink.classList.add('disabled');
 				requestDocumentDownload(documentExportLink.href)
 					.catch(function (error) {
@@ -735,6 +814,7 @@
 			});
 		});
 
+		restoreDOMFromPersisted();
 		syncUI();
 	});
 </script>
