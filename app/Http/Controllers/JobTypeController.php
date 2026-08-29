@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Jobtype;
+use App\Models\JobType;
 use Illuminate\Http\Request;
 
 class JobTypeController extends Controller
@@ -12,7 +12,7 @@ class JobTypeController extends Controller
      */
     public function index()
     {
-        return view('back.jobtypes.index')->with('jobtypes', Jobtype::orderBy('created_at', 'desc')->paginate(100));
+        return view('back.jobtypes.index')->with('jobtypes', JobType::orderBy('created_at', 'desc')->paginate(100));
     }
 
     /**
@@ -33,7 +33,7 @@ class JobTypeController extends Controller
             'is_active' => 'nullable|boolean',
             'description' => 'nullable|string|max:1000',
         ]);
-        $jobtype = new Jobtype();
+        $jobtype = new JobType();
         $jobtype->name = $request->name;
         $jobtype->is_active = $request->is_active ?? 0;
         $jobtype->description = $request->description ?? null;
@@ -44,7 +44,7 @@ class JobTypeController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(Jobtype $jobtype)
+    public function show(JobType $jobtype)
     {
         return view('back.jobtypes.show')->with('jobtype', $jobtype);
     }
@@ -52,7 +52,7 @@ class JobTypeController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(Jobtype $jobtype)
+    public function edit(JobType $jobtype)
     {
         return view('back.jobtypes.edit')->with('jobtype', $jobtype);
     }
@@ -60,7 +60,7 @@ class JobTypeController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Jobtype $jobtype)
+    public function update(Request $request, JobType $jobtype)
     {
         $request->validate([
             'name' => 'required|string|max:255',
@@ -75,7 +75,7 @@ class JobTypeController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Jobtype $jobtype   )
+    public function destroy(JobType $jobtype)
     {
         $jobtype->delete();
         return redirect()->route('jobtypes.index')->with('success', 'Job type deleted successfully.');
