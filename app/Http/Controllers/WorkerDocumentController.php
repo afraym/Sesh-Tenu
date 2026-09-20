@@ -602,44 +602,49 @@ PV Power Plant Abydos 2 Solar (MW1000)',
         $combinedDocxPath = $exportPath . DIRECTORY_SEPARATOR . 'workers-merged-' . $timestamp . '.docx';
         $combinedPdfPath = $exportPath . DIRECTORY_SEPARATOR . 'workers-merged-' . $timestamp . '.pdf';
 
-        $docxPaths = [];
-        foreach ($workers as $worker) {
-            $workerDocxPath = $exportPath . DIRECTORY_SEPARATOR . 'worker-' . $worker->id . '.docx';
-            $this->generateWorkerDocxFromTemplate($worker, $project, $workerDocxPath, $monthStart);
-            $docxPaths[] = $workerDocxPath;
+        $groupDocxPaths = [];
+        foreach ($workers->groupBy(fn (Worker $worker) => $this->isDriverJob($worker) ? 'driver' : 'default') as $type => $typeWorkers) {
+            $typeDocxPaths = [];
+
+            foreach ($typeWorkers as $worker) {
+                $workerDocxPath = $exportPath . DIRECTORY_SEPARATOR . 'worker-' . $worker->id . '.docx';
+                $this->generateWorkerDocxFromTemplate($worker, $project, $workerDocxPath, $monthStart);
+                $typeDocxPaths[] = $workerDocxPath;
+            }
+
+            $typeDocxPath = $exportPath . DIRECTORY_SEPARATOR . 'workers-' . $type . '-' . $timestamp . '.docx';
+            $this->mergeDocxFiles($typeDocxPaths, $typeDocxPath);
+            $groupDocxPaths[] = $typeDocxPath;
+
+            foreach ($typeDocxPaths as $typeDocxPath) {
+                @unlink($typeDocxPath);
+            }
         }
 
-        $this->mergeDocxFiles($docxPaths, $combinedDocxPath);
+        $this->mergeDocxFiles($groupDocxPaths, $combinedDocxPath);
 
         $monthAr = self::MONTH_NAMES[$monthStart->format('F')] ?? $monthStart->format('F');
 
         $libreOfficePath = $this->findLibreOffice();
         if (! $libreOfficePath) {
-            foreach ($docxPaths as $docxPath) {
-                @unlink($docxPath);
+            foreach ($groupDocxPaths as $groupDocxPath) {
+                @unlink($groupDocxPath);
             }
 
-            return response()->download(
+            return $this->respondWithGeneratedDocument(
+                $request,
                 $combinedDocxPath,
                 'سركي مجمع شهر ' . $monthAr . ' ' . $timestamp . '.docx',
-                ['Content-Type' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document']
-            )->deleteFileAfterSend(true);
+                'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+            );
         }
 
-        $combinedPdfGenerated = $this->convertDocxToPdf($libreOfficePath, $combinedDocxPath, $exportPath);
-
-        if (! $combinedPdfGenerated) {
-            $pdfPaths = [];
-            foreach ($docxPaths as $docxPath) {
-                $pdfPath = $this->convertDocxToPdf($libreOfficePath, $docxPath, $exportPath);
-                if ($pdfPath) {
-                    $pdfPaths[] = $pdfPath;
-                }
-            }
-
-            if (empty($pdfPaths)) {
-                foreach ($docxPaths as $docxPath) {
-                    @unlink($docxPath);
+        $pdfPaths = [];
+        foreach ($groupDocxPaths as $groupDocxPath) {
+            $pdfPath = $this->convertDocxToPdf($libreOfficePath, $groupDocxPath, $exportPath);
+            if (! $pdfPath) {
+                foreach ($groupDocxPaths as $path) {
+                    @unlink($path);
                 }
 
                 return $this->respondWithGeneratedDocument(
@@ -650,31 +655,37 @@ PV Power Plant Abydos 2 Solar (MW1000)',
                 );
             }
 
-            $fpdi = new Fpdi();
-            foreach ($pdfPaths as $path) {
-                $pageCount = $fpdi->setSourceFile($path);
-                for ($pageNo = 1; $pageNo <= $pageCount; $pageNo++) {
-                    $tplId = $fpdi->importPage($pageNo);
-                    $size = $fpdi->getTemplateSize($tplId);
-                    $orientation = $size['width'] > $size['height'] ? 'L' : 'P';
-                    $fpdi->AddPage($orientation, [$size['width'], $size['height']]);
-                    $fpdi->useTemplate($tplId);
-                }
-            }
-            $fpdi->Output($combinedPdfPath, 'F');
+            $pdfPaths[] = $pdfPath;
         }
 
-        foreach ($docxPaths as $docxPath) {
-            @unlink($docxPath);
+        $fpdi = new Fpdi();
+        foreach ($pdfPaths as $path) {
+            $pageCount = $fpdi->setSourceFile($path);
+            for ($pageNo = 1; $pageNo <= $pageCount; $pageNo++) {
+                $tplId = $fpdi->importPage($pageNo);
+                $size = $fpdi->getTemplateSize($tplId);
+                $orientation = $size['width'] > $size['height'] ? 'L' : 'P';
+                $fpdi->AddPage($orientation, [$size['width'], $size['height']]);
+                $fpdi->useTemplate($tplId);
+            }
+        }
+        $fpdi->Output($combinedPdfPath, 'F');
+
+        foreach ($groupDocxPaths as $groupDocxPath) {
+            @unlink($groupDocxPath);
+        }
+
+        foreach ($pdfPaths as $pdfPath) {
+            @unlink($pdfPath);
         }
 
         if (! file_exists($combinedPdfPath) || filesize($combinedPdfPath) <= 100) {
-                return $this->respondWithGeneratedDocument(
-                    $request,
-                    $combinedDocxPath,
-                    'سركي مجمع شهر ' . $monthAr . ' ' . $timestamp . '.docx',
-                    'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-                );
+            return $this->respondWithGeneratedDocument(
+                $request,
+                $combinedDocxPath,
+                'سركي مجمع شهر ' . $monthAr . ' ' . $timestamp . '.docx',
+                'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+            );
         }
 
         return $this->respondWithGeneratedDocument(

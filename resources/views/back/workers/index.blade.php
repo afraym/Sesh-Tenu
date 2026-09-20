@@ -322,6 +322,22 @@
 	.worker-selectable-row.worker-row-selected {
 		background: rgba(56, 178, 172, 0.18) !important;
 	}
+
+	.document-export-loading {
+		display: inline-block;
+		width: 0.9em;
+		height: 0.9em;
+		margin-inline-end: 0.45em;
+		vertical-align: -0.1em;
+		border: 2px solid currentColor;
+		border-right-color: transparent;
+		border-radius: 50%;
+		animation: document-export-spin 0.7s linear infinite;
+	}
+
+	@keyframes document-export-spin {
+		to { transform: rotate(360deg); }
+	}
 </style>
 
 <script>
@@ -730,17 +746,29 @@
 			if (documentExportLink) {
 				event.preventDefault();
 
+				if (documentExportLink.dataset.exportLoading === 'true') {
+					return;
+				}
+
 				if (documentExportLink.classList.contains('js-export-selected') && persistedWorkerSelectedIds.size === 0) {
 					alert('Please select at least one worker first.');
 					return;
 				}
 
+				documentExportLink.dataset.exportLoading = 'true';
+				documentExportLink.dataset.originalExportHtml = documentExportLink.innerHTML;
+				documentExportLink.setAttribute('aria-busy', 'true');
 				documentExportLink.classList.add('disabled');
+				documentExportLink.insertAdjacentHTML('beforeend', '<span class="document-export-loading" aria-hidden="true"></span>');
 				requestDocumentDownload(documentExportLink.href)
 					.catch(function (error) {
 						renderAlert(error.message || 'Failed to generate document.', 'danger');
 					})
 					.finally(function () {
+						documentExportLink.innerHTML = documentExportLink.dataset.originalExportHtml || documentExportLink.innerHTML;
+						delete documentExportLink.dataset.originalExportHtml;
+						delete documentExportLink.dataset.exportLoading;
+						documentExportLink.removeAttribute('aria-busy');
 						documentExportLink.classList.remove('disabled');
 					});
 				return;
