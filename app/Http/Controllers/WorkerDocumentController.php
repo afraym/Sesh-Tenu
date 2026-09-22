@@ -926,6 +926,28 @@ PV Power Plant Abydos 2 Solar (MW1000)',
         $baseXpath = new \DOMXPath($baseDom);
         $baseXpath->registerNamespace('w', 'http://schemas.openxmlformats.org/wordprocessingml/2006/main');
 
+        $baseRelationshipsXml = $baseZip->getFromName('word/_rels/document.xml.rels');
+        if ($baseRelationshipsXml === false) {
+            $baseZip->close();
+            throw new \RuntimeException('Base DOCX relationships not found.');
+        }
+
+        $baseRelationshipsDom = new \DOMDocument();
+        $baseRelationshipsDom->loadXML($baseRelationshipsXml);
+        $baseRelationships = $baseRelationshipsDom->documentElement;
+        $relationshipNamespace = 'http://schemas.openxmlformats.org/package/2006/relationships';
+        $nextRelationshipId = 1;
+
+        foreach ($baseRelationships->childNodes as $relationship) {
+            if ($relationship->nodeType !== XML_ELEMENT_NODE) {
+                continue;
+            }
+
+            if (preg_match('/^rId(\d+)$/', $relationship->getAttribute('Id'), $matches)) {
+                $nextRelationshipId = max($nextRelationshipId, (int) $matches[1] + 1);
+            }
+        }
+
         $baseBody = $baseXpath->query('//w:body')->item(0);
         if (! $baseBody) {
             $baseZip->close();
@@ -941,6 +963,33 @@ PV Power Plant Abydos 2 Solar (MW1000)',
             }
 
             $xml = $zip->getFromName('word/document.xml');
+            $relationshipsXml = $zip->getFromName('word/_rels/document.xml.rels');
+
+            $sourceImages = [];
+            if ($relationshipsXml !== false) {
+                $relationshipsDom = new \DOMDocument();
+                $relationshipsDom->loadXML($relationshipsXml);
+
+                foreach ($relationshipsDom->documentElement->childNodes as $relationship) {
+                    if ($relationship->nodeType !== XML_ELEMENT_NODE
+                        || $relationship->getAttribute('Type')
+                            !== 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/image') {
+                        continue;
+                    }
+
+                    $target = ltrim($relationship->getAttribute('Target'), '/');
+                    $sourceEntry = str_starts_with($target, 'word/') ? $target : 'word/' . $target;
+                    $imageContents = $zip->getFromName($sourceEntry);
+
+                    if ($imageContents !== false) {
+                        $sourceImages[$relationship->getAttribute('Id')] = [
+                            'contents' => $imageContents,
+                            'extension' => pathinfo($target, PATHINFO_EXTENSION) ?: 'png',
+                        ];
+                    }
+                }
+            }
+
             $zip->close();
 
             if ($xml === false) {
@@ -951,6 +1000,38 @@ PV Power Plant Abydos 2 Solar (MW1000)',
             $dom->loadXML($xml);
             $xpath = new \DOMXPath($dom);
             $xpath->registerNamespace('w', 'http://schemas.openxmlformats.org/wordprocessingml/2006/main');
+
+            $relationshipMap = [];
+            foreach ($sourceImages as $sourceRelationshipId => $image) {
+                $newRelationshipId = 'rId' . $nextRelationshipId++;
+                $imageName = 'merged-image-' . ($nextRelationshipId - 1) . '.' . $image['extension'];
+
+                $baseZip->addFromString('word/media/' . $imageName, $image['contents']);
+
+                $relationship = $baseRelationshipsDom->createElementNS(
+                    $relationshipNamespace,
+                    'Relationship'
+                );
+                $relationship->setAttribute('Id', $newRelationshipId);
+                $relationship->setAttribute(
+                    'Type',
+                    'http://schemas.openxmlformats.org/officeDocument/2006/relationships/image'
+                );
+                $relationship->setAttribute('Target', 'media/' . $imageName);
+                $baseRelationships->appendChild($relationship);
+
+                $relationshipMap[$sourceRelationshipId] = $newRelationshipId;
+            }
+
+            foreach ($relationshipMap as $sourceRelationshipId => $newRelationshipId) {
+                $imageReferences = $xpath->query(
+                    '//*[local-name()="blip"]/@*[local-name()="embed" and .="' . $sourceRelationshipId . '"]'
+                );
+
+                foreach ($imageReferences as $imageReference) {
+                    $imageReference->nodeValue = $newRelationshipId;
+                }
+            }
 
             $body = $xpath->query('//w:body')->item(0);
             if (! $body) {
@@ -973,6 +1054,8 @@ PV Power Plant Abydos 2 Solar (MW1000)',
 
         $baseZip->deleteName('word/document.xml');
         $baseZip->addFromString('word/document.xml', $baseDom->saveXML());
+        $baseZip->deleteName('word/_rels/document.xml.rels');
+        $baseZip->addFromString('word/_rels/document.xml.rels', $baseRelationshipsDom->saveXML());
         $baseZip->close();
     }
 
