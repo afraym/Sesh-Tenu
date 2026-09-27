@@ -661,11 +661,35 @@
 
 			const payload = await response.json();
 
-			if (!payload.download_url) {
-				throw new Error('Document download URL was not returned.');
+			if (!payload.status_url) {
+				throw new Error('Document status URL was not returned.');
 			}
 
-			const downloadResponse = await fetch(payload.download_url, {
+			let statusPayload;
+			do {
+				await new Promise(function (resolve) {
+					window.setTimeout(resolve, 3000);
+				});
+
+				const statusResponse = await fetch(payload.status_url, {
+					headers: {
+						'X-Requested-With': 'XMLHttpRequest',
+						'Accept': 'application/json',
+					},
+				});
+
+				if (!statusResponse.ok) {
+					throw new Error('Failed to check document status.');
+				}
+
+				statusPayload = await statusResponse.json();
+			} while (statusPayload.status === 'pending');
+
+			if (statusPayload.status !== 'ready' || !statusPayload.download_url) {
+				throw new Error(statusPayload.message || 'Document generation failed.');
+			}
+
+			const downloadResponse = await fetch(statusPayload.download_url, {
 				headers: {
 					'X-Requested-With': 'XMLHttpRequest',
 				},
@@ -676,7 +700,7 @@
 			}
 
 			const blob = await downloadResponse.blob();
-			downloadBlob(blob, payload.filename || 'document');
+			downloadBlob(blob, statusPayload.filename || 'document');
 		};
 
 		document.addEventListener('submit', function (event) {

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Jobs\GenerateWorkerDocument;
 use App\Models\Project;
 use App\Models\Worker;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -58,7 +59,7 @@ class WorkerDocumentController extends Controller
     public function downloadGeneratedDocument(string $token)
     {
         $cacheKey = $this->generatedDocumentCacheKey($token);
-        $document = Cache::pull($cacheKey);
+        $document = Cache::get($cacheKey);
 
         if (! is_array($document)) {
             abort(404, 'Document not found.');
@@ -72,6 +73,8 @@ class WorkerDocumentController extends Controller
             abort(404, 'Document file not found.');
         }
 
+        Cache::forget($cacheKey);
+
         return response()->download(
             $filePath,
             $fileName,
@@ -79,8 +82,23 @@ class WorkerDocumentController extends Controller
         )->deleteFileAfterSend(true);
     }
 
-    public function exportPdf(Worker $worker)
+    public function documentStatus(string $token)
     {
+        $status = Cache::get('workers.generated-document.status.' . $token);
+
+        if (! is_array($status)) {
+            abort(404, 'Document job not found.');
+        }
+
+        return response()->json($status);
+    }
+
+    public function exportPdf(Request $request, Worker $worker)
+    {
+        if ($queued = $this->queueDocumentIfRequested($request, __FUNCTION__, $worker)) {
+            return $queued;
+        }
+
         $worker->load(['company', 'jobType']);
         $project = Project::latest('id')->with('company')->first();
 
@@ -102,7 +120,7 @@ class WorkerDocumentController extends Controller
         file_put_contents($tempPath, $pdf->output());
 
         return $this->respondWithGeneratedDocument(
-            request(),
+            $request,
             $tempPath,
             $fileName,
             'application/pdf'
@@ -111,6 +129,10 @@ class WorkerDocumentController extends Controller
 
     public function exportPdfMerged(Request $request)
     {
+        if ($queued = $this->queueDocumentIfRequested($request, __FUNCTION__)) {
+            return $queued;
+        }
+
         if (! class_exists(Fpdi::class)) {
             abort(500, 'PDF merge requires setasign/fpdi. Install with: composer require setasign/fpdi');
         }
@@ -206,6 +228,10 @@ class WorkerDocumentController extends Controller
 
     public function exportWord(Request $request, Worker $worker)
     {
+        if ($queued = $this->queueDocumentIfRequested($request, __FUNCTION__, $worker)) {
+            return $queued;
+        }
+
         $worker->load([
             'company',
             'jobType',
@@ -302,6 +328,10 @@ PV Power Plant Abydos 2 Solar (MW1000)',
 
     public function exportWordAll(Request $request)
     {
+        if ($queued = $this->queueDocumentIfRequested($request, __FUNCTION__)) {
+            return $queued;
+        }
+
         $ids = collect(explode(',', (string) $request->query('ids')))
             ->filter(fn ($v) => trim($v) !== '')
             ->map(fn ($v) => (int) $v)
@@ -435,6 +465,10 @@ PV Power Plant Abydos 2 Solar (MW1000)',
 
     public function exportWordMerged(Request $request)
     {
+        if ($queued = $this->queueDocumentIfRequested($request, __FUNCTION__)) {
+            return $queued;
+        }
+
         $ids = collect(explode(',', (string) $request->query('ids')))
             ->filter(fn ($v) => trim($v) !== '')
             ->map(fn ($v) => (int) $v)
@@ -500,6 +534,10 @@ PV Power Plant Abydos 2 Solar (MW1000)',
 
     public function exportWordPdf(Request $request, Worker $worker)
     {
+        if ($queued = $this->queueDocumentIfRequested($request, __FUNCTION__, $worker)) {
+            return $queued;
+        }
+
         $worker->load([
             'company',
             'jobType',
@@ -527,23 +565,13 @@ PV Power Plant Abydos 2 Solar (MW1000)',
 
         $libreOfficePath = $this->findLibreOffice();
         if (! $libreOfficePath) {
-            return $this->respondWithGeneratedDocument(
-                $request,
-                $docxPath,
-                $docxFileName,
-                'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-            );
+            throw new \RuntimeException('LibreOffice is required to generate PDF files.');
         }
 
         $pdfPath = $this->convertDocxToPdf($libreOfficePath, $docxPath, $exportPath);
 
         if (! $pdfPath || ! file_exists($pdfPath) || filesize($pdfPath) <= 100) {
-            return $this->respondWithGeneratedDocument(
-                $request,
-                $docxPath,
-                $docxFileName,
-                'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-            );
+            throw new \RuntimeException('LibreOffice could not convert the document to PDF.');
         }
 
         @unlink($docxPath);
@@ -558,6 +586,10 @@ PV Power Plant Abydos 2 Solar (MW1000)',
 
     public function exportWordPdfAll(Request $request)
     {
+        if ($queued = $this->queueDocumentIfRequested($request, __FUNCTION__)) {
+            return $queued;
+        }
+
         $ids = collect(explode(',', (string) $request->query('ids')))
             ->filter(fn ($v) => trim($v) !== '')
             ->map(fn ($v) => (int) $v)
@@ -627,32 +659,14 @@ PV Power Plant Abydos 2 Solar (MW1000)',
 
         $libreOfficePath = $this->findLibreOffice();
         if (! $libreOfficePath) {
-            foreach ($groupDocxPaths as $groupDocxPath) {
-                @unlink($groupDocxPath);
-            }
-
-            return $this->respondWithGeneratedDocument(
-                $request,
-                $combinedDocxPath,
-                'سركي مجمع شهر ' . $monthAr . ' ' . $timestamp . '.docx',
-                'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-            );
+            throw new \RuntimeException('LibreOffice is required to generate PDF files.');
         }
 
         $pdfPaths = [];
         foreach ($groupDocxPaths as $groupDocxPath) {
             $pdfPath = $this->convertDocxToPdf($libreOfficePath, $groupDocxPath, $exportPath);
             if (! $pdfPath) {
-                foreach ($groupDocxPaths as $path) {
-                    @unlink($path);
-                }
-
-                return $this->respondWithGeneratedDocument(
-                    $request,
-                    $combinedDocxPath,
-                    'سركي مجمع شهر ' . $monthAr . ' ' . $timestamp . '.docx',
-                    'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-                );
+                throw new \RuntimeException('LibreOffice could not convert the document to PDF.');
             }
 
             $pdfPaths[] = $pdfPath;
@@ -680,12 +694,7 @@ PV Power Plant Abydos 2 Solar (MW1000)',
         }
 
         if (! file_exists($combinedPdfPath) || filesize($combinedPdfPath) <= 100) {
-            return $this->respondWithGeneratedDocument(
-                $request,
-                $combinedDocxPath,
-                'سركي مجمع شهر ' . $monthAr . ' ' . $timestamp . '.docx',
-                'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-            );
+            throw new \RuntimeException('The merged PDF file was not created.');
         }
 
         return $this->respondWithGeneratedDocument(
@@ -851,7 +860,7 @@ PV Power Plant Abydos 2 Solar (MW1000)',
     {
         $isWindows = strtoupper(substr(PHP_OS, 0, 3)) === 'WIN';
         $profileDir = $outputDir . DIRECTORY_SEPARATOR . '.lo-profile-' . bin2hex(random_bytes(6));
-        $profileUri = 'file://' . str_replace(DIRECTORY_SEPARATOR, '/', $profileDir);
+        $profileUri = 'file:///' . ltrim(str_replace(DIRECTORY_SEPARATOR, '/', $profileDir), '/');
 
         @mkdir($profileDir, 0775, true);
 
@@ -1217,8 +1226,12 @@ PV Power Plant Abydos 2 Solar (MW1000)',
         return null;
     }
 
-    public function exportDailyEquipmentInspection(Worker $worker)
+    public function exportDailyEquipmentInspection(Request $request, Worker $worker)
     {
+        if ($queued = $this->queueDocumentIfRequested($request, __FUNCTION__, $worker)) {
+            return $queued;
+        }
+
         $worker->load(['equipmentAsDriver' => function ($query) {
             $query->latest('id');
         }]);
@@ -1256,7 +1269,7 @@ PV Power Plant Abydos 2 Solar (MW1000)',
         $processor->saveAs($tempPath);
 
         return $this->respondWithGeneratedDocument(
-            request(),
+            $request,
             $tempPath,
             $fileName,
             'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
@@ -1276,6 +1289,16 @@ PV Power Plant Abydos 2 Solar (MW1000)',
 
     private function respondWithGeneratedDocument(Request $request, string $filePath, string $fileName, string $mimeType)
     {
+        if ($request->headers->has('X-Worker-Document-Job')) {
+            return response()->json([
+                'document' => [
+                    'path' => $filePath,
+                    'name' => $fileName,
+                    'mime' => $mimeType,
+                ],
+            ]);
+        }
+
         if ($request->ajax() || $request->expectsJson()) {
             $token = (string) Str::uuid();
 
@@ -1286,7 +1309,7 @@ PV Power Plant Abydos 2 Solar (MW1000)',
             ], now()->addMinutes(15));
 
             return response()->json([
-                'download_url' => route('workers.documents.download', ['token' => $token]),
+                'download_url' => route('workers.documents.download', ['token' => $token], false),
                 'filename' => $fileName,
             ]);
         }
@@ -1296,6 +1319,31 @@ PV Power Plant Abydos 2 Solar (MW1000)',
             $fileName,
             ['Content-Type' => $mimeType]
         )->deleteFileAfterSend(true);
+    }
+
+    private function queueDocumentIfRequested(Request $request, string $action, ?Worker $worker = null)
+    {
+        if (! ($request->ajax() || $request->expectsJson())
+            || $request->headers->has('X-Worker-Document-Job')) {
+            return null;
+        }
+
+        $token = (string) Str::uuid();
+
+        Cache::put('workers.generated-document.status.' . $token, [
+            'status' => 'pending',
+        ], now()->addMinutes(15));
+
+        GenerateWorkerDocument::dispatch(
+            $action,
+            $token,
+            $request->query(),
+            $worker?->getKey(),
+        );
+
+        return response()->json([
+            'status_url' => route('workers.documents.status', ['token' => $token], false),
+        ], 202);
     }
 
     private function generatedDocumentCacheKey(string $token): string
