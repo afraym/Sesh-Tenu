@@ -65,11 +65,11 @@ class WorkerDocumentController extends Controller
             abort(404, 'Document not found.');
         }
 
-        $filePath = $document['path'] ?? null;
+        $filePath = $this->resolveGeneratedDocumentPath($document['path'] ?? null);
         $fileName = $document['name'] ?? 'document';
         $mimeType = $document['mime'] ?? 'application/octet-stream';
 
-        if (! is_string($filePath) || ! file_exists($filePath)) {
+        if (! $filePath || ! file_exists($filePath)) {
             abort(404, 'Document file not found.');
         }
 
@@ -1292,7 +1292,7 @@ PV Power Plant Abydos 2 Solar (MW1000)',
         if ($request->headers->has('X-Worker-Document-Job')) {
             return response()->json([
                 'document' => [
-                    'path' => $filePath,
+                    'path' => $this->relativeGeneratedDocumentPath($filePath),
                     'name' => $fileName,
                     'mime' => $mimeType,
                 ],
@@ -1349,5 +1349,38 @@ PV Power Plant Abydos 2 Solar (MW1000)',
     private function generatedDocumentCacheKey(string $token): string
     {
         return 'workers.generated-document.' . $token;
+    }
+
+    private function relativeGeneratedDocumentPath(string $filePath): string
+    {
+        $storageRoot = rtrim(str_replace('\\', '/', storage_path('app/private')), '/') . '/';
+        $normalizedPath = str_replace('\\', '/', $filePath);
+
+        if (str_starts_with($normalizedPath, $storageRoot)) {
+            return substr($normalizedPath, strlen($storageRoot));
+        }
+
+        return $filePath;
+    }
+
+    private function resolveGeneratedDocumentPath(mixed $filePath): ?string
+    {
+        if (! is_string($filePath) || trim($filePath) === '') {
+            return null;
+        }
+
+        if (file_exists($filePath)) {
+            return $filePath;
+        }
+
+        $normalizedPath = str_replace('\\', '/', $filePath);
+        $storageMarker = '/storage/app/private/';
+        $storagePosition = strripos($normalizedPath, $storageMarker);
+
+        if ($storagePosition !== false) {
+            return storage_path('app/private/' . str_replace('/', DIRECTORY_SEPARATOR, substr($normalizedPath, $storagePosition + strlen($storageMarker))));
+        }
+
+        return storage_path('app/private/' . ltrim(str_replace('/', DIRECTORY_SEPARATOR, $normalizedPath), DIRECTORY_SEPARATOR));
     }
 }
