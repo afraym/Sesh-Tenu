@@ -74,6 +74,8 @@ class WorkerDocumentController extends Controller
                 'token' => $token,
                 'cached_path' => $document['path'] ?? null,
                 'resolved_path' => $filePath,
+                'file_exists' => $filePath ? file_exists($filePath) : false,
+                'is_readable' => $filePath ? is_readable($filePath) : false,
                 'private_storage' => storage_path('app/private'),
                 'storage' => storage_path('app'),
             ]);
@@ -1377,7 +1379,16 @@ PV Power Plant Abydos 2 Solar (MW1000)',
             return null;
         }
 
-        $candidates = [$filePath];
+        $candidates = [];
+
+        if (file_exists($filePath)) {
+            $candidates[] = $filePath;
+        }
+
+        try {
+            $candidates[] = Storage::disk('local')->path($filePath);
+        } catch (\Throwable) {
+        }
 
         $normalizedPath = str_replace('\\', '/', $filePath);
         foreach (['/storage/app/private/', '/storage/app/'] as $storageMarker) {
@@ -1394,7 +1405,15 @@ PV Power Plant Abydos 2 Solar (MW1000)',
         $relativePath = ltrim(str_replace('/', DIRECTORY_SEPARATOR, $normalizedPath), DIRECTORY_SEPARATOR);
         $candidates[] = storage_path('app/private/' . $relativePath);
         $candidates[] = storage_path('app/' . $relativePath);
+        $candidates[] = $filePath;
 
+        foreach (array_unique($candidates) as $candidate) {
+            if (file_exists($candidate) && is_readable($candidate)) {
+                return $candidate;
+            }
+        }
+
+        // Secondary check: file exists even if not readable, or first candidate
         foreach (array_unique($candidates) as $candidate) {
             if (file_exists($candidate)) {
                 return $candidate;

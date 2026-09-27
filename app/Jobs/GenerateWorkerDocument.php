@@ -63,14 +63,39 @@ class GenerateWorkerDocument implements ShouldQueue
 
         $extension = pathinfo($document['name'], PATHINFO_EXTENSION) ?: 'bin';
         $storedPath = 'generated-documents/' . $this->token . '.' . $extension;
-        $contents = file_get_contents($sourcePath);
 
-        if ($contents === false || ! Storage::disk('local')->put($storedPath, $contents)) {
-            throw new \RuntimeException('The generated document could not be stored.');
+        $targetDir = Storage::disk('local')->path('generated-documents');
+        if (! is_dir($targetDir)) {
+            @mkdir($targetDir, 0777, true);
+        }
+        @chmod($targetDir, 0777);
+
+        $storedFullPath = Storage::disk('local')->path($storedPath);
+
+        // Try direct copy first to avoid large memory usage, fallback to stream/file_get_contents
+        $copied = @copy($sourcePath, $storedFullPath);
+        if (! $copied) {
+            $contents = @file_get_contents($sourcePath);
+            if ($contents === false || @file_put_contents($storedFullPath, $contents) === false) {
+                $lastError = error_get_last();
+                report(new \RuntimeException('Failed to store generated document to ' . $storedFullPath . ': ' . ($lastError['message'] ?? 'unknown error')));
+                throw new \RuntimeException('The generated document could not be stored.');
+            }
         }
 
-        if (! Storage::disk('local')->exists($storedPath)) {
+        @chmod($storedFullPath, 0666);
+
+        if (! file_exists($storedFullPath) || filesize($storedFullPath) === 0) {
             throw new \RuntimeException('The stored document could not be verified.');
+        }
+
+        // Clean up temporary source file and its directory if inside workers-export or temp
+        if ($sourcePath !== $storedFullPath && file_exists($sourcePath)) {
+            @unlink($sourcePath);
+            $parentDir = dirname($sourcePath);
+            if (basename(dirname($parentDir)) === 'workers-export') {
+                @rmdir($parentDir);
+            }
         }
 
         $document['path'] = $storedPath;
@@ -86,7 +111,7 @@ class GenerateWorkerDocument implements ShouldQueue
     {
         Cache::put('workers.generated-document.status.' . $this->token, [
             'status' => 'failed',
-            'message' => 'Document generation failed.',
+            'message' => 'Document generation failed: ' . $exception->getMessage(),
         ], now()->addMinutes(15));
     }
 }
