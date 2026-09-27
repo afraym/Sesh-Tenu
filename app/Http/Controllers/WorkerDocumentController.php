@@ -70,6 +70,14 @@ class WorkerDocumentController extends Controller
         $mimeType = $document['mime'] ?? 'application/octet-stream';
 
         if (! $filePath || ! file_exists($filePath)) {
+            \Log::warning('Generated document file is unavailable', [
+                'token' => $token,
+                'cached_path' => $document['path'] ?? null,
+                'resolved_path' => $filePath,
+                'private_storage' => storage_path('app/private'),
+                'storage' => storage_path('app'),
+            ]);
+
             abort(404, 'Document file not found.');
         }
 
@@ -1369,18 +1377,30 @@ PV Power Plant Abydos 2 Solar (MW1000)',
             return null;
         }
 
-        if (file_exists($filePath)) {
-            return $filePath;
-        }
+        $candidates = [$filePath];
 
         $normalizedPath = str_replace('\\', '/', $filePath);
-        $storageMarker = '/storage/app/private/';
-        $storagePosition = strripos($normalizedPath, $storageMarker);
+        foreach (['/storage/app/private/', '/storage/app/'] as $storageMarker) {
+            $storagePosition = strripos($normalizedPath, $storageMarker);
 
-        if ($storagePosition !== false) {
-            return storage_path('app/private/' . str_replace('/', DIRECTORY_SEPARATOR, substr($normalizedPath, $storagePosition + strlen($storageMarker))));
+            if ($storagePosition !== false) {
+                $relativePath = str_replace('/', DIRECTORY_SEPARATOR, substr($normalizedPath, $storagePosition + strlen($storageMarker)));
+                $candidates[] = storage_path('app/private/' . $relativePath);
+                $candidates[] = storage_path('app/' . $relativePath);
+                break;
+            }
         }
 
-        return storage_path('app/private/' . ltrim(str_replace('/', DIRECTORY_SEPARATOR, $normalizedPath), DIRECTORY_SEPARATOR));
+        $relativePath = ltrim(str_replace('/', DIRECTORY_SEPARATOR, $normalizedPath), DIRECTORY_SEPARATOR);
+        $candidates[] = storage_path('app/private/' . $relativePath);
+        $candidates[] = storage_path('app/' . $relativePath);
+
+        foreach (array_unique($candidates) as $candidate) {
+            if (file_exists($candidate)) {
+                return $candidate;
+            }
+        }
+
+        return $candidates[0] ?? null;
     }
 }
