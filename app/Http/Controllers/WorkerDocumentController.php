@@ -850,29 +850,30 @@ PV Power Plant Abydos 2 Solar (MW1000)',
     private function convertDocxToPdf(string $libreOfficePath, string $docxPath, string $outputDir): ?string
     {
         $isWindows = strtoupper(substr(PHP_OS, 0, 3)) === 'WIN';
+        $profileDir = $outputDir . DIRECTORY_SEPARATOR . '.lo-profile-' . bin2hex(random_bytes(6));
+        $profileUri = 'file://' . str_replace(DIRECTORY_SEPARATOR, '/', $profileDir);
+
+        @mkdir($profileDir, 0775, true);
 
         if ($isWindows) {
             $command = sprintf(
-                '%s --headless --convert-to pdf --outdir %s %s 2>&1',
+                '%s --headless --norestore --nofirststartwizard --nodefault --nolockcheck -env:UserInstallation=%s --convert-to pdf --outdir %s %s 2>&1',
                 escapeshellarg($libreOfficePath),
+                escapeshellarg($profileUri),
                 escapeshellarg($outputDir),
                 escapeshellarg($docxPath)
             );
         } else {
-            $profileDir = $outputDir . DIRECTORY_SEPARATOR . '.lo-profile';
             $homeDir = $outputDir . DIRECTORY_SEPARATOR . '.home';
             $cacheDir = $outputDir . DIRECTORY_SEPARATOR . '.cache';
             $configDir = $outputDir . DIRECTORY_SEPARATOR . '.config';
 
-            @mkdir($profileDir, 0775, true);
             @mkdir($homeDir, 0775, true);
             @mkdir($cacheDir, 0775, true);
             @mkdir($configDir, 0775, true);
 
-            $profileUri = 'file://' . str_replace(DIRECTORY_SEPARATOR, '/', $profileDir);
-
             $command = sprintf(
-                'HOME=%s XDG_CACHE_HOME=%s XDG_CONFIG_HOME=%s %s --headless -env:UserInstallation=%s --convert-to pdf --outdir %s %s 2>&1',
+                'HOME=%s XDG_CACHE_HOME=%s XDG_CONFIG_HOME=%s %s --headless --norestore --nofirststartwizard --nodefault --nolockcheck -env:UserInstallation=%s --convert-to pdf --outdir %s %s 2>&1',
                 escapeshellarg($homeDir),
                 escapeshellarg($cacheDir),
                 escapeshellarg($configDir),
@@ -883,21 +884,63 @@ PV Power Plant Abydos 2 Solar (MW1000)',
             );
         }
 
-        exec($command, $output, $returnCode);
+        $process = proc_open($command, [
+            1 => ['pipe', 'w'],
+            2 => ['pipe', 'w'],
+        ], $pipes);
+
+        if (! is_resource($process)) {
+            return null;
+        }
+
+        stream_set_blocking($pipes[1], false);
+        stream_set_blocking($pipes[2], false);
+        $output = '';
+        $startedAt = microtime(true);
+        $timedOut = false;
+
+        do {
+            $output .= stream_get_contents($pipes[1]);
+            $output .= stream_get_contents($pipes[2]);
+            $status = proc_get_status($process);
+
+            if (! $status['running']) {
+                break;
+            }
+
+            if (microtime(true) - $startedAt >= 90) {
+                $timedOut = true;
+                proc_terminate($process);
+                break;
+            }
+
+            usleep(100000);
+        } while (true);
+
+        $output .= stream_get_contents($pipes[1]);
+        $output .= stream_get_contents($pipes[2]);
+        fclose($pipes[1]);
+        fclose($pipes[2]);
+        $returnCode = proc_close($process);
 
         $pdfPath = $outputDir . DIRECTORY_SEPARATOR . pathinfo($docxPath, PATHINFO_FILENAME) . '.pdf';
 
-        if ($returnCode === 0 && file_exists($pdfPath) && filesize($pdfPath) > 100) {
+        if (! $timedOut && $returnCode === 0 && file_exists($pdfPath) && filesize($pdfPath) > 100) {
+            @rmdir($profileDir);
+
             return $pdfPath;
         }
 
-        \Log::warning('LibreOffice conversion failed', [
+        \Log::warning('LibreOffice conversion failed or timed out', [
             'command' => $command,
             'return_code' => $returnCode,
-            'output' => implode("\n", $output),
+            'timed_out' => $timedOut,
+            'output' => $output,
             'docx' => $docxPath,
             'expected_pdf' => $pdfPath,
         ]);
+
+        @rmdir($profileDir);
 
         return null;
     }
