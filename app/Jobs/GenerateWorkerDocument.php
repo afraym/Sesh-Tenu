@@ -51,13 +51,18 @@ class GenerateWorkerDocument implements ShouldQueue
             throw new \RuntimeException('The document generator did not return a valid file.');
         }
 
-        if (! is_file($document['path']) || ! is_readable($document['path'])) {
+        $sourcePath = $document['path'];
+        if (! is_file($sourcePath)) {
+            $sourcePath = Storage::disk('local')->path(ltrim(str_replace('\\', '/', $sourcePath), '/'));
+        }
+
+        if (! is_file($sourcePath) || ! is_readable($sourcePath)) {
             throw new \RuntimeException('The generated document is not readable.');
         }
 
         $extension = pathinfo($document['name'], PATHINFO_EXTENSION) ?: 'bin';
         $storedPath = 'generated-documents/' . $this->token . '.' . $extension;
-        $contents = file_get_contents($document['path']);
+        $contents = file_get_contents($sourcePath);
 
         if ($contents === false || ! Storage::disk('local')->put($storedPath, $contents)) {
             throw new \RuntimeException('The generated document could not be stored.');
