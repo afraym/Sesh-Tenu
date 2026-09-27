@@ -1300,7 +1300,7 @@ PV Power Plant Abydos 2 Solar (MW1000)',
         if ($request->headers->has('X-Worker-Document-Job')) {
             return response()->json([
                 'document' => [
-                    'path' => $this->relativeGeneratedDocumentPath($filePath),
+                    'path' => $filePath,
                     'name' => $fileName,
                     'mime' => $mimeType,
                 ],

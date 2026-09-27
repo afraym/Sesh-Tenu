@@ -57,6 +57,7 @@ class GenerateWorkerDocument implements ShouldQueue
         }
 
         if (! is_file($sourcePath) || ! is_readable($sourcePath)) {
+            report(new \RuntimeException('Generated document source is unavailable: ' . $sourcePath));
             throw new \RuntimeException('The generated document is not readable.');
         }
 
