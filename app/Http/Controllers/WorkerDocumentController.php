@@ -251,88 +251,46 @@ class WorkerDocumentController extends Controller
         ]);
         $project = Project::latest('id')->with('company')->first();
 
-        $templatePath = $this->resolveWorkerTemplatePath($worker);
-
         $monthStart = $this->resolveSelectedMonthStart($request);
-        $daysInMonth = $monthStart->daysInMonth;
+        $monthAr = self::MONTH_NAMES[$monthStart->format('F')] ?? $monthStart->format('F');
+        Storage::makeDirectory('temp');
+        $shifts = $this->workerDocumentShifts($worker);
 
-        $weekdayRows = [];
+        if (count($shifts) === 1) {
+            $fileName = $worker->name . '  - سركي - ' . $monthAr . '.docx';
+            $fullPath = Storage::path('temp/' . $fileName);
+            $this->generateWorkerDocxFromTemplate($worker, $project, $fullPath, $monthStart, $shifts[0]);
 
-        for ($i = 0; $i < $daysInMonth; $i++) {
-            $day = $monthStart->copy()->addDays($i);
-            $base = [
-                'serial' => $i + 1,
-                'date' => $day->format('j/n/Y'),
-                'start' => '',
-                'end' => '',
-                'break' => '',
-                'hours' => '',
-                'location' => '',
-                'note' => '',
-                'supervisor' => '',
-                'engineer' => '',
-            ];
-
-            $weekdayRows[] = [
-                'row_serial' => $base['serial'],
-                'row_date' => $base['date'],
-                'row_start' => $base['start'],
-                'row_end' => $base['end'],
-                'row_break' => $base['break'],
-                'row_hours' => $base['hours'],
-                'row_location' => $base['location'],
-                'row_note' => $base['note'],
-                'row_supervisor' => $base['supervisor'],
-                'row_engineer' => $base['engineer'],
-            ];
+            return $this->respondWithGeneratedDocument(
+                $request,
+                $fullPath,
+                $fileName,
+                'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+            );
         }
 
-        $companyAr = $worker->company->name_ar ?? $worker->company->name ?? '';
-        $companyEn = $worker->company->name_en ?? $worker->company->short_name ?? '';
-        $consortiumFixed =
-             $this->rtl(' للمقاولات ')
-            . $this->ltr(' FM+ ')
-            . $this->rtl(' تحالف الشيماء الزراعية للمقاولات والتوريدات ');
-        $processor = new TemplateProcessor($templatePath);
+        $zipPath = Storage::path('temp/' . $worker->name . '  - سركي - ' . $monthAr . '.zip');
+        $zip = new \ZipArchive();
+        $zip->open($zipPath, \ZipArchive::CREATE | \ZipArchive::OVERWRITE);
 
-        $processor->setValues([
-            'project_name_en' => optional($project)->name ?? 'محطة كهرباء أبيدوس2 للطاقة الشمسية بقدرة 1000 ميجاوات 
-PV Power Plant Abydos 2 Solar (MW1000)',
-            'company_name' => $consortiumFixed,
-            'consortium_name' => optional(optional($project)->company)->name
-                ?? (optional($worker->company)->name ?: (optional($worker->company)->short_name ?? '')),
-            'worker_name' => $worker->name ?? '',
-            'worker_job' => optional($worker->jobType)->name ?? '',
-            'worker_id' => $worker->national_id ?? '',
-            'worker_phone' => $worker->phone_number ?? '',
-            'access_code' => $worker->entity ?? " ",
-            'report_month' => $monthStart->format('F Y'),
-            'equipment' => $this->workerEquipmentValue($worker, 'equipment'),
-            'equipment_type' => $this->workerEquipmentValue($worker, 'equipment_type'),
-            'equipment_code' => $this->workerEquipmentValue($worker, 'equipment_code'),
-            'equipment_number' => $this->workerEquipmentValue($worker, 'equipment_number'),
-            'equipment_model' => $this->workerEquipmentValue($worker, 'equipment_model'),
-        ]);
+        foreach ($shifts as $shift) {
+            $fileName = $worker->name . '  - سركي - ' . $shift . ' - ' . $monthAr . '.docx';
+            $fullPath = Storage::path('temp/' . $fileName);
+            $this->generateWorkerDocxFromTemplate($worker, $project, $fullPath, $monthStart, $shift);
+            $zip->addFile($fullPath, $fileName);
+        }
 
-        $this->fillAllTimesheetTables($processor, $weekdayRows);
+        $zip->close();
 
-        // $fileName = $worker->name . ' - سركي.docx';
-
-        $monthAr = self::MONTH_NAMES[$monthStart->format('F')] ?? $monthStart->format('F');
-        $fileName = $worker->name . '  - سركي - ' . $monthAr . '.docx';
-        $tempPath = 'temp/' . $fileName;
-
-        Storage::makeDirectory('temp');
-        $fullPath = Storage::path($tempPath);
-        $processor->saveAs($fullPath);
-
-        $this->addRedShadingToFridayCells($fullPath);
+        foreach ($shifts as $shift) {
+            @unlink(Storage::path('temp/' . $worker->name . '  - سركي - ' . $shift . ' - ' . $monthAr . '.docx'));
+        }
 
         return $this->respondWithGeneratedDocument(
             $request,
-            $fullPath,
-            $fileName,
-            'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+            $zipPath,
+            $worker->name . '  - سركي - ' . $monthAr . '.zip',
+            'application/zip'
         );
     }
 
@@ -380,72 +338,13 @@ PV Power Plant Abydos 2 Solar (MW1000)',
         $monthStart = $this->resolveSelectedMonthStart($request);
 
         foreach ($workers as $worker) {
-            $daysInMonth = $monthStart->daysInMonth;
-            $weekdayRows = [];
-
-            for ($i = 0; $i < $daysInMonth; $i++) {
-                $day = $monthStart->copy()->addDays($i);
-                $base = [
-                    'serial' => $i + 1,
-                    'date' => $day->format('j/n/Y'),
-                    'start' => '',
-                    'end' => '',
-                    'break' => '',
-                    'hours' => '',
-                    'location' => '',
-                    'note' => '',
-                    'supervisor' => '',
-                    'engineer' => '',
-                ];
-
-                $weekdayRows[] = [
-                    'row_serial' => $base['serial'],
-                    'row_date' => $base['date'],
-                    'row_start' => $base['start'],
-                    'row_end' => $base['end'],
-                    'row_break' => $base['break'],
-                    'row_hours' => $base['hours'],
-                    'row_location' => $base['location'],
-                    'row_note' => $base['note'],
-                    'row_supervisor' => $base['supervisor'],
-                    'row_engineer' => $base['engineer'],
-                ];
+            foreach ($this->workerDocumentShifts($worker) as $shift) {
+                $suffix = $shift ? '-' . $shift : '';
+                $fileName = 'worker-' . $worker->id . $suffix . '-' . preg_replace('/[^a-zA-Z0-9]/', '', $worker->name) . '.docx';
+                $docxPath = $tempDir . DIRECTORY_SEPARATOR . $fileName;
+                $this->generateWorkerDocxFromTemplate($worker, $project, $docxPath, $monthStart, $shift);
+                $docxPaths[] = $docxPath;
             }
-
-              $templatePath = $this->resolveWorkerTemplatePath($worker);
-              $processor = new TemplateProcessor($templatePath);
-            $consortiumFixed =
-                 $this->rtl(' للمقاولات ')
-                . $this->ltr(' FM+ ')
-                . $this->rtl(' تحالف الشيماء الزراعية للمقاولات والتوريدات ');
-            $processor->setValues([
-                'project_name_en' => optional($project)->name ?? 'محطة كهرباء أبيدوس2 للطاقة الشمسية بقدرة 1000 ميجاوات 
-PV Power Plant Abydos 2 Solar (MW1000)',
-                'company_name' => $consortiumFixed,
-                'consortium_name' => optional(optional($project)->company)->name
-                    ?? (optional($worker->company)->name ?: (optional($worker->company)->short_name ?? '')),
-                'worker_name' => $worker->name ?? '',
-                'worker_job' => optional($worker->jobType)->name ?? '',
-                'worker_id' => $worker->national_id ?? '',
-                'worker_phone' => $worker->phone_number ?? '',
-                'access_code' => $worker->entity ?? "",
-                'report_month' => $monthStart->format('F Y'),
-                'equipment' => $this->workerEquipmentValue($worker, 'equipment'),
-                'equipment_type' => $this->workerEquipmentValue($worker, 'equipment_type'),
-                'equipment_code' => $this->workerEquipmentValue($worker, 'equipment_code'),
-                'equipment_number' => $this->workerEquipmentValue($worker, 'equipment_number'),
-                'equipment_model' => $this->workerEquipmentValue($worker, 'equipment_model'),
-            ]);
-
-            $this->fillAllTimesheetTables($processor, $weekdayRows);
-
-            $fileName = 'worker-' . $worker->id . '-' . preg_replace('/[^a-zA-Z0-9]/', '', $worker->name) . '.docx';
-            $docxPath = $tempDir . DIRECTORY_SEPARATOR . $fileName;
-
-            $processor->saveAs($docxPath);
-            $this->addRedShadingToFridayCells($docxPath);
-
-            $docxPaths[] = $docxPath;
         }
 
         $zipPath = $tempDir . DIRECTORY_SEPARATOR . 'workers-timesheets.zip';
@@ -521,9 +420,12 @@ PV Power Plant Abydos 2 Solar (MW1000)',
 
         $docxPaths = [];
         foreach ($workers as $worker) {
-            $workerDocxPath = $exportPath . DIRECTORY_SEPARATOR . 'worker-' . $worker->id . '.docx';
-            $this->generateWorkerDocxFromTemplate($worker, $project, $workerDocxPath, $monthStart);
-            $docxPaths[] = $workerDocxPath;
+            foreach ($this->workerDocumentShifts($worker) as $shift) {
+                $suffix = $shift ? '-' . $shift : '';
+                $workerDocxPath = $exportPath . DIRECTORY_SEPARATOR . 'worker-' . $worker->id . $suffix . '.docx';
+                $this->generateWorkerDocxFromTemplate($worker, $project, $workerDocxPath, $monthStart, $shift);
+                $docxPaths[] = $workerDocxPath;
+            }
         }
 
         $this->mergeDocxFiles($docxPaths, $combinedDocxPath);
@@ -566,31 +468,54 @@ PV Power Plant Abydos 2 Solar (MW1000)',
         $exportPath = Storage::path($exportFolder);
 
         $fileNameBase = $worker->name . ' - سركي - ' . $monthAr;
-        $docxFileName = $fileNameBase . '.docx';
         $pdfFileName = $fileNameBase . '.pdf';
-
-        $docxPath = $exportPath . DIRECTORY_SEPARATOR . 'worker-' . $worker->id . '.docx';
-
-        $this->generateWorkerDocxFromTemplate($worker, $project, $docxPath, $monthStart);
 
         $libreOfficePath = $this->findLibreOffice();
         if (! $libreOfficePath) {
             throw new \RuntimeException('LibreOffice is required to generate PDF files.');
         }
 
-        $pdfPath = $this->convertDocxToPdf($libreOfficePath, $docxPath, $exportPath);
+        $pdfPaths = [];
+        foreach ($this->workerDocumentShifts($worker) as $shift) {
+            $suffix = $shift ? '-' . $shift : '';
+            $docxPath = $exportPath . DIRECTORY_SEPARATOR . 'worker-' . $worker->id . $suffix . '.docx';
+            $this->generateWorkerDocxFromTemplate($worker, $project, $docxPath, $monthStart, $shift);
+            $pdfPath = $this->convertDocxToPdf($libreOfficePath, $docxPath, $exportPath);
 
-        if (! $pdfPath || ! file_exists($pdfPath) || filesize($pdfPath) <= 100) {
-            throw new \RuntimeException('LibreOffice could not convert the document to PDF.');
+            if (! $pdfPath || ! file_exists($pdfPath) || filesize($pdfPath) <= 100) {
+                throw new \RuntimeException('LibreOffice could not convert the document to PDF.');
+            }
+
+            $pdfPaths[] = [$pdfPath, $shift];
+            @unlink($docxPath);
         }
 
-        @unlink($docxPath);
+        if (count($pdfPaths) === 1) {
+            return $this->respondWithGeneratedDocument(
+                $request,
+                $pdfPaths[0][0],
+                $pdfFileName,
+                'application/pdf'
+            );
+        }
+
+        $zipPath = $exportPath . DIRECTORY_SEPARATOR . $fileNameBase . '.zip';
+        $zip = new \ZipArchive();
+        $zip->open($zipPath, \ZipArchive::CREATE | \ZipArchive::OVERWRITE);
+        foreach ($pdfPaths as [$pdfPath, $shift]) {
+            $zip->addFile($pdfPath, $fileNameBase . ' - ' . $shift . '.pdf');
+        }
+        $zip->close();
+
+        foreach ($pdfPaths as [$pdfPath]) {
+            @unlink($pdfPath);
+        }
 
         return $this->respondWithGeneratedDocument(
             $request,
-            $pdfPath,
-            $pdfFileName,
-            'application/pdf'
+            $zipPath,
+            $fileNameBase . '.zip',
+            'application/zip'
         );
     }
 
@@ -649,9 +574,12 @@ PV Power Plant Abydos 2 Solar (MW1000)',
             $typeDocxPaths = [];
 
             foreach ($typeWorkers as $worker) {
-                $workerDocxPath = $exportPath . DIRECTORY_SEPARATOR . 'worker-' . $worker->id . '.docx';
-                $this->generateWorkerDocxFromTemplate($worker, $project, $workerDocxPath, $monthStart);
-                $typeDocxPaths[] = $workerDocxPath;
+                foreach ($this->workerDocumentShifts($worker) as $shift) {
+                    $suffix = $shift ? '-' . $shift : '';
+                    $workerDocxPath = $exportPath . DIRECTORY_SEPARATOR . 'worker-' . $worker->id . $suffix . '.docx';
+                    $this->generateWorkerDocxFromTemplate($worker, $project, $workerDocxPath, $monthStart, $shift);
+                    $typeDocxPaths[] = $workerDocxPath;
+                }
             }
 
             $typeDocxPath = $exportPath . DIRECTORY_SEPARATOR . 'workers-' . $type . '-' . $timestamp . '.docx';
@@ -715,7 +643,7 @@ PV Power Plant Abydos 2 Solar (MW1000)',
         );
     }
 
-    private function generateWorkerDocxFromTemplate(Worker $worker, $project, string $outputPath, Carbon $monthStart): void
+    private function generateWorkerDocxFromTemplate(Worker $worker, $project, string $outputPath, Carbon $monthStart, ?string $shift = null): void
     {
         $templatePath = $this->resolveWorkerTemplatePath($worker);
         $daysInMonth = $monthStart->daysInMonth;
@@ -751,6 +679,21 @@ PV Power Plant Abydos 2 Solar (MW1000)',
             ];
         }
 
+        for ($i = $daysInMonth; $i < 31; $i++) {
+            $weekdayRows[] = [
+                'row_serial' => '__padding_row__',
+                'row_date' => '',
+                'row_start' => '',
+                'row_end' => '',
+                'row_break' => '',
+                'row_hours' => '',
+                'row_location' => '',
+                'row_note' => '',
+                'row_supervisor' => '',
+                'row_engineer' => '',
+            ];
+        }
+
         $processor = new TemplateProcessor($templatePath);
         $consortiumFixed =
              $this->rtl(' للمقاولات ')
@@ -768,6 +711,7 @@ PV Power Plant Abydos 2 Solar (MW1000)',
             'worker_id' => $worker->national_id ?? '',
             'worker_phone' => $worker->phone_number ?? '',
             'access_code' => $worker->entity ?? "",
+            'shift' => $shift ?? '',
             'report_month' => $monthStart->format('F Y'),
             'equipment' => $this->workerEquipmentValue($worker, 'equipment'),
             'equipment_type' => $this->workerEquipmentValue($worker, 'equipment_type'),
@@ -779,6 +723,11 @@ PV Power Plant Abydos 2 Solar (MW1000)',
         $this->fillAllTimesheetTables($processor, $weekdayRows);
         $processor->saveAs($outputPath);
         $this->addRedShadingToFridayCells($outputPath);
+    }
+
+    private function workerDocumentShifts(Worker $worker): array
+    {
+        return $this->isDriverJob($worker) ? ['صباحي', 'مسائي'] : [null];
     }
 
     private function fillAllTimesheetTables(TemplateProcessor $processor, array $weekdayRows): void
@@ -1144,6 +1093,62 @@ PV Power Plant Abydos 2 Solar (MW1000)',
 
         foreach ($rows as $row) {
             $rowXml = $dom->saveXML($row);
+            $isPaddingRow = str_contains($rowXml, '__padding_row__');
+
+            if ($isPaddingRow) {
+                foreach ($xpath->query('.//w:t', $row) as $textNode) {
+                    if (trim($textNode->textContent) === '__padding_row__') {
+                        $textNode->nodeValue = '';
+                    }
+                }
+            }
+
+            $rowProperties = $xpath->query('./w:trPr', $row)->item(0);
+            if (! $rowProperties) {
+                $rowProperties = $dom->createElementNS(
+                    'http://schemas.openxmlformats.org/wordprocessingml/2006/main',
+                    'w:trPr'
+                );
+                $row->insertBefore($rowProperties, $row->firstChild);
+            }
+
+            if ($xpath->query('./w:cantSplit', $rowProperties)->length === 0) {
+                $rowProperties->appendChild($dom->createElementNS(
+                    'http://schemas.openxmlformats.org/wordprocessingml/2006/main',
+                    'w:cantSplit'
+                ));
+            }
+
+            if ($isPaddingRow) {
+                foreach ($xpath->query('.//w:tc', $row) as $cell) {
+                    $tcProperties = $xpath->query('./w:tcPr', $cell)->item(0);
+                    if (! $tcProperties) {
+                        $tcProperties = $dom->createElementNS(
+                            'http://schemas.openxmlformats.org/wordprocessingml/2006/main',
+                            'w:tcPr'
+                        );
+                        $cell->insertBefore($tcProperties, $cell->firstChild);
+                    }
+
+                    foreach ($xpath->query('./w:tcBorders', $tcProperties) as $borders) {
+                        $tcProperties->removeChild($borders);
+                    }
+
+                    $borders = $dom->createElementNS(
+                        'http://schemas.openxmlformats.org/wordprocessingml/2006/main',
+                        'w:tcBorders'
+                    );
+                    foreach (['top', 'left', 'bottom', 'right', 'insideH', 'insideV'] as $side) {
+                        $border = $dom->createElementNS(
+                            'http://schemas.openxmlformats.org/wordprocessingml/2006/main',
+                            'w:' . $side
+                        );
+                        $border->setAttribute('w:val', 'nil');
+                        $borders->appendChild($border);
+                    }
+                    $tcProperties->appendChild($borders);
+                }
+            }
 
             if ($this->isFridayRow($rowXml)) {
                 $cells = $xpath->query('.//w:tc', $row);
