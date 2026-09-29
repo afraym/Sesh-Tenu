@@ -679,21 +679,6 @@ class WorkerDocumentController extends Controller
             ];
         }
 
-        for ($i = $daysInMonth; $i < 31; $i++) {
-            $weekdayRows[] = [
-                'row_serial' => '__padding_row__',
-                'row_date' => '',
-                'row_start' => '',
-                'row_end' => '',
-                'row_break' => '',
-                'row_hours' => '',
-                'row_location' => '',
-                'row_note' => '',
-                'row_supervisor' => '',
-                'row_engineer' => '',
-            ];
-        }
-
         $processor = new TemplateProcessor($templatePath);
         $consortiumFixed =
              $this->rtl(' للمقاولات ')
@@ -732,13 +717,9 @@ PV Power Plant Abydos 2 Solar (MW1000)',
 
     private function fillAllTimesheetTables(TemplateProcessor $processor, array $weekdayRows): void
     {
-        // Some templates contain the same row placeholder in multiple tables/pages.
-        for ($i = 0; $i < 10; $i++) {
-            try {
-                $processor->cloneRowAndSetValues('row_serial', $weekdayRows);
-            } catch (\Throwable $e) {
-                break;
-            }
+        try {
+            $processor->cloneRowAndSetValues('row_serial', $weekdayRows);
+        } catch (\Throwable $e) {
         }
     }
 
